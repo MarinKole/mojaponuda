@@ -7,27 +7,19 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, Terminal, ShieldAlert } from "lucide-react";
 
 const errorMessages: Record<string, string> = {
-  "User already registered": "Korisnik s ovim emailom već postoji.",
+  "User already registered": "SYS_ERROR // KORISNIK VEĆ POSTOJI",
   "Password should be at least 6 characters":
-    "Lozinka mora imati najmanje 6 znakova.",
-  "Too many requests": "Previše pokušaja. Pokušajte ponovo za nekoliko minuta.",
+    "SEC_ALERT // LOZINKA MORA IMATI MINIMALNO 6 ZNAKOVA",
+  "Too many requests": "SYS_BLOCK // PREVIŠE POKUŠAJA. RATE_LIMIT_ACTIVE",
   "Signup requires a valid password":
-    "Unesite validnu lozinku.",
+    "SEC_ALERT // UNESITE VALIDNU LOZINKU",
 };
 
 function translateError(message: string): string {
-  return errorMessages[message] || "Greška pri registraciji. Pokušajte ponovo.";
+  return errorMessages[message] || "SYS_ERROR // GREŠKA PRI REGISTRACIJI";
 }
 
 export default function SignupPage() {
@@ -46,19 +38,19 @@ export default function SignupPage() {
     setLoading(true);
 
     if (password !== confirmPassword) {
-      setError("Lozinke se ne poklapaju.");
+      setError("SEC_ALERT // LOZINKE SE NE POKLAPAJU");
       setLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("Lozinka mora imati najmanje 6 znakova.");
+      setError("SEC_ALERT // LOZINKA MORA IMATI MINIMALNO 6 ZNAKOVA");
       setLoading(false);
       return;
     }
 
     if (companyName.trim().length < 2) {
-      setError("Unesite naziv firme.");
+      setError("DATA_REQ // UNESITE NAZIV ENTITETA (FIRME)");
       setLoading(false);
       return;
     }
@@ -108,44 +100,72 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <Card className="border-border bg-card">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            Provjerite email
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Poslali smo vam link za potvrdu na <strong>{email}</strong>.
-            Kliknite na link da aktivirate svoj račun.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="justify-center">
+      <div className="w-full border border-emerald-900/50 bg-[#060b17] shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+        <div className="flex items-center justify-between border-b border-slate-800 bg-[#020611] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Terminal className="size-4 text-emerald-500" />
+            <span className="font-mono text-xs font-bold text-emerald-500 tracking-widest">
+              SYSTEM_MSG
+            </span>
+          </div>
+        </div>
+        <div className="p-8 text-center">
+          <ShieldAlert className="mx-auto mb-4 size-12 text-emerald-500" />
+          <h2 className="mb-4 font-mono text-lg font-bold text-white">
+            VERIFIKACIJA_IDENTITETA
+          </h2>
+          <p className="mb-8 font-mono text-xs text-slate-400 leading-relaxed">
+            Link za verifikaciju poslan na:<br/>
+            <span className="text-emerald-400">{email}</span><br/><br/>
+            Sistem zahtijeva potvrdu email adrese za aktivaciju.
+          </p>
           <Link href="/login">
-            <Button variant="outline">Nazad na prijavu</Button>
+            <Button className="w-full rounded-none border border-slate-700 bg-transparent font-mono text-xs hover:bg-slate-800 hover:text-white">
+              RETURN_TO_LOGIN
+            </Button>
           </Link>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold tracking-tight">
-          MojaPonuda<span className="text-primary">.ba</span>
-        </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          Kreirajte novi račun
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSignup}>
-        <CardContent className="space-y-4">
+    <div className="w-full border border-slate-800 bg-[#060b17] shadow-2xl">
+      <div className="flex items-center justify-between border-b border-slate-800 bg-[#020611] px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Terminal className="size-4 text-blue-500" />
+          <span className="font-mono text-xs font-bold text-white tracking-widest">
+            NODE_REGISTRATION
+          </span>
+        </div>
+        <div className="flex gap-1.5">
+          <div className="size-2 rounded-sm bg-slate-700" />
+          <div className="size-2 rounded-sm bg-slate-700" />
+          <div className="size-2 rounded-sm bg-slate-700" />
+        </div>
+      </div>
+
+      <div className="p-8">
+        <div className="mb-8 text-center">
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-white">
+            MojaPonuda<span className="text-blue-500">.ba</span>
+          </h1>
+          <p className="mt-2 font-mono text-[10px] text-slate-500 uppercase tracking-widest">
+            Aktivacija novog entiteta
+          </p>
+        </div>
+
+        <form onSubmit={handleSignup} className="space-y-6">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="border border-red-900/50 bg-red-950/20 p-3 font-mono text-xs font-bold text-red-500">
               {error}
             </div>
           )}
+
           <div className="space-y-2">
-            <Label htmlFor="companyName">Naziv firme</Label>
+            <Label htmlFor="companyName" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              ENTITY_NAME (NAZIV FIRME)
+            </Label>
             <Input
               id="companyName"
               type="text"
@@ -154,10 +174,14 @@ export default function SignupPage() {
               onChange={(e) => setCompanyName(e.target.value)}
               required
               disabled={loading}
+              className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
             />
           </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              COMM_CHANNEL (EMAIL)
+            </Label>
             <Input
               id="email"
               type="email"
@@ -166,10 +190,14 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
             />
           </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="password">Lozinka</Label>
+            <Label htmlFor="password" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              SECURE_KEY (LOZINKA)
+            </Label>
             <Input
               id="password"
               type="password"
@@ -178,10 +206,14 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
+              className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Potvrdite lozinku</Label>
+            <Label htmlFor="confirmPassword" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              VERIFY_SECURE_KEY
+            </Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -190,22 +222,29 @@ export default function SignupPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={loading}
+              className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
             />
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="animate-spin" />}
-            Registracija
+
+          <Button 
+            type="submit" 
+            className="w-full rounded-none bg-blue-600 font-mono text-xs font-bold uppercase tracking-widest text-white hover:bg-blue-500" 
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+            EXECUTE_REGISTRATION
           </Button>
-          <p className="text-sm text-muted-foreground">
-            Već imate račun?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Prijavite se
-            </Link>
-          </p>
-        </CardFooter>
-      </form>
-    </Card>
+
+          <div className="border-t border-slate-800 pt-6 text-center">
+            <p className="font-mono text-[10px] text-slate-500">
+              ACTIVE_LICENSE_EXISTS?{" "}
+              <Link href="/login" className="text-blue-500 hover:text-blue-400 font-bold transition-colors">
+                INITIATE_LOGIN
+              </Link>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

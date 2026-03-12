@@ -122,11 +122,24 @@ async function TendersContent({ searchParams }: TendersPageProps) {
 export default async function TendersPage(props: TendersPageProps) {
   return (
     <div className="space-y-6">
-      <div className="border-b border-border pb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Tenderi</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Pretražite aktivne tendere iz BiH e-Procurement portala.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800 pb-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="size-1.5 bg-emerald-500" />
+            <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Module_Active // Market_Scanner
+            </p>
+          </div>
+          <h2 className="text-2xl font-serif font-bold text-white tracking-tight">
+            Tenderi
+          </h2>
+        </div>
+        <div className="text-right">
+          <p className="font-mono text-[10px] text-emerald-400">DATA_STREAM: CONNECTED</p>
+          <p className="mt-1 font-mono text-[10px] text-slate-500">
+            SOURCE: ejn.gov.ba
+          </p>
+        </div>
       </div>
 
       <Suspense fallback={null}>
@@ -137,8 +150,8 @@ export default async function TendersPage(props: TendersPageProps) {
         fallback={
           <div className="flex items-center justify-center py-16">
             <div className="flex flex-col items-center gap-3">
-              <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <p className="text-sm text-muted-foreground">Učitavanje tendera...</p>
+              <div className="size-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+              <p className="font-mono text-[10px] text-slate-500">FETCHING_MARKET_DATA...</p>
             </div>
           </div>
         }

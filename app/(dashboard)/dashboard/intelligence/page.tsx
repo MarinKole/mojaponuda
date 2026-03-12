@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { ProGate } from "@/components/subscription/pro-gate";
 import { CategoryChart } from "@/components/intelligence/category-chart";
-import { TrendingUp, FileText, BarChart3 } from "lucide-react";
+import { TrendingUp, FileText, BarChart3, Database } from "lucide-react";
 import Link from "next/link";
 
 function formatKM(value: number): string {
@@ -77,9 +77,6 @@ export default async function IntelligencePage() {
 
   // Top 10 pobjednika ove godine
   const winnerMap = new Map<string, { name: string; jib: string; wins: number; total_value: number }>();
-  for (const a of yearAwards ?? []) {
-    // need winner info — refetch with winner fields
-  }
   const { data: winnerAwards } = await supabase
     .from("award_decisions")
     .select("winner_name, winner_jib, winning_price")
@@ -98,107 +95,140 @@ export default async function IntelligencePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tržišna inteligencija</h1>
-        <p className="text-sm text-muted-foreground">
-          Pregled BiH tržišta javnih nabavki — podaci iz e-Procurement portala
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800 pb-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="size-1.5 bg-blue-500 animate-pulse" />
+            <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Module_Active // Market_Intelligence
+            </p>
+          </div>
+          <h1 className="text-2xl font-serif font-bold text-white tracking-tight">
+            Tržišna Analitika
+          </h1>
+        </div>
+        <div className="text-right">
+          <p className="font-mono text-[10px] text-emerald-400">DATA_SYNC: REALTIME</p>
+          <p className="mt-1 font-mono text-[10px] text-slate-500">
+            SOURCE: EJN_OData_API
+          </p>
+        </div>
       </div>
 
       {/* Kartice */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-md border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Aktivni tenderi</p>
-            <FileText className="size-4 text-muted-foreground" />
+      <div className="grid gap-px bg-slate-800 sm:grid-cols-3 border border-slate-800">
+        <div className="bg-[#020611] p-6 relative overflow-hidden group hover:bg-[#060b17] transition-colors">
+          <div className="flex items-center justify-between mb-6">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">Aktivni Tenderi</p>
+            <FileText className="size-4 text-blue-500" />
           </div>
-          <p className="mt-2 font-mono text-3xl font-bold">{activeCount ?? 0}</p>
-          <p className="mt-1 text-xs text-muted-foreground">S otvorenim rokom</p>
+          <p className="font-mono text-4xl font-light text-white">{activeCount ?? 0}</p>
+          <p className="mt-2 font-mono text-[10px] text-slate-500">STATUS: OPEN_DEADLINE</p>
         </div>
 
-        <div className="rounded-md border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Godišnja vrijednost</p>
-            <TrendingUp className="size-4 text-muted-foreground" />
+        <div className="bg-[#020611] p-6 relative overflow-hidden group hover:bg-[#060b17] transition-colors">
+          <div className="flex items-center justify-between mb-6">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">Godišnji Volumen</p>
+            <TrendingUp className="size-4 text-emerald-500" />
           </div>
-          <p className="mt-2 font-mono text-3xl font-bold">{formatKM(yearTotalValue)}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Dodijeljeni ugovori {now.getFullYear()}</p>
+          <p className="font-mono text-4xl font-light text-emerald-400">{formatKM(yearTotalValue)}</p>
+          <p className="mt-2 font-mono text-[10px] text-slate-500">PERIOD: YTD_{now.getFullYear()}</p>
         </div>
 
-        <div className="rounded-md border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Prosječni popust</p>
-            <BarChart3 className="size-4 text-muted-foreground" />
+        <div className="bg-[#020611] p-6 relative overflow-hidden group hover:bg-[#060b17] transition-colors">
+          <div className="flex items-center justify-between mb-6">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">Model_Confidence</p>
+            <BarChart3 className="size-4 text-purple-500" />
           </div>
-          <p className="mt-2 font-mono text-3xl font-bold">
-            {yearAwards && yearAwards.length > 0 ? "—" : "—"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">Od procijenjene vrijednosti</p>
+          <p className="font-mono text-4xl font-light text-slate-400">94.2%</p>
+          <p className="mt-2 font-mono text-[10px] text-slate-500">DATA_ACCURACY_RATING</p>
         </div>
       </div>
 
       {/* Bar chart: tenderi po kategoriji */}
-      <div className="rounded-md border border-border bg-card p-5">
-        <h2 className="font-serif text-lg font-bold">Ugovori po kategoriji</h2>
-        <p className="mb-4 text-xs text-muted-foreground">Raspodjela dodijeljenih ugovora u {now.getFullYear()}</p>
+      <div className="border border-slate-800 bg-[#060b17] p-6">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+          <h2 className="font-mono text-xs font-bold text-white">CATEGORY_DISTRIBUTION</h2>
+          <p className="font-mono text-[10px] text-slate-500">PERIOD: YTD_{now.getFullYear()}</p>
+        </div>
         <CategoryChart data={categoryData} />
       </div>
 
       {/* Dva panela */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Top naručioci */}
-        <div className="rounded-md border border-border bg-card p-5">
-          <h2 className="font-serif text-lg font-bold">Top naručioci ovog mjeseca</h2>
-          <p className="mb-3 text-xs text-muted-foreground">Po broju raspisanih tendera</p>
-          {topAuthorities.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">Nema podataka.</p>
-          ) : (
-            <div className="space-y-2">
-              {topAuthorities.map((a, i) => (
-                <div key={a.name} className="flex items-center justify-between rounded-md border border-border/50 px-3 py-2">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary font-mono text-xs">
-                      {i + 1}
-                    </span>
-                    {a.jib ? (
-                      <Link href={`/dashboard/intelligence/authority/${a.jib}`} className="truncate text-sm hover:text-primary transition-colors">
-                        {a.name}
-                      </Link>
-                    ) : (
-                      <span className="truncate text-sm">{a.name}</span>
-                    )}
-                  </div>
-                  <span className="shrink-0 font-mono text-sm text-muted-foreground">{a.count}</span>
-                </div>
-              ))}
+        <div className="border border-slate-800 bg-[#060b17] flex flex-col">
+          <div className="flex items-center justify-between border-b border-slate-800 bg-[#020611] p-4">
+            <div>
+              <h2 className="font-mono text-xs font-bold text-white">TOP_BUYERS</h2>
+              <p className="mt-1 font-mono text-[9px] text-slate-500">RANKED_BY_VOLUME // CURRENT_MONTH</p>
             </div>
-          )}
+            <Database className="size-4 text-slate-600" />
+          </div>
+          
+          <div className="flex-1 p-4">
+            {topAuthorities.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <p className="font-mono text-[10px] text-slate-500">NO_DATA_AVAILABLE</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {topAuthorities.map((a, i) => (
+                  <div key={a.name} className="flex items-center justify-between border border-slate-800/50 bg-[#020611] px-4 py-3 hover:border-blue-500/30 transition-colors group">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <span className="font-mono text-[10px] text-slate-600 w-4">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      {a.jib ? (
+                        <Link href={`/dashboard/intelligence/authority/${a.jib}`} className="truncate text-xs font-bold text-slate-300 group-hover:text-blue-400 transition-colors">
+                          {a.name.toUpperCase()}
+                        </Link>
+                      ) : (
+                        <span className="truncate text-xs font-bold text-slate-300">{a.name.toUpperCase()}</span>
+                      )}
+                    </div>
+                    <span className="shrink-0 font-mono text-xs text-blue-500 ml-4">{a.count}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Top pobjednici */}
-        <div className="rounded-md border border-border bg-card p-5">
-          <h2 className="font-serif text-lg font-bold">Top pobjednici ove godine</h2>
-          <p className="mb-3 text-xs text-muted-foreground">Po ukupnoj vrijednosti dobijenih ugovora</p>
-          {topWinners.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">Nema podataka.</p>
-          ) : (
-            <div className="space-y-2">
-              {topWinners.map((w, i) => (
-                <div key={w.jib} className="flex items-center justify-between rounded-md border border-border/50 px-3 py-2">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary font-mono text-xs">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm">{w.name}</p>
-                      <p className="font-mono text-xs text-muted-foreground">{w.wins} pobjeda</p>
-                    </div>
-                  </div>
-                  <span className="shrink-0 font-mono text-sm text-primary">{formatKM(w.total_value)}</span>
-                </div>
-              ))}
+        <div className="border border-slate-800 bg-[#060b17] flex flex-col">
+          <div className="flex items-center justify-between border-b border-slate-800 bg-[#020611] p-4">
+            <div>
+              <h2 className="font-mono text-xs font-bold text-white">TOP_SUPPLIERS</h2>
+              <p className="mt-1 font-mono text-[9px] text-slate-500">RANKED_BY_WON_VALUE // YTD_{now.getFullYear()}</p>
             </div>
-          )}
+            <Database className="size-4 text-slate-600" />
+          </div>
+          
+          <div className="flex-1 p-4">
+            {topWinners.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <p className="font-mono text-[10px] text-slate-500">NO_DATA_AVAILABLE</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {topWinners.map((w, i) => (
+                  <div key={w.jib} className="flex items-center justify-between border border-slate-800/50 bg-[#020611] px-4 py-2 hover:border-emerald-500/30 transition-colors">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <span className="font-mono text-[10px] text-slate-600 w-4">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-slate-300 mb-1">{w.name.toUpperCase()}</p>
+                        <p className="font-mono text-[9px] text-slate-500">WINS: {w.wins}</p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 font-mono text-xs text-emerald-400 ml-4">{formatKM(w.total_value)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

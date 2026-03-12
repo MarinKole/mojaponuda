@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Database } from "lucide-react";
 
 interface DocumentGridProps {
   documents: Document[];
@@ -49,65 +49,76 @@ export function DocumentGrid({ documents }: DocumentGridProps) {
   }, [documents, typeFilter, expiryFilter]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Banner upozorenja za dokumente koji ističu */}
       {expiringDocs.length > 0 && (
-        <div className="flex items-center gap-3 rounded-md border border-red-500/30 bg-red-500/10 p-4">
-          <AlertTriangle className="size-5 shrink-0 text-red-400" />
+        <div className="flex items-center gap-4 border border-red-900/50 bg-red-950/20 p-4">
+          <div className="flex size-10 shrink-0 items-center justify-center bg-red-500/10">
+            <AlertTriangle className="size-5 text-red-500 animate-pulse" />
+          </div>
           <div>
-            <p className="text-sm font-medium text-red-400">
-              {expiringDocs.length === 1
-                ? "1 dokument ističe u narednih 30 dana"
-                : `${expiringDocs.length} dokumenta ističu u narednih 30 dana`}
+            <p className="font-mono text-xs font-bold text-red-500">
+              SYSTEM_ALERT: {expiringDocs.length === 1 ? "1_DOCUMENT_EXPIRING" : `${expiringDocs.length}_DOCUMENTS_EXPIRING`}
             </p>
-            <p className="mt-0.5 text-xs text-red-400/70">
-              {expiringDocs.map((d) => d.name).join(", ")}
+            <p className="mt-1 font-mono text-[10px] text-red-400/70">
+              TARGETS: {expiringDocs.map((d) => d.name.toUpperCase()).join(" | ")}
             </p>
           </div>
         </div>
       )}
 
       {/* Filteri */}
-      <div className="flex flex-wrap gap-3">
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Svi tipovi" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Svi tipovi</SelectItem>
-            {DOCUMENT_TYPES.map((dt) => (
-              <SelectItem key={dt} value={dt}>
-                {dt}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap gap-4 border-b border-slate-800 pb-6">
+        <div className="space-y-2">
+          <label className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-500">
+            FILTER_BY_TYPE
+          </label>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[240px] rounded-none border-slate-800 bg-[#060b17] font-mono text-xs focus:ring-0 focus:border-blue-500">
+              <SelectValue placeholder="SVI_TIPOVI" />
+            </SelectTrigger>
+            <SelectContent className="rounded-none border-slate-800 bg-[#060b17] font-mono text-xs">
+              <SelectItem value="all" className="focus:bg-blue-500/20 focus:text-white">SVI_TIPOVI</SelectItem>
+              {DOCUMENT_TYPES.map((dt) => (
+                <SelectItem key={dt} value={dt} className="focus:bg-blue-500/20 focus:text-white">
+                  {dt.toUpperCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={expiryFilter} onValueChange={setExpiryFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Svi statusi" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Svi statusi</SelectItem>
-            <SelectItem value="danger">Ističe (&lt; 30 dana)</SelectItem>
-            <SelectItem value="warning">Upozorenje (30–60 dana)</SelectItem>
-            <SelectItem value="ok">U redu (&gt; 60 dana)</SelectItem>
-            <SelectItem value="none">Bez roka</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-2">
+          <label className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-500">
+            FILTER_BY_STATUS
+          </label>
+          <Select value={expiryFilter} onValueChange={setExpiryFilter}>
+            <SelectTrigger className="w-[240px] rounded-none border-slate-800 bg-[#060b17] font-mono text-xs focus:ring-0 focus:border-blue-500">
+              <SelectValue placeholder="SVI_STATUSI" />
+            </SelectTrigger>
+            <SelectContent className="rounded-none border-slate-800 bg-[#060b17] font-mono text-xs">
+              <SelectItem value="all" className="focus:bg-blue-500/20 focus:text-white">SVI_STATUSI</SelectItem>
+              <SelectItem value="danger" className="text-red-400 focus:bg-red-500/20 focus:text-red-300">CRITICAL_(&lt;30d)</SelectItem>
+              <SelectItem value="warning" className="text-amber-400 focus:bg-amber-500/20 focus:text-amber-300">WARNING_(30-60d)</SelectItem>
+              <SelectItem value="ok" className="text-emerald-400 focus:bg-emerald-500/20 focus:text-emerald-300">OPTIMAL_(&gt;60d)</SelectItem>
+              <SelectItem value="none" className="focus:bg-blue-500/20 focus:text-white">NO_EXPIRY</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-border py-16">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-center border border-dashed border-slate-800 bg-[#020611] py-20">
+          <Database className="size-8 text-slate-800 mb-4" />
+          <p className="font-mono text-xs text-slate-500">
             {documents.length === 0
-              ? "Nemate dokumenata. Kliknite \"Dodaj dokument\" za početak."
-              : "Nema dokumenata koji odgovaraju filteru."}
+              ? "VAULT_EMPTY // NO_DOCUMENTS_FOUND"
+              : "QUERY_RETURNED_0_RESULTS"}
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((doc) => (
             <DocumentCard key={doc.id} document={doc} />
           ))}

@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   FileText,
   Briefcase,
@@ -13,6 +11,7 @@ import {
   Clock,
   Plus,
   TrendingUp,
+  ChevronRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { BidStatus, Document as DocType } from "@/types/database";
@@ -33,19 +32,19 @@ function daysUntil(dateStr: string): number {
 }
 
 const STATUS_DOT: Record<string, string> = {
-  draft: "bg-slate-400",
-  in_review: "bg-amber-400",
-  submitted: "bg-blue-400",
-  won: "bg-emerald-400",
-  lost: "bg-red-400",
+  draft: "bg-slate-500",
+  in_review: "bg-amber-500",
+  submitted: "bg-blue-500",
+  won: "bg-emerald-500",
+  lost: "bg-red-500",
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: "Nacrt",
-  in_review: "U pregledu",
-  submitted: "Predato",
-  won: "Pobijeđeno",
-  lost: "Izgubljeno",
+  draft: "NACRT",
+  in_review: "U_PREGLEDU",
+  submitted: "PREDATO",
+  won: "POBIJEDJENO",
+  lost: "IZGUBLJENO",
 };
 
 export default async function DashboardPage() {
@@ -92,11 +91,11 @@ export default async function DashboardPage() {
       .limit(5),
   ]);
 
-  const stats: { title: string; value: number; icon: LucideIcon; accent: string }[] = [
-    { title: "Dokumenti", value: documentsCount ?? 0, icon: FileText, accent: "text-blue-400" },
-    { title: "Ponude", value: bidsCount ?? 0, icon: Briefcase, accent: "text-amber-400" },
-    { title: "Tenderi", value: tendersCount ?? 0, icon: Search, accent: "text-emerald-400" },
-    { title: "Odluke", value: awardsCount ?? 0, icon: Award, accent: "text-purple-400" },
+  const stats: { title: string; value: number; icon: LucideIcon; accent: string; metric: string }[] = [
+    { title: "AKTIVNI DOKUMENTI", value: documentsCount ?? 0, icon: FileText, accent: "text-blue-400", metric: "DOC_VAULT" },
+    { title: "RADNE PONUDE", value: bidsCount ?? 0, icon: Briefcase, accent: "text-amber-400", metric: "BID_PIPELINE" },
+    { title: "TENDERI BAZA", value: tendersCount ?? 0, icon: Search, accent: "text-emerald-400", metric: "MARKET_OPPS" },
+    { title: "ANALIZIRANE ODLUKE", value: awardsCount ?? 0, icon: Award, accent: "text-purple-400", metric: "INTEL_DATA" },
   ];
 
   const expiring = (expiringDocs ?? []) as Pick<DocType, "id" | "name" | "type" | "expires_at">[];
@@ -108,216 +107,195 @@ export default async function DashboardPage() {
   }[];
 
   const now = new Date();
-  const greeting =
-    now.getHours() < 12
-      ? "Dobro jutro"
-      : now.getHours() < 18
-      ? "Dobar dan"
-      : "Dobra večer";
-
+  
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          {greeting}, {company.name.split(" ")[0]}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {now.toLocaleDateString("bs-BA", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800 pb-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="size-1.5 bg-blue-500" />
+            <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              System_Overview // {company.name.split(" ")[0]}
+            </p>
+          </div>
+          <h2 className="text-2xl font-serif font-bold text-white tracking-tight">
+            Dashboard
+          </h2>
+        </div>
+        <div className="text-right">
+          <p className="font-mono text-[10px] text-emerald-400">STATUS: ONLINE</p>
+          <p className="mt-1 font-mono text-[10px] text-slate-500">
+            {now.toISOString().split('T')[0]} {now.toTimeString().split('T')[1].substring(0, 8)} UTC
+          </p>
+        </div>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px bg-slate-800 sm:grid-cols-2 lg:grid-cols-4 border border-slate-800">
         {stats.map((stat) => (
-          <Card
+          <div
             key={stat.title}
-            className="group relative overflow-hidden border-border bg-card transition-colors hover:border-primary/20"
+            className="bg-[#020611] p-5 relative overflow-hidden group"
           >
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-[13px] font-medium text-muted-foreground">
-                  {stat.title}
-                </p>
-                <div className="flex size-9 items-center justify-center rounded-lg bg-muted/50 transition-colors group-hover:bg-primary/10">
-                  <stat.icon className={`size-4 ${stat.accent}`} />
-                </div>
+            <div className="absolute inset-0 bg-blue-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <span className="font-mono text-[9px] text-slate-500">{stat.metric}</span>
+                <stat.icon className={`size-4 ${stat.accent}`} />
               </div>
-              <p className="mt-3 font-mono text-3xl font-bold tracking-tight">
+              <p className="font-mono text-3xl font-light text-white mb-1">
                 {stat.value.toLocaleString("bs-BA")}
               </p>
-            </CardContent>
-          </Card>
+              <p className="font-mono text-[10px] font-bold text-slate-400">
+                {stat.title}
+              </p>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Expiring Documents Alert */}
       {expiring.length > 0 && (
-        <Card className="border-amber-500/20 bg-amber-500/5">
-          <CardContent className="p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="size-4 text-amber-400" />
-                <h3 className="text-sm font-semibold text-amber-300">
-                  Dokumenti koji ističu
-                </h3>
-              </div>
-              <Link href="/dashboard/vault">
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-400 hover:text-amber-300">
-                  Pogledaj sve
-                  <ArrowRight className="ml-1 size-3" />
-                </Button>
-              </Link>
+        <div className="border border-amber-900/50 bg-amber-950/10">
+          <div className="flex items-center justify-between border-b border-amber-900/50 p-3 bg-amber-950/20">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="size-4 text-amber-500" />
+              <h3 className="font-mono text-xs font-bold text-amber-500">
+                SYSTEM_ALERT: EXPIRING_DOCUMENTS
+              </h3>
             </div>
-            <div className="space-y-2">
-              {expiring.map((doc) => {
-                const days = daysUntil(doc.expires_at!);
-                const urgent = days <= 14;
-                return (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between rounded-md bg-background/40 px-3 py-2"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="size-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{doc.name}</p>
-                        {doc.type && (
-                          <p className="text-[11px] text-muted-foreground">{doc.type}</p>
-                        )}
-                      </div>
+            <Link href="/dashboard/vault" className="font-mono text-[10px] text-amber-500/70 hover:text-amber-400 flex items-center gap-1">
+              VIEW_VAULT
+              <ArrowRight className="size-3" />
+            </Link>
+          </div>
+          <div className="divide-y divide-amber-900/30">
+            {expiring.map((doc) => {
+              const days = daysUntil(doc.expires_at!);
+              const urgent = days <= 14;
+              return (
+                <div key={doc.id} className="flex items-center justify-between p-3 px-4">
+                  <div className="flex items-center gap-4">
+                    <FileText className="size-4 text-amber-500/50" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-300">{doc.name}</p>
+                      {doc.type && (
+                        <p className="font-mono text-[9px] text-slate-500 mt-0.5">{doc.type.toUpperCase()}</p>
+                      )}
                     </div>
-                    <span
-                      className={`rounded-md px-2 py-1 font-mono text-xs font-semibold ${
-                        urgent
-                          ? "bg-red-500/15 text-red-400"
-                          : "bg-amber-500/15 text-amber-400"
-                      }`}
-                    >
-                      {days === 0 ? "Danas" : days === 1 ? "Sutra" : `${days} dana`}
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className={`font-mono text-xs font-bold ${urgent ? "text-red-500" : "text-amber-500"}`}>
+                      {days === 0 ? "EXPIRES_TODAY" : days === 1 ? "EXPIRES_TOMORROW" : `T-${days}_DAYS`}
                     </span>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Bids */}
-        <Card className="border-border bg-card lg:col-span-3">
-          <CardContent className="p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Nedavne ponude</h3>
-              <Link href="/dashboard/bids">
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-foreground">
-                  Sve ponude
-                  <ArrowRight className="ml-1 size-3" />
-                </Button>
+        <div className="border border-slate-800 bg-[#020611] lg:col-span-2">
+          <div className="flex items-center justify-between border-b border-slate-800 p-4 bg-[#060b17]">
+            <div className="flex items-center gap-2">
+              <Briefcase className="size-4 text-slate-500" />
+              <h3 className="font-mono text-xs font-bold text-white">ACTIVE_PIPELINE</h3>
+            </div>
+            <Link href="/dashboard/bids" className="font-mono text-[10px] text-blue-500 hover:text-blue-400 flex items-center gap-1">
+              VIEW_ALL
+              <ArrowRight className="size-3" />
+            </Link>
+          </div>
+
+          {bids.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="font-mono text-[10px] text-slate-500 mb-4">NO_ACTIVE_BIDS_FOUND</p>
+              <Link
+                href="/dashboard/tenders"
+                className="font-mono text-xs text-blue-500 border border-blue-500/30 px-4 py-2 hover:bg-blue-500/10 transition-colors"
+              >
+                + SCAN_MARKET
               </Link>
             </div>
-
-            {bids.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-10">
-                <Briefcase className="size-8 text-muted-foreground/30" />
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Nemate ponuda
-                </p>
-                <Link href="/dashboard/tenders" className="mt-3">
-                  <Button size="sm" variant="outline" className="h-8 text-xs">
-                    <Search className="mr-1.5 size-3" />
-                    Pretražite tendere
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {bids.map((bid) => (
-                  <Link
-                    key={bid.id}
-                    href={`/dashboard/bids/${bid.id}`}
-                    className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/50"
-                  >
-                    <span className={`size-2 shrink-0 rounded-full ${STATUS_DOT[bid.status]}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium group-hover:text-primary">
-                        {bid.tenders?.title ?? "Tender"}
-                      </p>
-                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <span>{STATUS_LABEL[bid.status]}</span>
-                        {bid.tenders?.deadline && (
-                          <>
-                            <span className="text-border">|</span>
-                            <Clock className="size-3" />
-                            <span>{formatDate(bid.tenders.deadline)}</span>
-                          </>
-                        )}
-                      </div>
+          ) : (
+            <div className="divide-y divide-slate-800/50">
+              {bids.map((bid) => (
+                <Link
+                  key={bid.id}
+                  href={`/dashboard/bids/${bid.id}`}
+                  className="group flex items-center gap-4 p-4 transition-colors hover:bg-[#060b17]"
+                >
+                  <div className={`size-2 shrink-0 rounded-sm ${STATUS_DOT[bid.status]}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
+                      {bid.tenders?.title ?? "N/A"}
+                    </p>
+                    <div className="flex items-center gap-4 mt-1">
+                      <span className={`font-mono text-[9px] ${
+                        bid.status === 'won' ? 'text-emerald-500' :
+                        bid.status === 'lost' ? 'text-red-500' :
+                        bid.status === 'submitted' ? 'text-blue-500' :
+                        'text-slate-500'
+                      }`}>
+                        STATUS: {STATUS_LABEL[bid.status]}
+                      </span>
+                      {bid.tenders?.deadline && (
+                        <>
+                          <span className="text-slate-800">|</span>
+                          <span className="font-mono text-[9px] text-slate-500 flex items-center gap-1">
+                            <Clock className="size-2.5" />
+                            DUE: {formatDate(bid.tenders.deadline)}
+                          </span>
+                        </>
+                      )}
                     </div>
-                    <ArrowRight className="size-3.5 text-muted-foreground/0 transition-all group-hover:text-muted-foreground" />
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  </div>
+                  <ChevronRight className="size-4 text-slate-700 group-hover:text-blue-500 transition-colors" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Quick Actions */}
-        <div className="space-y-3 lg:col-span-2">
-          <h3 className="text-sm font-semibold">Brze akcije</h3>
-          <Link href="/dashboard/vault">
-            <Card className="group cursor-pointer border-border bg-card transition-all hover:border-blue-500/30 hover:bg-blue-500/5">
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 transition-colors group-hover:bg-blue-500/20">
-                  <Plus className="size-5 text-blue-400" />
+        <div className="border border-slate-800 bg-[#060b17] p-5">
+          <h3 className="font-mono text-[10px] text-slate-500 mb-6">QUICK_ACTIONS //</h3>
+          
+          <div className="space-y-3">
+            <Link href="/dashboard/vault" className="block">
+              <div className="group border border-slate-800 bg-[#020611] p-4 transition-all hover:border-blue-500/50">
+                <div className="flex items-center gap-3 mb-2">
+                  <Plus className="size-4 text-blue-500" />
+                  <p className="font-mono text-xs font-bold text-white">UPLOAD_DOCUMENT</p>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold">Upload dokumenta</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Dodajte dokument u trezor
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+                <p className="text-xs text-slate-500 ml-7">Dodajte novi dokument u trezor.</p>
+              </div>
+            </Link>
 
-          <Link href="/dashboard/tenders">
-            <Card className="group cursor-pointer border-border bg-card transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5">
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 transition-colors group-hover:bg-emerald-500/20">
-                  <Search className="size-5 text-emerald-400" />
+            <Link href="/dashboard/tenders" className="block">
+              <div className="group border border-slate-800 bg-[#020611] p-4 transition-all hover:border-emerald-500/50">
+                <div className="flex items-center gap-3 mb-2">
+                  <Search className="size-4 text-emerald-500" />
+                  <p className="font-mono text-xs font-bold text-white">SCAN_TENDERS</p>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold">Pretražite tendere</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Pronađite prilike na portalu
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+                <p className="text-xs text-slate-500 ml-7">Pretražite bazu aktivnih nabavki.</p>
+              </div>
+            </Link>
 
-          <Link href="/dashboard/intelligence">
-            <Card className="group cursor-pointer border-border bg-card transition-all hover:border-purple-500/30 hover:bg-purple-500/5">
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 transition-colors group-hover:bg-purple-500/20">
-                  <TrendingUp className="size-5 text-purple-400" />
+            <Link href="/dashboard/intelligence" className="block">
+              <div className="group border border-slate-800 bg-[#020611] p-4 transition-all hover:border-purple-500/50">
+                <div className="flex items-center gap-3 mb-2">
+                  <TrendingUp className="size-4 text-purple-500" />
+                  <p className="font-mono text-xs font-bold text-white">MARKET_INTEL</p>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold">Tržišna inteligencija</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Analizirajte konkurenciju
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+                <p className="text-xs text-slate-500 ml-7">Analizirajte konkurente i trendove.</p>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

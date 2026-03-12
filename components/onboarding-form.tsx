@@ -30,7 +30,7 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
     setLoading(true);
 
     if (jib.trim().length < 12) {
-      setError("JIB mora imati najmanje 12 cifara.");
+      setError("DATA_ERR // JIB MORA IMATI NAJMANJE 12 CIFARA");
       setLoading(false);
       return;
     }
@@ -50,9 +50,9 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
 
     if (updateError) {
       if (updateError.message.includes("duplicate key")) {
-        setError("Firma s ovim JIB-om već postoji u sistemu.");
+        setError("SYS_CONFLICT // FIRMA S OVIM JIB-OM VEĆ POSTOJI");
       } else {
-        setError("Greška pri spremanju podataka. Pokušajte ponovo.");
+        setError("SYS_ERROR // GREŠKA PRI SPREMANJU PODATAKA");
       }
       setLoading(false);
       return;
@@ -63,14 +63,17 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="border border-red-900/50 bg-red-950/20 p-3 font-mono text-xs font-bold text-red-500">
           {error}
         </div>
       )}
+      
       <div className="space-y-2">
-        <Label htmlFor="name">Naziv firme</Label>
+        <Label htmlFor="name" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          LEGAL_ENTITY_NAME
+        </Label>
         <Input
           id="name"
           type="text"
@@ -78,11 +81,15 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
           onChange={(e) => setName(e.target.value)}
           required
           disabled={loading}
+          className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      
+      <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="jib">JIB (identifikacioni broj) *</Label>
+          <Label htmlFor="jib" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            JIB (ID_NUMBER) *
+          </Label>
           <Input
             id="jib"
             type="text"
@@ -91,11 +98,13 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
             onChange={(e) => setJib(e.target.value)}
             required
             disabled={loading}
-            className="font-mono"
+            className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="pdv">PDV broj</Label>
+          <Label htmlFor="pdv" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            VAT_NUMBER (PDV)
+          </Label>
           <Input
             id="pdv"
             type="text"
@@ -103,12 +112,15 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
             value={pdv}
             onChange={(e) => setPdv(e.target.value)}
             disabled={loading}
-            className="font-mono"
+            className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
           />
         </div>
       </div>
+      
       <div className="space-y-2">
-        <Label htmlFor="address">Adresa</Label>
+        <Label htmlFor="address" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          HQ_ADDRESS
+        </Label>
         <Input
           id="address"
           type="text"
@@ -116,11 +128,15 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           disabled={loading}
+          className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      
+      <div className="grid grid-cols-2 gap-6">
         <div className="space-y-2">
-          <Label htmlFor="contactEmail">Kontakt email</Label>
+          <Label htmlFor="contactEmail" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            CONTACT_EMAIL
+          </Label>
           <Input
             id="contactEmail"
             type="email"
@@ -128,10 +144,13 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
             value={contactEmail}
             onChange={(e) => setContactEmail(e.target.value)}
             disabled={loading}
+            className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="contactPhone">Kontakt telefon</Label>
+          <Label htmlFor="contactPhone" className="font-mono text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            CONTACT_PHONE
+          </Label>
           <Input
             id="contactPhone"
             type="tel"
@@ -139,12 +158,18 @@ export function OnboardingForm({ companyId, companyName }: OnboardingFormProps) 
             value={contactPhone}
             onChange={(e) => setContactPhone(e.target.value)}
             disabled={loading}
+            className="rounded-none border-slate-800 bg-[#020611] font-mono text-xs text-white focus-visible:border-blue-500 focus-visible:ring-0"
           />
         </div>
       </div>
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading && <Loader2 className="animate-spin" />}
-        Sačuvaj i nastavi
+      
+      <Button 
+        type="submit" 
+        className="w-full rounded-none bg-blue-600 font-mono text-xs font-bold uppercase tracking-widest text-white hover:bg-blue-500" 
+        disabled={loading}
+      >
+        {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+        INITIALIZE_WORKSPACE
       </Button>
     </form>
   );

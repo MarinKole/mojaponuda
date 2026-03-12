@@ -21,42 +21,42 @@ import {
 
 function NavBar() {
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/5 bg-[#0a1628]/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+    <nav className="fixed top-0 z-50 w-full border-b border-slate-800 bg-[#020611]/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link href="/" className="flex items-baseline gap-0.5">
           <span className="font-serif text-lg font-bold tracking-tight text-white">
             MojaPonuda
           </span>
-          <span className="font-serif text-lg font-bold text-[#3b82f6]">.ba</span>
+          <span className="font-serif text-lg font-bold text-blue-500">.ba</span>
         </Link>
 
         <div className="hidden items-center gap-8 sm:flex">
-          <a href="#problem" className="text-[13px] text-[#94a3b8] transition-colors hover:text-white">
+          <a href="#problem" className="text-xs font-medium uppercase tracking-wider text-slate-400 transition-colors hover:text-white">
             Problem
           </a>
-          <a href="#kako-radi" className="text-[13px] text-[#94a3b8] transition-colors hover:text-white">
-            Kako radi
+          <a href="#kako-radi" className="text-xs font-medium uppercase tracking-wider text-slate-400 transition-colors hover:text-white">
+            Metodologija
           </a>
-          <a href="#rjesenje" className="text-[13px] text-[#94a3b8] transition-colors hover:text-white">
-            Mogućnosti
+          <a href="#rjesenje" className="text-xs font-medium uppercase tracking-wider text-slate-400 transition-colors hover:text-white">
+            Platforma
           </a>
-          <a href="#cijene" className="text-[13px] text-[#94a3b8] transition-colors hover:text-white">
-            Cijene
+          <a href="#cijene" className="text-xs font-medium uppercase tracking-wider text-slate-400 transition-colors hover:text-white">
+            Pristup
           </a>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Link
             href="/login"
-            className="text-[13px] font-medium text-[#94a3b8] transition-colors hover:text-white"
+            className="text-xs font-medium uppercase tracking-wider text-slate-400 transition-colors hover:text-white"
           >
             Prijava
           </Link>
           <Link
             href="/signup"
-            className="rounded-lg bg-[#3b82f6] px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#2563eb]"
+            className="rounded-none bg-white px-5 py-2 text-xs font-bold uppercase tracking-wider text-[#020611] transition-colors hover:bg-slate-200"
           >
-            Počnite besplatno
+            Pristup sistemu
           </Link>
         </div>
       </div>
@@ -64,120 +64,167 @@ function NavBar() {
   );
 }
 
+// ... HeroSection is already updated ...
+
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-[#0a1628] px-6 pb-20 pt-28 sm:pb-32 sm:pt-36">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(59,130,246,0.1)_0%,_transparent_60%)]" />
+    <section className="relative overflow-hidden bg-[#020611] px-6 pb-24 pt-32 sm:pb-32 sm:pt-40">
+      {/* Abstract grid background */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#1e3a8a15_1px,transparent_1px),linear-gradient(to_bottom,#1e3a8a15_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020611_100%)]" />
 
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-5 font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-[#3b82f6]">
-            Platforma za javne nabavke BiH
-          </p>
+      <div className="relative z-10 mx-auto max-w-7xl">
+        <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#1e3a8a]/40 bg-[#1e3a8a]/10 px-3 py-1 mb-6">
+              <span className="flex size-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="font-mono text-[10px] font-medium uppercase tracking-widest text-blue-400">
+                MojaPonuda.ba Platforma 2.0
+              </span>
+            </div>
 
-          <h1 className="font-serif text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Pripremite ponudu
-            <br />
-            <span className="text-[#3b82f6]">bez grešaka.</span>
-          </h1>
+            <h1 className="font-serif text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Pripremite ponudu
+              <br />
+              <span className="text-blue-500">bez ijedne greške.</span>
+            </h1>
 
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[#94a3b8] sm:text-lg">
-            Jedna platforma za dokumente, ponude i tržišnu inteligenciju.
-            Prestanite gubiti ugovore zbog administrativnih grešaka.
-          </p>
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg">
+              Jedina platforma za upravljanje tenderskom dokumentacijom i analizu javnih nabavki u Bosni i Hercegovini. 
+              Eliminišite administrativne greške i pobjeđujte na tenderima na osnovu podataka.
+            </p>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#3b82f6] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-[#2563eb] hover:shadow-blue-500/30"
-            >
-              Počnite besplatno
-              <ArrowRight className="size-4" />
-            </Link>
-            <a
-              href="#kako-radi"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#1e3a5f] px-8 py-3.5 text-sm font-semibold text-[#94a3b8] transition-all hover:border-[#3b82f6]/40 hover:text-white"
-            >
-              Pogledajte kako radi
-              <ChevronDown className="size-4" />
-            </a>
-          </div>
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <Link
+                href="/signup"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-none bg-blue-600 px-8 text-sm font-semibold text-white transition-all hover:bg-blue-500"
+              >
+                Započnite besplatno
+                <ArrowRight className="size-4" />
+              </Link>
+              <a
+                href="#kako-radi"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-none border border-slate-700 bg-transparent px-8 text-sm font-semibold text-slate-300 transition-all hover:border-slate-500 hover:text-white"
+              >
+                Upoznajte platformu
+              </a>
+            </div>
 
-          <p className="mt-4 font-mono text-[11px] text-[#64748b]">
-            Besplatno za prve 3 ponude. Bez kreditne kartice.
-          </p>
-        </div>
-
-        {/* Product Mockup Frame */}
-        <div className="relative mx-auto mt-16 max-w-5xl">
-          <div className="overflow-hidden rounded-xl border border-[#1e3a5f]/60 bg-[#111d33] shadow-2xl shadow-black/40">
-            {/* Browser chrome */}
-            <div className="flex items-center gap-2 border-b border-[#1e3a5f]/60 bg-[#0a1628] px-4 py-3">
-              <div className="flex gap-1.5">
-                <div className="size-2.5 rounded-full bg-[#1e3a5f]" />
-                <div className="size-2.5 rounded-full bg-[#1e3a5f]" />
-                <div className="size-2.5 rounded-full bg-[#1e3a5f]" />
+            <div className="mt-10 flex items-center gap-6 border-t border-slate-800 pt-6">
+              <div className="flex flex-col">
+                <span className="font-mono text-2xl font-bold text-white">4.8B+</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Analiziranih KM</span>
               </div>
-              <div className="mx-auto flex h-6 w-72 items-center justify-center rounded-md bg-[#0f1d32] font-mono text-[10px] text-[#64748b]">
-                app.mojaponuda.ba/dashboard
+              <div className="h-8 w-px bg-slate-800" />
+              <div className="flex flex-col">
+                <span className="font-mono text-2xl font-bold text-white">12k+</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Dnevnih tendera</span>
+              </div>
+              <div className="h-8 w-px bg-slate-800" />
+              <div className="flex flex-col">
+                <span className="font-mono text-2xl font-bold text-white">0%</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Margina greške</span>
               </div>
             </div>
-            {/* Dashboard preview content */}
-            <div className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <div className="h-6 w-48 rounded bg-[#1e3a5f]/50" />
-                  <div className="mt-2 h-3 w-32 rounded bg-[#1e3a5f]/30" />
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-4">
-                {[
-                  { label: "Dokumenti", val: "24", color: "text-blue-400", icon: FileText },
-                  { label: "Ponude", val: "8", color: "text-amber-400", icon: Briefcase },
-                  { label: "Tenderi", val: "1,247", color: "text-emerald-400", icon: Search },
-                  { label: "Odluke", val: "3,891", color: "text-purple-400", icon: BarChart3 },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="rounded-lg border border-[#1e3a5f]/60 bg-[#0a1628]/50 p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-[#64748b]">{s.label}</span>
-                      <s.icon className={`size-3.5 ${s.color}`} />
-                    </div>
-                    <p className="mt-2 font-mono text-2xl font-bold text-white">{s.val}</p>
+          </div>
+
+          {/* High-end Bloomberg Terminal Mockup */}
+          <div className="relative mx-auto w-full max-w-2xl lg:mx-0">
+            <div className="absolute -inset-0.5 rounded-sm bg-gradient-to-b from-blue-500/30 to-transparent opacity-50 blur-xl" />
+            <div className="relative overflow-hidden rounded-sm border border-slate-800 bg-[#060b17] shadow-2xl">
+              
+              {/* Terminal Header */}
+              <div className="flex items-center justify-between border-b border-slate-800 bg-[#020611] px-4 py-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    <div className="size-2 rounded-sm bg-slate-700" />
+                    <div className="size-2 rounded-sm bg-slate-700" />
+                    <div className="size-2 rounded-sm bg-slate-700" />
                   </div>
-                ))}
+                  <span className="font-mono text-[10px] text-slate-500">SYS.TER.01 // MARKET_INTEL</span>
+                </div>
+                <div className="font-mono text-[10px] text-blue-500/70">
+                  LIVE<span className="ml-1 inline-block size-1.5 animate-pulse rounded-full bg-blue-500" />
+                </div>
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-5">
-                <div className="rounded-lg border border-[#1e3a5f]/60 bg-[#0a1628]/50 p-4 sm:col-span-3">
-                  <div className="mb-3 h-4 w-28 rounded bg-[#1e3a5f]/50" />
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="mb-2 flex items-center gap-3">
-                      <div className={`size-2 rounded-full ${i === 1 ? "bg-amber-400" : i === 2 ? "bg-blue-400" : "bg-emerald-400"}`} />
-                      <div className="h-3 flex-1 rounded bg-[#1e3a5f]/30" />
-                      <div className="h-3 w-16 rounded bg-[#1e3a5f]/20" />
+
+              {/* Terminal Content */}
+              <div className="p-5">
+                <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div>
+                    <h3 className="font-mono text-xs font-bold text-white">TENDER_ANALYSIS_DASHBOARD</h3>
+                    <p className="mt-1 font-mono text-[10px] text-slate-500">Analiza tržišta javnih nabavki - Sektor građevine (Q3)</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono text-xs text-emerald-400">STATUS: OPTIMAL</div>
+                    <div className="font-mono text-[10px] text-slate-500">LATENCY: 12ms</div>
+                  </div>
+                </div>
+
+                {/* Data Grid */}
+                <div className="grid grid-cols-4 gap-px bg-slate-800">
+                  {[
+                    { label: "VOLUMEN (BAM)", val: "142.5M", change: "+12.4%", color: "text-emerald-400" },
+                    { label: "AKTIVNI TENDERI", val: "843", change: "+4.1%", color: "text-emerald-400" },
+                    { label: "PROS. ZAKASNJENJE", val: "0.4D", change: "-2.1%", color: "text-emerald-400" },
+                    { label: "UPOZORENJA", val: "12", change: "+3.0%", color: "text-red-400" },
+                  ].map((s, i) => (
+                    <div key={i} className="bg-[#060b17] p-3">
+                      <div className="font-mono text-[9px] text-slate-500">{s.label}</div>
+                      <div className="mt-1 font-mono text-lg font-bold text-white">{s.val}</div>
+                      <div className={`mt-1 font-mono text-[9px] ${s.color}`}>{s.change} vs LAST Q</div>
                     </div>
                   ))}
                 </div>
-                <div className="space-y-3 sm:col-span-2">
-                  {[
-                    { color: "border-blue-500/20 bg-blue-500/5", icon: Upload, iconColor: "text-blue-400" },
-                    { color: "border-emerald-500/20 bg-emerald-500/5", icon: Search, iconColor: "text-emerald-400" },
-                  ].map((a, i) => (
-                    <div key={i} className={`rounded-lg border p-3 ${a.color}`}>
-                      <div className="flex items-center gap-3">
-                        <a.icon className={`size-4 ${a.iconColor}`} />
-                        <div className="h-3 w-24 rounded bg-[#1e3a5f]/30" />
-                      </div>
+
+                {/* Chart Mockup */}
+                <div className="mt-4 rounded-sm border border-slate-800 p-4">
+                  <div className="mb-4 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-slate-400">WIN_RATE_PROJECTION</span>
+                    <div className="flex gap-2">
+                      <span className="font-mono text-[9px] text-blue-400">■ COMPETITOR A</span>
+                      <span className="font-mono text-[9px] text-emerald-400">■ OUR MODEL</span>
                     </div>
-                  ))}
+                  </div>
+                  <div className="relative h-32 w-full border-b border-l border-slate-800">
+                    {/* Grid lines */}
+                    <div className="absolute inset-0 flex flex-col justify-between">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-px w-full bg-slate-800/50" />
+                      ))}
+                    </div>
+                    {/* Graph line 1 (Our model) */}
+                    <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
+                      <path d="M0 100 Q 50 80, 100 90 T 200 60 T 300 30 T 400 20" fill="none" stroke="#34d399" strokeWidth="2" />
+                      <path d="M0 100 Q 50 80, 100 90 T 200 60 T 300 30 T 400 20 L 400 128 L 0 128 Z" fill="url(#grad-emerald)" opacity="0.1" />
+                      <defs>
+                        <linearGradient id="grad-emerald" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#34d399" />
+                          <stop offset="100%" stopColor="transparent" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    {/* Graph line 2 (Competitor) */}
+                    <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
+                      <path d="M0 110 Q 50 100, 100 110 T 200 90 T 300 80 T 400 85" fill="none" stroke="#60a5fa" strokeWidth="1" strokeDasharray="4 4" />
+                    </svg>
+                  </div>
+                  <div className="mt-2 flex justify-between font-mono text-[9px] text-slate-600">
+                    <span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span>
+                  </div>
+                </div>
+
+                {/* Log Output */}
+                <div className="mt-4 rounded-sm bg-[#020611] p-3 font-mono text-[10px] leading-relaxed text-slate-500">
+                  <div><span className="text-blue-500">&gt;</span> SYSTEM_INIT_ROUTINE</div>
+                  <div><span className="text-blue-500">&gt;</span> FETCHING_EJN_DATA_STREAM... <span className="text-emerald-400">OK</span></div>
+                  <div><span className="text-blue-500">&gt;</span> RUNNING_AI_DOC_ANALYSIS... <span className="text-emerald-400">OK</span></div>
+                  <div><span className="text-blue-500">&gt;</span> DETECTED_3_EXPIRING_CERTS: [TAX, COURT, BANK]</div>
+                  <div className="text-amber-400"><span className="text-amber-400">&gt;</span> ALERT: UPLOAD_NEW_DOCS_BEFORE_2024_08_15</div>
                 </div>
               </div>
             </div>
           </div>
-          {/* Fade at bottom */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#0a1628] to-transparent" />
         </div>
       </div>
     </section>
@@ -187,51 +234,62 @@ function HeroSection() {
 const PROBLEMS = [
   {
     icon: FolderSearch,
-    title: "Dokumenta svuda",
+    title: "DOKUMENTACIJA_RASUTA",
     description:
-      "Uvjerenje o registraciji u jednom folderu, potvrda o porezu u emailu, garancija negdje na desktopu. Svaki tender — isto traženje ispočetka.",
+      "Uvjerenje o registraciji u jednom folderu, potvrda o porezu u emailu, garancija na desktopu. Gubitak vremena na svakom novom tenderu.",
   },
   {
     icon: Clock,
-    title: "Rokovi koji iznenađuju",
+    title: "ROKOVI_ISTEKLI",
     description:
-      "Dokument istekne usred pripreme ponude. Nema ko da upozori. Saznate tek kad je kasno.",
+      "Dokument istekne usred pripreme ponude. Nema automatskog upozorenja. Diskvalifikacija zbog administrativnog propusta.",
   },
   {
     icon: EyeOff,
-    title: "Ne znate gdje stojite",
+    title: "SLIJEPA_TACKA",
     description:
-      "Ko pobjeđuje, po kojim cijenama, koji tenderi dolaze? Radite na slijepo dok konkurencija koristi podatke.",
+      "Nedostatak podataka o tome ko pobjeđuje, po kojim cijenama i koji tenderi dolaze. Konkurencija koristi podatke, vi ne.",
   },
 ] as const;
 
 function ProblemSection() {
   return (
-    <section id="problem" className="bg-[#f8fafc] px-6 py-24">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-center font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-[#3b82f6]">
-          Problem
-        </p>
-        <h2 className="mt-4 text-center font-serif text-3xl font-bold tracking-tight text-[#0f172a] sm:text-4xl">
-          Priprema ponude ne bi trebala biti najteži dio posla.
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center text-base text-[#64748b]">
-          Većina firmi u BiH i dalje priprema ponude ručno — i plaća cijenu za to.
-        </p>
+    <section id="problem" className="border-t border-slate-800 bg-[#020611] px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 bg-red-500" />
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                Identifikacija_Problema
+              </p>
+            </div>
+            <h2 className="mt-4 font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Priprema ponude je 
+              <span className="text-slate-500"> administrativni haos.</span>
+            </h2>
+          </div>
+          <p className="max-w-md text-sm text-slate-400">
+            Većina firmi u BiH gubi ugovore ne zbog cijene ili kvaliteta, već zbog banalne papirologije i nedostatka pravovremenih informacija.
+          </p>
+        </div>
 
-        <div className="mt-16 grid gap-6 sm:grid-cols-3">
-          {PROBLEMS.map((p) => (
+        <div className="grid gap-6 sm:grid-cols-3">
+          {PROBLEMS.map((p, i) => (
             <div
               key={p.title}
-              className="rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+              className="group relative border border-slate-800 bg-[#060b17] p-8 transition-colors hover:border-slate-700"
             >
-              <div className="flex size-11 items-center justify-center rounded-lg bg-red-50">
-                <p.icon className="size-5 text-red-500" />
+              <div className="mb-6 font-mono text-[10px] text-slate-600">
+                0{i + 1} // ERROR_STATE
               </div>
-              <h3 className="mt-4 font-serif text-lg font-bold text-[#0f172a]">
+              <div className="mb-6 flex size-12 items-center justify-center border border-slate-800 bg-[#020611] text-slate-400 group-hover:text-red-400 transition-colors">
+                <p.icon className="size-5" />
+              </div>
+              <h3 className="mb-3 font-mono text-sm font-bold text-white">
                 {p.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#64748b]">
+              <p className="text-sm leading-relaxed text-slate-400">
                 {p.description}
               </p>
             </div>
@@ -245,56 +303,60 @@ function ProblemSection() {
 const HOW_IT_WORKS = [
   {
     step: "01",
-    title: "Uploadujte dokumente",
-    description: "Jednom uploadujte sva dokumenta firme. Sistem prati rokove i upozorava prije isteka.",
+    title: "DATA_INGESTION",
+    label: "Skladištenje i validacija",
+    description: "Centralizovani trezor dokumenata sa automatskim praćenjem rokova trajanja (60, 30 i 7 dana).",
     icon: Upload,
-    color: "bg-blue-500/10 text-blue-400",
   },
   {
     step: "02",
-    title: "Pripremite ponudu",
-    description: "AI analizira tendersku dokumentaciju i generiše checklist. Vi samo priložite dokumente.",
+    title: "AI_PROCESSING",
+    label: "Analiza tenderske dokumentacije",
+    description: "Algoritam čita PDF tendera, izdvaja zahtjeve i kreira interaktivnu checklistu potrebnih dokumenata.",
     icon: LayoutDashboard,
-    color: "bg-amber-500/10 text-amber-400",
   },
   {
     step: "03",
-    title: "Pobjedite tender",
-    description: "Iskoristite tržišnu inteligenciju da znate ko konkuriše i po kojim cijenama.",
+    title: "MARKET_INTEL",
+    label: "Strateško pozicioniranje",
+    description: "Pristup historijskim podacima o cijenama i konkurenciji za optimizaciju finansijske ponude.",
     icon: TrendingUp,
-    color: "bg-emerald-500/10 text-emerald-400",
   },
 ] as const;
 
 function HowItWorksSection() {
   return (
-    <section id="kako-radi" className="bg-[#0a1628] px-6 py-24">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-center font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-[#3b82f6]">
-          Kako radi
-        </p>
-        <h2 className="mt-4 text-center font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          Tri koraka do uspješne ponude.
+    <section id="kako-radi" className="border-t border-slate-800 bg-[#060b17] px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 bg-blue-500" />
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            Sistemska_Metodologija
+          </p>
+        </div>
+        <h2 className="mt-4 font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          Kako platforma 
+          <span className="text-blue-500"> eliminiše greške.</span>
         </h2>
 
-        <div className="mt-16 grid gap-8 sm:grid-cols-3">
+        <div className="mt-16 grid gap-0 sm:grid-cols-3 border border-slate-800">
           {HOW_IT_WORKS.map((s, i) => (
-            <div key={s.step} className="relative text-center">
-              <div className={`mx-auto flex size-14 items-center justify-center rounded-2xl ${s.color.split(" ")[0]}`}>
-                <s.icon className={`size-6 ${s.color.split(" ")[1]}`} />
+            <div key={s.step} className={`relative p-8 ${i !== 2 ? 'border-b sm:border-b-0 sm:border-r border-slate-800' : ''}`}>
+              <div className="mb-8 flex items-center justify-between">
+                <span className="font-mono text-3xl font-light text-slate-800">
+                  {s.step}
+                </span>
+                <s.icon className="size-6 text-slate-500" />
               </div>
-              <span className="mt-4 block font-mono text-[11px] font-bold uppercase tracking-widest text-[#3b82f6]">
-                Korak {s.step}
-              </span>
-              <h3 className="mt-2 font-serif text-xl font-bold text-white">
+              <h3 className="font-mono text-sm font-bold text-blue-400">
                 {s.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#94a3b8]">
+              <p className="mt-2 text-xs font-medium text-white">
+                {s.label}
+              </p>
+              <p className="mt-4 text-sm leading-relaxed text-slate-400">
                 {s.description}
               </p>
-              {i < HOW_IT_WORKS.length - 1 && (
-                <ChevronRight className="absolute -right-4 top-6 hidden size-5 text-[#1e3a5f] sm:block" />
-              )}
             </div>
           ))}
         </div>
@@ -306,102 +368,117 @@ function HowItWorksSection() {
 const FEATURES = [
   {
     icon: Shield,
-    title: "Trezor dokumenata",
+    title: "SECURE_VAULT",
+    label: "Trezor dokumenata",
     description:
-      "Centralizirano skladište svih dokumenata vaše firme. Automatsko praćenje isteka — upozorenje 60, 30 i 7 dana prije.",
+      "Centralizovano, enkriptovano skladište za sve dokumente vaše firme. Praćenje rokova važenja na nivou dana.",
     details: [
       "Upload jednom, koristite na svakom tenderu",
-      "Automatska upozorenja za istek dokumenata",
-      "Pregled, preuzimanje i organizacija po tipu",
+      "Sistem upozorenja (60/30/7 dana prije isteka)",
+      "Organizacija po klasama i tipovima dokumenata",
     ],
   },
   {
     icon: LayoutDashboard,
-    title: "Radni prostor za ponude",
+    title: "BID_WORKSPACE",
+    label: "Radni prostor za ponude",
     description:
-      "Svaki tender ima dedicirani workspace. AI analizira dokumentaciju i generiše checklist obaveznih dokumenata.",
+      "Zasebno okruženje za svaki tender. NLP analiza tenderske dokumentacije izvlači obavezne uslove i kreira dinamičku listu.",
     details: [
-      "AI-generisan checklist zahtjeva",
-      "Povezivanje dokumenata iz trezora",
-      "Praćenje statusa i izvoz PDF paketa",
+      "AI ekstrakcija uslova iz PDF/Word fajlova",
+      "Validacija poklapanja s vašim trezorom",
+      "Automatsko generisanje finalnog paketa ponude",
     ],
   },
   {
     icon: TrendingUp,
-    title: "Tržišna inteligencija",
+    title: "MARKET_ANALYTICS",
+    label: "Tržišna inteligencija",
     description:
-      "Historijski podaci o pobjednicima, cijenama i naručiocima. Planirani tenderi prije javne objave.",
+      "Otkrijte obrasce u javnim nabavkama. Saznajte po kojim cijenama konkurencija dobija ugovore i predvidite buduće tendere.",
     details: [
-      "Ko pobjeđuje i po kojim cijenama",
-      "Analiza naručilaca i konkurenata",
-      "Nadolazeći tenderi iz planova nabavki",
+      "Analiza historije pobjeda po naručiocima",
+      "Predviđanje cijena na osnovu prošlih ugovora",
+      "Rani pristup planovima javnih nabavki",
     ],
   },
 ] as const;
 
 function SolutionSection() {
   return (
-    <section id="rjesenje" className="bg-[#f8fafc] px-6 py-24">
-      <div className="mx-auto max-w-6xl">
-        <p className="text-center font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-[#3b82f6]">
-          Mogućnosti
-        </p>
-        <h2 className="mt-4 text-center font-serif text-3xl font-bold tracking-tight text-[#0f172a] sm:text-4xl">
-          Sve što vam treba. Na jednom mjestu.
+    <section id="rjesenje" className="border-t border-slate-800 bg-[#020611] px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 bg-blue-500" />
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            Arhitektura_Sistema
+          </p>
+        </div>
+        <h2 className="mt-4 font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          Kompletan tehnološki stack za 
+          <span className="text-slate-500"> javne nabavke.</span>
         </h2>
 
-        <div className="mt-16 space-y-20">
+        <div className="mt-20 space-y-24">
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              className={`flex flex-col items-center gap-12 lg:flex-row ${
+              className={`flex flex-col items-center gap-16 lg:flex-row ${
                 i % 2 === 1 ? "lg:flex-row-reverse" : ""
               }`}
             >
-              {/* Mockup placeholder */}
-              <div className="flex-1">
-                <div className="overflow-hidden rounded-xl border border-[#e2e8f0] bg-white shadow-lg">
-                  <div className="flex items-center gap-1.5 border-b border-[#f1f5f9] px-4 py-2.5">
-                    <div className="size-2 rounded-full bg-[#e2e8f0]" />
-                    <div className="size-2 rounded-full bg-[#e2e8f0]" />
-                    <div className="size-2 rounded-full bg-[#e2e8f0]" />
-                  </div>
-                  <div className="bg-[#0a1628] p-6">
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="flex size-8 items-center justify-center rounded-lg bg-[#3b82f6]/10">
-                        <f.icon className="size-4 text-[#3b82f6]" />
-                      </div>
-                      <div className="h-4 w-32 rounded bg-[#1e3a5f]/50" />
+              {/* Technical Mockup Side */}
+              <div className="w-full flex-1">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm border border-slate-800 bg-[#060b17]">
+                  {/* Decorative corner brackets */}
+                  <div className="absolute left-0 top-0 size-4 border-l border-t border-slate-600" />
+                  <div className="absolute right-0 top-0 size-4 border-r border-t border-slate-600" />
+                  <div className="absolute bottom-0 left-0 size-4 border-b border-l border-slate-600" />
+                  <div className="absolute bottom-0 right-0 size-4 border-b border-r border-slate-600" />
+                  
+                  <div className="absolute inset-0 p-6">
+                    <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="font-mono text-[10px] text-slate-500">MODULE // {f.title}</div>
+                      <div className="font-mono text-[10px] text-emerald-400">ACTIVE</div>
                     </div>
-                    {[1, 2, 3, 4].map((row) => (
-                      <div key={row} className="mb-2 flex items-center gap-3">
-                        <div className={`size-2 rounded-full ${row <= 2 ? "bg-emerald-400" : row === 3 ? "bg-amber-400" : "bg-[#1e3a5f]"}`} />
-                        <div className="h-3 flex-1 rounded bg-[#1e3a5f]/30" style={{ maxWidth: `${70 + row * 5}%` }} />
-                      </div>
-                    ))}
+                    
+                    <div className="flex h-[calc(100%-2rem)] flex-col gap-3">
+                      {[1, 2, 3, 4, 5].map((row) => (
+                        <div key={row} className="flex flex-1 items-center gap-4 bg-[#020611] p-3 border border-slate-800/50">
+                          <div className={`size-1.5 shrink-0 ${row <= 3 ? "bg-emerald-500" : row === 4 ? "bg-amber-500" : "bg-slate-700"}`} />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-1.5 rounded-sm bg-slate-700" style={{ width: `${Math.random() * 40 + 30}%` }} />
+                            <div className="h-1.5 rounded-sm bg-slate-800" style={{ width: `${Math.random() * 20 + 10}%` }} />
+                          </div>
+                          <div className="font-mono text-[9px] text-slate-600">
+                            {(Math.random() * 100).toFixed(2)}ms
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Text */}
+              {/* Data Side */}
               <div className="flex-1">
-                <div className="flex size-11 items-center justify-center rounded-lg bg-[#3b82f6]/10">
-                  <f.icon className="size-5 text-[#3b82f6]" />
+                <div className="mb-6 font-mono text-[10px] text-slate-500">
+                  // {f.title}
                 </div>
-                <h3 className="mt-4 font-serif text-2xl font-bold text-[#0f172a]">
-                  {f.title}
+                <h3 className="font-serif text-2xl font-bold text-white">
+                  {f.label}
                 </h3>
-                <p className="mt-3 text-base leading-relaxed text-[#64748b]">
+                <p className="mt-4 text-base leading-relaxed text-slate-400">
                   {f.description}
                 </p>
-                <ul className="mt-5 space-y-2.5">
+                <div className="mt-8 space-y-4 border-l border-slate-800 pl-6">
                   {f.details.map((d) => (
-                    <li key={d} className="flex items-center gap-3">
-                      <CheckCircle className="size-4 shrink-0 text-[#3b82f6]" />
-                      <span className="text-sm text-[#334155]">{d}</span>
-                    </li>
+                    <div key={d} className="flex items-start gap-3">
+                      <div className="mt-1.5 size-1 shrink-0 bg-blue-500" />
+                      <span className="text-sm text-slate-300">{d}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           ))}
@@ -413,21 +490,22 @@ function SolutionSection() {
 
 function StatsSection() {
   const stats = [
-    { value: "3x", label: "Brža priprema ponude" },
-    { value: "0", label: "Propuštenih rokova" },
-    { value: "100%", label: "Dokumenata na jednom mjestu" },
-    { value: "24/7", label: "Pristup platformi" },
+    { value: "3x", label: "Brža priprema ponude", metric: "EFFICIENCY_GAIN" },
+    { value: "0", label: "Propuštenih rokova", metric: "ERROR_RATE" },
+    { value: "100%", label: "Dokumenata na jednom mjestu", metric: "DATA_CENTRALIZATION" },
+    { value: "24/7", label: "Pristup platformi", metric: "UPTIME" },
   ];
 
   return (
-    <section className="bg-[#0a1628] px-6 py-20">
+    <section className="border-t border-slate-800 bg-[#020611] px-6 py-20">
       <div className="mx-auto grid max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="text-center">
-            <p className="font-mono text-4xl font-bold tracking-tight text-[#3b82f6]">
+          <div key={s.label} className="border-l border-slate-800 pl-6">
+            <div className="font-mono text-[10px] text-slate-500 mb-2">METRIC // {s.metric}</div>
+            <p className="font-mono text-4xl font-light tracking-tight text-white">
               {s.value}
             </p>
-            <p className="mt-2 text-sm text-[#94a3b8]">{s.label}</p>
+            <p className="mt-2 text-sm text-slate-400">{s.label}</p>
           </div>
         ))}
       </div>
@@ -437,26 +515,30 @@ function StatsSection() {
 
 function TestimonialSection() {
   return (
-    <section className="bg-[#f1f5f9] px-6 py-24">
+    <section className="border-t border-slate-800 bg-[#060b17] px-6 py-24">
       <div className="mx-auto max-w-3xl text-center">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-[#3b82f6]">
-          Iskustva korisnika
-        </p>
-        <div className="mt-10 rounded-xl border border-[#e2e8f0] bg-white p-8 shadow-sm sm:p-12">
-          <p className="font-serif text-lg leading-relaxed text-[#334155] italic sm:text-xl">
-            &ldquo;Prije MojaPonude, priprema jedne ponude nam je trajala 3-4
-            dana. Sad nam treba dan, a nismo propustili nijedan rok otkad
-            koristimo platformu. Za firmu koja učestvuje na 15-20 tendera
-            godišnje, to je ogromna ušteda.&rdquo;
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <span className="size-1.5 bg-blue-500" />
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            Validacija_Trzista
           </p>
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-full bg-[#3b82f6]/10 font-serif text-lg font-bold text-[#3b82f6]">
-              M
+        </div>
+        <div className="relative">
+          {/* Quotes */}
+          <div className="absolute -top-10 left-0 font-serif text-8xl text-slate-800/50">"</div>
+          <p className="relative z-10 font-serif text-xl leading-relaxed text-slate-300 sm:text-2xl">
+            Prije platforme, priprema jedne ponude nam je trajala 3-4
+            dana. Sad nam treba dan, a nismo propustili nijedan rok. 
+            Za firmu koja učestvuje na 20 tendera godišnje, ROI je momentalan.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-4">
+            <div className="flex size-12 items-center justify-center bg-slate-800 font-mono text-sm text-slate-300">
+              MH
             </div>
             <div className="text-left">
-              <p className="font-semibold text-[#0f172a]">Mirza Hodžić</p>
-              <p className="text-sm text-[#64748b]">
-                Direktor, Gradnja Plus d.o.o. Zenica
+              <p className="font-mono text-sm font-bold text-white">Mirza Hodžić</p>
+              <p className="font-mono text-[10px] text-slate-500">
+                DIREKTOR // GRADNJA PLUS D.O.O.
               </p>
             </div>
           </div>
@@ -469,90 +551,88 @@ function TestimonialSection() {
 const PRICING_FEATURES = [
   "Trezor dokumenata s upozorenjima za istek",
   "Radni prostor za svaki tender",
-  "AI analiza tenderske dokumentacije",
+  "AI ekstrakcija uslova iz dokumentacije",
   "Automatski checklist obaveznih dokumenata",
   "Izvoz PDF paketa ponude",
   "Pretraga i praćenje aktivnih tendera",
-  "Tržišna analitika — pobjednici, cijene, trendovi",
-  "Planirane nabavke — tenderi prije objave",
+  "Tržišna analitika (pobjednici, cijene)",
+  "Planirane nabavke (rani pristup)",
 ] as const;
 
 function PricingSection() {
   return (
-    <section id="cijene" className="bg-[#0a1628] px-6 py-24">
+    <section id="cijene" className="border-t border-slate-800 bg-[#020611] px-6 py-24">
       <div className="mx-auto max-w-6xl">
-        <p className="text-center font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-[#3b82f6]">
-          Cijene
-        </p>
-        <h2 className="mt-4 text-center font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          Jednostavno i transparentno.
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 bg-blue-500" />
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            Komercijalni_Model
+          </p>
+        </div>
+        <h2 className="mt-4 font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          Predvidljiva i 
+          <span className="text-blue-500"> transparentna licenca.</span>
         </h2>
 
         <div className="mx-auto mt-16 grid max-w-4xl gap-6 lg:grid-cols-2">
           {/* Free */}
-          <div className="rounded-xl border border-[#1e3a5f] bg-[#111d33] p-8">
-            <h3 className="font-serif text-lg font-bold text-white">Besplatno</h3>
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="font-mono text-4xl font-bold text-white">0</span>
-              <span className="text-sm text-[#64748b]">EUR / mjesečno</span>
+          <div className="border border-slate-800 bg-[#060b17] p-8 transition-colors hover:border-slate-700">
+            <h3 className="font-mono text-sm font-bold text-slate-400">EVALUATION_LICENSE</h3>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="font-mono text-4xl font-light text-white">0</span>
+              <span className="font-mono text-[10px] text-slate-500">BAM / MJESEČNO</span>
             </div>
-            <p className="mt-3 text-sm text-[#94a3b8]">
-              Testirajte platformu bez obaveza.
+            <p className="mt-4 text-sm text-slate-400">
+              Validacija sistema na stvarnim podacima.
             </p>
-            <ul className="mt-6 space-y-3">
+            <div className="mt-8 space-y-3 border-t border-slate-800 pt-6">
               {[
-                "Do 3 ponude",
+                "Ograničeno na 3 ponude",
                 "Trezor dokumenata",
                 "Pretraga tendera",
                 "Osnovna analitika",
               ].map((f) => (
-                <li key={f} className="flex items-center gap-3">
-                  <CheckCircle className="size-4 shrink-0 text-[#64748b]" />
-                  <span className="text-sm text-[#cbd5e1]">{f}</span>
-                </li>
+                <div key={f} className="flex items-start gap-3">
+                  <div className="mt-1.5 size-1 shrink-0 bg-slate-600" />
+                  <span className="text-sm text-slate-300">{f}</span>
+                </div>
               ))}
-            </ul>
+            </div>
             <Link
               href="/signup"
-              className="mt-8 flex w-full items-center justify-center rounded-lg border border-[#1e3a5f] py-3 text-sm font-semibold text-[#94a3b8] transition-all hover:border-[#3b82f6]/40 hover:text-white"
+              className="mt-8 flex w-full items-center justify-center border border-slate-700 bg-transparent py-3 text-xs font-bold uppercase tracking-wider text-slate-300 transition-all hover:bg-slate-800 hover:text-white"
             >
-              Registrujte se
+              Inicijalizacija Evaluacije
             </Link>
           </div>
 
           {/* Pro */}
-          <div className="relative rounded-xl border-2 border-[#3b82f6]/40 bg-[#111d33] p-8 shadow-lg shadow-blue-500/5">
-            <span className="absolute -top-3 right-6 rounded-full bg-[#3b82f6] px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-white">
-              Najpopularnije
-            </span>
-            <h3 className="font-serif text-lg font-bold text-white">
-              MojaPonuda Pro
-            </h3>
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="font-mono text-4xl font-bold text-white">80</span>
-              <span className="text-sm text-[#64748b]">EUR / mjesečno</span>
+          <div className="relative border border-blue-500/30 bg-[#060b17] p-8 shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+            <div className="absolute top-0 right-8 -translate-y-1/2 bg-blue-500 px-3 py-1 font-mono text-[10px] font-bold text-white">
+              OPTIMAL_CHOICE
             </div>
-            <p className="mt-3 text-sm text-[#94a3b8]">
-              Sve za ozbiljnu pripremu ponuda.
+            <h3 className="font-mono text-sm font-bold text-blue-400">ENTERPRISE_LICENSE</h3>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="font-mono text-4xl font-light text-white">150</span>
+              <span className="font-mono text-[10px] text-slate-500">BAM / MJESEČNO</span>
+            </div>
+            <p className="mt-4 text-sm text-slate-400">
+              Puna snaga platforme za serijske ponuđače.
             </p>
-            <ul className="mt-6 space-y-3">
+            <div className="mt-8 space-y-3 border-t border-slate-800 pt-6">
               {PRICING_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-3">
-                  <CheckCircle className="size-4 shrink-0 text-[#3b82f6]" />
-                  <span className="text-sm text-[#cbd5e1]">{f}</span>
-                </li>
+                <div key={f} className="flex items-start gap-3">
+                  <div className="mt-1.5 size-1 shrink-0 bg-blue-500" />
+                  <span className="text-sm text-slate-300">{f}</span>
+                </div>
               ))}
-            </ul>
+            </div>
             <Link
               href="/signup"
-              className="mt-8 flex w-full items-center justify-center gap-2 rounded-lg bg-[#3b82f6] py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-[#2563eb]"
+              className="mt-8 flex w-full items-center justify-center bg-blue-600 py-3 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-blue-500"
             >
-              Počnite besplatno
-              <ArrowRight className="size-4" />
+              Aktivacija Licence
             </Link>
-            <p className="mt-3 text-center font-mono text-[10px] text-[#64748b]">
-              Bez ugovora. Otkazivanje u bilo kojem trenutku.
-            </p>
           </div>
         </div>
       </div>
@@ -562,55 +642,50 @@ function PricingSection() {
 
 const FAQ_ITEMS = [
   {
-    q: "Da li moram platiti odmah?",
-    a: "Ne. Registracija je besplatna i dobijate 3 besplatne ponude. Pretplata je potrebna tek kad potrošite besplatne ponude.",
+    q: "Da li postoji ugovorna obaveza?",
+    a: "Ne. Licenca je na mjesečnom nivou i može se otkazati u bilo kojem trenutku iz dashboarda. Podaci ostaju dostupni u read-only formatu do kraja tekućeg obračunskog perioda.",
   },
   {
-    q: "Koji dokumenti se mogu uploadovati?",
-    a: "PDF i slike (PNG, JPG) do 10MB. Uvjerenja o registraciji, potvrde o porezu, garancije, licence — sve što vam treba za ponude.",
+    q: "Koji formati dokumenata su podržani?",
+    a: "Sistem prihvata PDF, PNG i JPG formate do veličine od 10MB po dokumentu. Preporučujemo skeniranje u PDF formatu za optimalnu čitljivost.",
   },
   {
-    q: "Kako radi AI analiza?",
-    a: "AI čita tendersku dokumentaciju i automatski generiše checklist obaveznih dokumenata. Identificira rizike i zahtjeve koje ne smijete propustiti.",
+    q: "Kako funkcioniše AI ekstrakcija uslova?",
+    a: "Sistem koristi napredne modele za obradu prirodnog jezika (NLP) koji čitaju tendersku dokumentaciju, identificiraju sekcije koje propisuju uslove kvalifikacije i generišu strukturiranu listu.",
   },
   {
-    q: "Odakle dolaze podaci o tenderima?",
-    a: "Podaci se dohvaćaju iz javnog BiH e-Procurement portala (ejn.gov.ba) i ažuriraju se svakodnevno.",
+    q: "Koliko često se ažuriraju podaci o tenderima?",
+    a: "Podaci se sinhronizuju sa zvaničnim e-Procurement portalom (ejn.gov.ba) u realnom vremenu, osiguravajući da uvijek imate najnovije informacije o objavama i odlukama.",
   },
   {
-    q: "Mogu li otkazati pretplatu?",
-    a: "Da, u svakom trenutku. Bez ugovora, bez penala. Vaši podaci ostaju dostupni do kraja tekućeg perioda.",
-  },
-  {
-    q: "Da li su moji podaci sigurni?",
-    a: "Da. Koristimo Supabase s Row Level Security — svaka firma vidi samo svoje podatke. Dokumenti su enkriptirani u skladištu.",
+    q: "Gdje se čuvaju moji podaci?",
+    a: "Podaci se čuvaju u sigurnim cloud instancama koristeći Supabase infrastrukturu s Row Level Security (RLS) politikama, što znači da su vaši podaci strogo izolirani od drugih korisnika.",
   },
 ] as const;
 
 function FAQSection() {
   return (
-    <section className="bg-[#f8fafc] px-6 py-24">
+    <section className="border-t border-slate-800 bg-[#060b17] px-6 py-24">
       <div className="mx-auto max-w-3xl">
-        <p className="text-center font-mono text-[11px] font-semibold uppercase tracking-[0.25em] text-[#3b82f6]">
-          FAQ
-        </p>
-        <h2 className="mt-4 text-center font-serif text-3xl font-bold tracking-tight text-[#0f172a] sm:text-4xl">
-          Česta pitanja
-        </h2>
+        <div className="flex items-center gap-2 mb-8">
+          <span className="size-1.5 bg-blue-500" />
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            Knowledge_Base
+          </p>
+        </div>
 
-        <div className="mt-12 space-y-4">
+        <div className="space-y-4">
           {FAQ_ITEMS.map((item) => (
             <details
               key={item.q}
-              className="group rounded-xl border border-[#e2e8f0] bg-white shadow-sm"
+              className="group border border-slate-800 bg-[#020611] transition-colors hover:border-slate-700"
             >
-              <summary className="flex cursor-pointer items-center justify-between px-6 py-4 text-sm font-semibold text-[#0f172a] [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer items-center justify-between p-6 text-sm font-bold text-white [&::-webkit-details-marker]:hidden">
                 {item.q}
-                <Plus className="size-4 shrink-0 text-[#94a3b8] transition-transform group-open:hidden" />
-                <Minus className="hidden size-4 shrink-0 text-[#3b82f6] transition-transform group-open:block" />
+                <span className="font-mono text-xs text-slate-500 transition-transform group-open:rotate-45">+</span>
               </summary>
-              <div className="border-t border-[#f1f5f9] px-6 pb-4 pt-3">
-                <p className="text-sm leading-relaxed text-[#64748b]">
+              <div className="border-t border-slate-800/50 p-6 pt-0">
+                <p className="mt-4 text-sm leading-relaxed text-slate-400">
                   {item.a}
                 </p>
               </div>
@@ -624,27 +699,23 @@ function FAQSection() {
 
 function FinalCTA() {
   return (
-    <section className="bg-[#0a1628] px-6 py-24">
+    <section className="border-t border-slate-800 bg-[#020611] px-6 py-32">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Spremni za sljedeći tender?
+          Optimizirajte proces prikupljanja dokumentacije.
         </h2>
-        <p className="mx-auto mt-4 max-w-lg text-base text-[#94a3b8]">
-          Pridružite se firmama koje pripremaju ponude pametnije, brže i bez
-          grešaka.
+        <p className="mx-auto mt-6 max-w-xl text-base text-slate-400">
+          Ukinite ručni rad i prepustite praćenje rokova i uslova sistemu izgrađenom za profesionalne nabavke.
         </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-10 flex justify-center">
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#3b82f6] px-10 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-[#2563eb]"
+            className="inline-flex h-12 items-center justify-center gap-2 bg-white px-8 text-sm font-bold uppercase tracking-wider text-[#020611] transition-colors hover:bg-slate-200"
           >
-            Počnite besplatno
+            Pristup sistemu
             <ArrowRight className="size-4" />
           </Link>
         </div>
-        <p className="mt-4 font-mono text-[11px] text-[#64748b]">
-          3 ponude besplatno. Bez kreditne kartice.
-        </p>
       </div>
     </section>
   );
@@ -652,43 +723,37 @@ function FinalCTA() {
 
 function Footer() {
   return (
-    <footer className="border-t border-[#1e3a5f]/40 bg-[#070f1e] px-6 py-10">
-      <div className="mx-auto max-w-6xl">
+    <footer className="border-t border-slate-800 bg-[#060b17] px-6 py-12">
+      <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div>
             <div className="flex items-baseline gap-0.5">
-              <span className="font-serif text-sm font-bold text-[#94a3b8]">
+              <span className="font-serif text-sm font-bold text-white">
                 MojaPonuda
               </span>
-              <span className="font-serif text-sm font-bold text-[#3b82f6]">
+              <span className="font-serif text-sm font-bold text-blue-500">
                 .ba
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#475569]">
-              Platforma za upravljanje ponudama u javnim nabavkama
+            <p className="mt-2 font-mono text-[10px] text-slate-500">
+              SYSTEM_VERSION: 2.0.4 // MARKET_DATA: ACTIVE
             </p>
           </div>
 
           <div className="flex items-center gap-6">
             <Link
               href="/privacy"
-              className="text-xs text-[#64748b] transition-colors hover:text-[#94a3b8]"
+              className="font-mono text-[10px] uppercase tracking-widest text-slate-500 transition-colors hover:text-white"
             >
               Politika privatnosti
             </Link>
             <Link
               href="/terms"
-              className="text-xs text-[#64748b] transition-colors hover:text-[#94a3b8]"
+              className="font-mono text-[10px] uppercase tracking-widest text-slate-500 transition-colors hover:text-white"
             >
               Uvjeti korištenja
             </Link>
           </div>
-        </div>
-
-        <div className="mt-8 border-t border-[#1e3a5f]/30 pt-6 text-center">
-          <p className="font-mono text-[11px] text-[#475569]">
-            &copy; {new Date().getFullYear()} MojaPonuda.ba. Sva prava zadržana.
-          </p>
         </div>
       </div>
     </footer>
