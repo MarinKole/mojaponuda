@@ -122,7 +122,7 @@ export default async function BidWorkspacePage({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 max-w-[1400px] mx-auto">
       {/* Gornji bar */}
       <TopBar
         bidId={id}
@@ -137,14 +137,15 @@ export default async function BidWorkspacePage({
       ) : (
         <>
           {/* Dva panela */}
-          <div className="grid gap-4 lg:grid-cols-5">
+          <div className="grid gap-6 lg:grid-cols-5">
             {/* Lijevi panel: Checklist — 3/5 */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-6">
               <ChecklistPanel
                 bidId={id}
                 items={checklistItems}
                 vaultDocuments={vaultDocuments}
               />
+              <NotesSection bidId={id} initialNotes={bid.notes || ""} />
             </div>
 
             {/* Desni panel: Dokumenti — 2/5 */}
@@ -156,9 +157,6 @@ export default async function BidWorkspacePage({
               />
             </div>
           </div>
-
-          {/* Donji odjeljak: Bilješke */}
-          <NotesSection bidId={id} initialNotes={bid.notes || ""} />
         </>
       )}
     </div>

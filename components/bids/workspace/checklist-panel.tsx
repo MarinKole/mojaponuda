@@ -15,13 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Plus,
   Trash2,
   Pencil,
@@ -31,6 +24,7 @@ import {
   Loader2,
   Check,
   X,
+  ListTodo,
 } from "lucide-react";
 
 const STATUS_LABELS: Record<ChecklistStatus, string> = {
@@ -40,9 +34,9 @@ const STATUS_LABELS: Record<ChecklistStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<ChecklistStatus, string> = {
-  missing: "border-red-500/30 bg-red-500/10 text-red-400",
-  attached: "border-amber-500/30 bg-amber-500/10 text-amber-400",
-  confirmed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+  missing: "bg-red-50 text-red-600 border-red-100",
+  attached: "bg-amber-50 text-amber-600 border-amber-100",
+  confirmed: "bg-emerald-50 text-emerald-600 border-emerald-100",
 };
 
 interface ChecklistPanelProps {
@@ -151,82 +145,95 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-md border border-border bg-card p-4">
+    <div className="flex flex-col gap-6 rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Checklist zahtjeva
-        </h3>
-        <Button size="xs" onClick={() => setAddOpen(true)}>
-          <Plus className="size-3" />
-          Dodaj
+        <div className="flex items-center gap-2.5 text-slate-900">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <ListTodo className="size-5" />
+          </div>
+          <h3 className="font-heading font-bold text-lg">
+            Checklist zahtjeva
+          </h3>
+        </div>
+        <Button size="sm" onClick={() => setAddOpen(true)} className="rounded-xl font-bold shadow-blue-500/20 shadow-md">
+          <Plus className="mr-2 size-3.5" />
+          Dodaj stavku
         </Button>
       </div>
 
       {/* Progress bar */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Kompletiranost</span>
-          <span className="font-mono text-foreground">
+      <div className="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-bold text-slate-700">Napredak pripreme</span>
+          <span className="font-mono font-medium text-slate-500">
             {confirmedCount}/{totalCount} ({progressPct}%)
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div className="h-3 overflow-hidden rounded-full bg-slate-200">
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+            className="h-full rounded-full bg-blue-500 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
             style={{ width: `${progressPct}%` }}
           />
         </div>
       </div>
 
       {/* Lista stavki */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            Nema stavki. Dodajte zahtjeve za ovu ponudu.
-          </p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+             <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-slate-50">
+               <ListTodo className="size-6 text-slate-300" />
+             </div>
+             <p className="text-sm font-medium text-slate-900">Lista je prazna</p>
+             <p className="text-xs text-slate-500 max-w-[200px] mt-1">
+               Dodajte zahtjeve i dokumente potrebne za ovu ponudu.
+             </p>
+          </div>
         ) : (
           items.map((item) => (
             <div
               key={item.id}
-              className="group rounded-md border border-border p-3 transition-colors hover:border-primary/20"
+              className="group relative rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-200 hover:shadow-md"
             >
               {editingId === item.id ? (
                 /* Edit mode */
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Input
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
                     placeholder="Naziv stavke"
-                    className="text-sm"
+                    className="h-10 text-sm font-medium"
+                    autoFocus
                   />
                   <Input
                     value={editDesc}
                     onChange={(e) => setEditDesc(e.target.value)}
                     placeholder="Opis (opciono)"
-                    className="text-sm"
+                    className="h-9 text-sm"
                   />
                   <Input
                     value={editRisk}
                     onChange={(e) => setEditRisk(e.target.value)}
                     placeholder="Napomena o riziku (opciono)"
-                    className="text-sm"
+                    className="h-9 text-sm border-red-200 focus:border-red-400 focus:ring-red-400/20"
                   />
-                  <div className="flex gap-1">
-                    <Button size="xs" onClick={saveEdit}>
-                      <Check className="size-3" /> Sačuvaj
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" onClick={saveEdit} className="h-8">
+                      <Check className="mr-1.5 size-3.5" /> Sačuvaj
                     </Button>
                     <Button
-                      size="xs"
-                      variant="outline"
+                      size="sm"
+                      variant="ghost"
                       onClick={() => setEditingId(null)}
+                      className="h-8"
                     >
-                      <X className="size-3" /> Odustani
+                      <X className="mr-1.5 size-3.5" /> Odustani
                     </Button>
                   </div>
                 </div>
               ) : (
                 /* View mode */
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-4">
                   {/* Status checkbox */}
                   <button
                     onClick={() => {
@@ -238,65 +245,69 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
                           : "missing";
                       updateItem(item.id, { status: next });
                     }}
-                    className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-colors ${
+                    className={`mt-1 flex size-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-200 ${
                       item.status === "confirmed"
-                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        ? "border-emerald-500 bg-emerald-500 text-white shadow-sm scale-110"
                         : item.status === "attached"
-                        ? "border-amber-500 bg-amber-500/20"
-                        : "border-border"
+                        ? "border-amber-400 bg-amber-50 text-amber-500"
+                        : "border-slate-300 bg-slate-50 hover:border-blue-400"
                     }`}
                   >
-                    {item.status === "confirmed" && <Check className="size-3" />}
+                    {item.status === "confirmed" && <Check className="size-3.5 stroke-[3]" />}
+                    {item.status === "attached" && <div className="size-2 rounded-full bg-amber-400" />}
                   </button>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <div className="flex items-center gap-2 mb-1">
                       <span
-                        className={`text-sm font-medium ${
+                        className={`text-sm font-bold transition-colors ${
                           item.status === "confirmed"
-                            ? "text-muted-foreground line-through"
-                            : "text-foreground"
+                            ? "text-emerald-700 line-through decoration-emerald-300"
+                            : "text-slate-900"
                         }`}
                       >
                         {item.title}
                       </span>
                       {item.risk_note && (
-                        <AlertTriangle className="size-3.5 shrink-0 text-red-400" />
+                        <div className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                          <AlertTriangle className="size-3" />
+                          RIZIK
+                        </div>
                       )}
                     </div>
 
                     {item.description && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="text-sm text-slate-500 mb-2 leading-relaxed">
                         {item.description}
                       </p>
                     )}
 
                     {item.risk_note && (
-                      <p className="mt-1 text-xs text-red-400">
-                        ⚠ {item.risk_note}
+                      <p className="mb-2 text-xs font-medium text-red-500 bg-red-50 p-2 rounded-lg border border-red-100">
+                        {item.risk_note}
                       </p>
                     )}
 
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
                       <span
-                        className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium ${STATUS_CLASSES[item.status]}`}
+                        className={`inline-flex items-center rounded-md border px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_CLASSES[item.status]}`}
                       >
                         {STATUS_LABELS[item.status]}
                       </span>
 
                       {item.document_id ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <FileText className="size-2.5" />
+                        <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700 border border-blue-100">
+                          <FileText className="size-3" />
                           Dokument priložen
                         </span>
                       ) : (
                         <Button
-                          size="xs"
-                          variant="ghost"
-                          className="h-5 px-1.5 text-[10px]"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-[10px] rounded-lg border-dashed border-slate-300 hover:border-primary hover:text-primary hover:bg-blue-50"
                           onClick={() => openAttachModal(item.id)}
                         >
-                          <Link2 className="size-2.5" />
+                          <Link2 className="mr-1.5 size-3" />
                           Priloži iz Vaulta
                         </Button>
                       )}
@@ -304,21 +315,22 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
                   </div>
 
                   {/* Akcije */}
-                  <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <Button
-                      size="icon-xs"
+                      size="icon"
                       variant="ghost"
+                      className="size-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-900"
                       onClick={() => startEdit(item)}
                     >
-                      <Pencil className="size-3" />
+                      <Pencil className="size-3.5" />
                     </Button>
                     <Button
-                      size="icon-xs"
+                      size="icon"
                       variant="ghost"
-                      className="text-red-400 hover:text-red-300"
+                      className="size-8 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600"
                       onClick={() => deleteItem(item.id)}
                     >
-                      <Trash2 className="size-3" />
+                      <Trash2 className="size-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -330,40 +342,52 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
 
       {/* Modal: Dodaj stavku */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="border-border bg-card sm:max-w-md">
+        <DialogContent className="border-slate-100 bg-white sm:max-w-md p-6 rounded-2xl shadow-xl">
           <DialogHeader>
-            <DialogTitle>Dodaj stavku checklista</DialogTitle>
-            <DialogDescription>
-              Dodajte zahtjev koji je potreban za ovu ponudu.
+            <DialogTitle className="text-xl font-heading font-bold text-slate-900">Dodaj stavku checklista</DialogTitle>
+            <DialogDescription className="text-slate-500">
+              Definišite novi zahtjev ili dokument koji je potreban za ovu ponudu.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <Input
-              placeholder="Naziv stavke *"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              disabled={loading}
-            />
-            <Input
-              placeholder="Opis (opciono)"
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-              disabled={loading}
-            />
-            <Input
-              placeholder="Napomena o riziku (opciono)"
-              value={newRisk}
-              onChange={(e) => setNewRisk(e.target.value)}
-              disabled={loading}
-            />
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Naziv *</label>
+              <Input
+                placeholder="npr. Potvrda o solventnosti"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                disabled={loading}
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Opis</label>
+              <Input
+                placeholder="Dodatne informacije..."
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                disabled={loading}
+                className="h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-red-400">Rizik</label>
+              <Input
+                placeholder="Upozorenje na potencijalni problem..."
+                value={newRisk}
+                onChange={(e) => setNewRisk(e.target.value)}
+                disabled={loading}
+                className="h-11 rounded-xl border-red-200 focus:ring-red-400/20 focus:border-red-400"
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={loading}>
+            <Button variant="ghost" onClick={() => setAddOpen(false)} disabled={loading} className="rounded-xl font-bold text-slate-500 hover:text-slate-900">
               Odustani
             </Button>
-            <Button onClick={addItem} disabled={loading || !newTitle.trim()}>
-              {loading && <Loader2 className="animate-spin" />}
-              Dodaj
+            <Button onClick={addItem} disabled={loading || !newTitle.trim()} className="rounded-xl font-bold shadow-lg shadow-blue-500/20">
+              {loading && <Loader2 className="mr-2 animate-spin" />}
+              Dodaj stavku
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -371,18 +395,20 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
 
       {/* Modal: Priloži dokument iz Vaulta */}
       <Dialog open={attachModalOpen} onOpenChange={setAttachModalOpen}>
-        <DialogContent className="border-border bg-card sm:max-w-md">
+        <DialogContent className="border-slate-100 bg-white sm:max-w-md p-6 rounded-2xl shadow-xl">
           <DialogHeader>
-            <DialogTitle>Priloži dokument iz Vaulta</DialogTitle>
-            <DialogDescription>
-              Odaberite dokument koji želite priložiti uz ovu stavku.
+            <DialogTitle className="text-xl font-heading font-bold text-slate-900">Priloži iz Trezora</DialogTitle>
+            <DialogDescription className="text-slate-500">
+              Odaberite postojeći dokument iz vašeg trezora.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-64 space-y-1 overflow-y-auto">
+          <div className="max-h-80 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
             {vaultDocuments.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                Nemate dokumenata u Vaultu.
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <FileText className="size-8 text-slate-300 mb-2" />
+                <p className="text-sm font-medium text-slate-900">Prazan trezor</p>
+                <p className="text-xs text-slate-500">Nemate dokumenata u Vaultu.</p>
+              </div>
             ) : (
               vaultDocuments.map((doc) => {
                 const expiryStatus = getExpiryStatus(doc.expires_at);
@@ -391,17 +417,19 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
                   <button
                     key={doc.id}
                     onClick={() => attachDocument(doc.id)}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted"
+                    className="group flex w-full items-center gap-4 rounded-xl border border-slate-100 bg-white p-3 text-left transition-all hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
                   >
-                    <FileText className="size-4 shrink-0 text-primary" />
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600">
+                      <FileText className="size-5" />
+                    </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{doc.name}</p>
+                      <p className="truncate text-sm font-bold text-slate-900 group-hover:text-blue-900">{doc.name}</p>
                       {doc.type && (
-                        <p className="text-xs text-muted-foreground">{doc.type}</p>
+                        <p className="text-xs text-slate-500">{doc.type}</p>
                       )}
                     </div>
                     <span
-                      className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] ${badgeClasses}`}
+                      className={`shrink-0 rounded-md border px-2 py-1 text-[10px] font-bold ${badgeClasses}`}
                     >
                       {formatExpiryText(doc.expires_at)}
                     </span>

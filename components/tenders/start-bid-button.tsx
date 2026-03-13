@@ -8,16 +8,22 @@ import { Loader2, Briefcase } from "lucide-react";
 interface StartBidButtonProps {
   tenderId: string;
   existingBidId?: string | null;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  className?: string;
 }
 
-export function StartBidButton({ tenderId, existingBidId }: StartBidButtonProps) {
+export function StartBidButton({ tenderId, existingBidId, variant = "default", className }: StartBidButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   if (existingBidId) {
     return (
-      <Button onClick={() => router.push(`/dashboard/bids/${existingBidId}`)}>
-        <Briefcase className="size-4" />
+      <Button 
+        variant={variant} 
+        onClick={() => router.push(`/dashboard/bids/${existingBidId}`)}
+        className={className}
+      >
+        <Briefcase className="mr-2 size-4" />
         Otvori ponudu
       </Button>
     );
@@ -42,8 +48,8 @@ export function StartBidButton({ tenderId, existingBidId }: StartBidButtonProps)
   }
 
   return (
-    <Button onClick={handleStart} disabled={loading}>
-      {loading ? <Loader2 className="animate-spin" /> : <Briefcase className="size-4" />}
+    <Button onClick={handleStart} disabled={loading} variant={variant} className={className}>
+      {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Briefcase className="mr-2 size-4" />}
       Počni pripremu ponude
     </Button>
   );

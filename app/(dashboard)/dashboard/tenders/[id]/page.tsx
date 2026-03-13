@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Tender, Company } from "@/types/database";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StartBidButton } from "@/components/tenders/start-bid-button";
 import {
@@ -13,6 +12,8 @@ import {
   FileText,
   ExternalLink,
   BarChart3,
+  Calendar,
+  Briefcase
 } from "lucide-react";
 
 function formatDate(dateStr: string | null): string {
@@ -35,13 +36,13 @@ function formatValue(value: number | null): string {
 }
 
 function getDeadlineColor(deadline: string | null): string {
-  if (!deadline) return "text-muted-foreground";
+  if (!deadline) return "text-slate-500";
   const diffDays = Math.ceil(
     (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
-  if (diffDays < 0) return "text-muted-foreground line-through";
-  if (diffDays <= 7) return "text-red-400 font-bold";
-  return "text-foreground";
+  if (diffDays < 0) return "text-slate-400 line-through";
+  if (diffDays <= 7) return "text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-full";
+  return "text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full";
 }
 
 export default async function TenderDetailPage({
@@ -135,126 +136,141 @@ export default async function TenderDetailPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-5xl mx-auto">
       {/* Navigacija nazad + akcija */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link href="/dashboard/tenders">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="size-4" />
+          <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-900 -ml-2">
+            <ArrowLeft className="mr-2 size-4" />
             Nazad na tendere
           </Button>
         </Link>
-        {company && (
-          <StartBidButton tenderId={id} existingBidId={existingBidId} />
-        )}
-      </div>
-
-      {/* Glavni podaci */}
-      <Card className="border-border bg-card">
-        <CardHeader>
-          <CardTitle className="text-xl leading-tight">{tender.title}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <InfoItem
-              icon={<Building2 className="size-4" />}
-              label="Naručilac"
-              value={tender.contracting_authority || "—"}
-            />
-            <InfoItem
-              icon={<Clock className="size-4" />}
-              label="Rok za ponude"
-              value={formatDate(tender.deadline)}
-              valueClassName={getDeadlineColor(tender.deadline)}
-            />
-            <InfoItem
-              icon={<Tag className="size-4" />}
-              label="Tip ugovora"
-              value={tender.contract_type || "—"}
-            />
-            <InfoItem
-              icon={<FileText className="size-4" />}
-              label="Tip procedure"
-              value={tender.procedure_type || "—"}
-            />
-            <InfoItem
-              icon={<BarChart3 className="size-4" />}
-              label="Procijenjena vrijednost"
-              value={formatValue(tender.estimated_value)}
-              valueClassName="font-mono"
-            />
-            <InfoItem
-              icon={<Tag className="size-4" />}
-              label="Status"
-              value={tender.status || "—"}
-            />
-          </div>
-
-          {tender.contracting_authority_jib && (
-            <p className="font-mono text-xs text-muted-foreground">
-              JIB naručioca: {tender.contracting_authority_jib}
-            </p>
-          )}
-
+        <div className="flex items-center gap-3">
           {tender.portal_url && (
             <a
               href={tender.portal_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-all"
             >
-              <ExternalLink className="size-3.5" />
-              Pogledaj na EJN portalu
+              <ExternalLink className="size-4" />
+              Otvori na portalu
             </a>
           )}
-        </CardContent>
-      </Card>
+          {company && (
+            <StartBidButton tenderId={id} existingBidId={existingBidId} />
+          )}
+        </div>
+      </div>
 
-      {/* Opis */}
-      {tender.raw_description && (
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <CardTitle className="text-base">Opis tendera</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-              {tender.raw_description}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Historijat naručioca */}
-      {authorityStats && (
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <CardTitle className="text-base">
-              Historijat naručioca
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <StatCard
-                label="Ukupno tendera"
-                value={String(authorityStats.totalTenders)}
-              />
-              <StatCard
-                label="Odluke o dodjeli"
-                value={String(authorityStats.totalAwards)}
-              />
-              <StatCard
-                label="Prosječni popust"
-                value={
-                  authorityStats.avgDiscount !== null
-                    ? `${authorityStats.avgDiscount}%`
-                    : "—"
-                }
-                description="od procijenjene vrijednosti"
-              />
+      {/* Glavni Header */}
+      <div className="rounded-[2rem] border border-slate-100 bg-white p-8 shadow-sm">
+        <div className="flex items-start justify-between gap-6 mb-6">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-primary">
+                {tender.contract_type || "Tender"}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">
+                {tender.status || "Aktivan"}
+              </span>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 leading-tight">
+              {tender.title}
+            </h1>
+          </div>
+          <div className="hidden sm:flex size-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <FileText className="size-7" />
+          </div>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 pt-6 border-t border-slate-50">
+          <InfoItem
+            icon={<Building2 className="size-4" />}
+            label="Naručilac"
+            value={tender.contracting_authority || "—"}
+            subValue={tender.contracting_authority_jib ? `ID: ${tender.contracting_authority_jib}` : undefined}
+          />
+          <InfoItem
+            icon={<Clock className="size-4" />}
+            label="Rok za ponude"
+            value={formatDate(tender.deadline)}
+            valueClassName={getDeadlineColor(tender.deadline)}
+          />
+          <InfoItem
+            icon={<Briefcase className="size-4" />}
+            label="Procedura"
+            value={tender.procedure_type || "—"}
+          />
+          <InfoItem
+            icon={<BarChart3 className="size-4" />}
+            label="Procijenjena vrijednost"
+            value={formatValue(tender.estimated_value)}
+            valueClassName="font-heading font-bold text-primary"
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Lijeva kolona - Opis */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="rounded-[1.5rem] border border-slate-100 bg-white p-8 shadow-sm">
+            <h3 className="text-lg font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <FileText className="size-5 text-slate-400" />
+              Opis predmeta nabavke
+            </h3>
+            <div className="prose prose-sm prose-slate max-w-none text-slate-600">
+              <p className="whitespace-pre-wrap leading-relaxed">
+                {tender.raw_description || "Nema dodatnog opisa za ovaj tender."}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Desna kolona - Statistika naručioca */}
+        <div className="space-y-6">
+          {authorityStats && (
+            <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-heading font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <BarChart3 className="size-5 text-slate-400" />
+                Historijat naručioca
+              </h3>
+              
+              <div className="space-y-4">
+                <StatRow 
+                  label="Ukupno tendera" 
+                  value={String(authorityStats.totalTenders)} 
+                  icon={<FileText className="size-4 text-blue-500" />}
+                />
+                <StatRow 
+                  label="Dodijeljeni ugovori" 
+                  value={String(authorityStats.totalAwards)} 
+                  icon={<Tag className="size-4 text-emerald-500" />}
+                />
+                <div className="pt-4 mt-4 border-t border-slate-50">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Prosječni popust</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-heading font-bold text-slate-900">
+                      {authorityStats.avgDiscount !== null ? `${authorityStats.avgDiscount}%` : "—"}
+                    </span>
+                    <span className="text-xs text-slate-500">ispod procijenjene</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-[1.5rem] bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-lg">
+            <h3 className="text-base font-bold mb-2">Trebate pomoć?</h3>
+            <p className="text-sm text-slate-300 mb-4 leading-relaxed">
+              Naša AI analiza može vam pomoći da procijenite rizik i pripremite pobjedničku ponudu za ovaj tender.
+            </p>
+            {company && (
+              <StartBidButton tenderId={id} existingBidId={existingBidId} variant="secondary" />
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -263,40 +279,45 @@ function InfoItem({
   icon,
   label,
   value,
+  subValue,
   valueClassName,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
+  subValue?: string;
   valueClassName?: string;
 }) {
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
         {icon}
         {label}
       </div>
-      <p className={`text-sm ${valueClassName || "text-foreground"}`}>{value}</p>
+      <p className={`text-base font-medium text-slate-900 ${valueClassName || ""}`}>{value}</p>
+      {subValue && <p className="text-xs text-slate-500">{subValue}</p>}
     </div>
   );
 }
 
-function StatCard({
+function StatRow({
   label,
   value,
-  description,
+  icon,
 }: {
   label: string;
   value: string;
-  description?: string;
+  icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-md border border-border p-3 text-center">
-      <p className="font-mono text-2xl font-bold">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      {description && (
-        <p className="mt-0.5 text-[10px] text-muted-foreground">{description}</p>
-      )}
+    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+      <div className="flex items-center gap-3">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-white shadow-sm">
+          {icon}
+        </div>
+        <span className="text-sm font-medium text-slate-700">{label}</span>
+      </div>
+      <span className="text-lg font-bold text-slate-900">{value}</span>
     </div>
   );
 }
