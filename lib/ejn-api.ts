@@ -175,13 +175,12 @@ export async function fetchProcurementNotices(
 }
 
 export async function fetchAwardNotices(
-  lastSyncAt?: string | null
+  _lastSyncAt?: string | null
 ): Promise<EjnAwardNotice[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/AwardNotices",
-    "Id desc",
-    lastSyncAt ? `Id gt ${lastSyncAt}` : undefined
+    "Id desc"
   );
 
   return raw.map((r) => ({
@@ -200,13 +199,12 @@ export async function fetchAwardNotices(
 }
 
 export async function fetchContractingAuthorities(
-  lastSyncAt?: string | null
+  _lastSyncAt?: string | null
 ): Promise<EjnContractingAuthority[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/ContractingAuthorities",
-    "Id desc",
-    lastSyncAt ? `Id gt ${lastSyncAt}` : undefined
+    "Id desc"
   );
 
   return raw.map((r) => ({
@@ -223,13 +221,12 @@ export async function fetchContractingAuthorities(
 }
 
 export async function fetchSuppliers(
-  lastSyncAt?: string | null
+  _lastSyncAt?: string | null
 ): Promise<EjnSupplier[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/Suppliers",
-    "Id desc",
-    lastSyncAt ? `Id gt ${lastSyncAt}` : undefined
+    "Id desc"
   );
 
   return raw.map((r) => ({
@@ -242,13 +239,12 @@ export async function fetchSuppliers(
 }
 
 export async function fetchPlannedProcurements(
-  lastSyncAt?: string | null
+  _lastSyncAt?: string | null
 ): Promise<EjnPlannedProcurement[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/PlannedProcurements",
-    "Id desc",
-    lastSyncAt ? `Id gt ${lastSyncAt}` : undefined
+    "Id desc"
   );
 
   return raw.map((r) => ({
