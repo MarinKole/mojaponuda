@@ -90,17 +90,14 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 m-3 flex h-[calc(100vh-24px)] w-[200px] flex-col overflow-hidden rounded-[2rem] bg-gradient-to-b from-blue-500 via-blue-600 to-blue-700 shadow-xl">
-      {/* Diagonal header section */}
-      <div className="relative px-4 pb-8 pt-6">
-        {/* Logo */}
-        <Link href="/" className="relative z-10 flex items-center justify-center transition-opacity hover:opacity-90">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-sm">
+    <aside className="fixed inset-y-0 left-0 z-40 flex h-screen w-[200px] flex-col bg-gradient-to-b from-[#4d8df8] via-[#2563eb] to-[#1d4ed8]">
+      {/* Logo top */}
+      <div className="flex items-center justify-center px-4 py-6">
+        <Link href="/" className="flex items-center justify-center transition-opacity hover:opacity-90">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-white/20 text-white">
             <Box className="size-5" />
           </div>
         </Link>
-        {/* Diagonal decorative shape */}
-        <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-b from-transparent to-blue-600/50" style={{ clipPath: 'polygon(0 0, 100% 50%, 100% 100%, 0 100%)' }} />
       </div>
 
       <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-1 scrollbar-hide">
@@ -123,19 +120,25 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
         </div>
       </nav>
 
-      {/* User avatar at bottom */}
-      <div className="mt-auto px-3 pb-4">
-        <button
-          onClick={handleSignOut}
-          className="group flex w-full items-center justify-center rounded-2xl p-2 transition-all hover:bg-white/10"
-        >
-          <div className="relative">
-            <div className="flex size-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
-              {userEmail.charAt(0).toUpperCase()}
-            </div>
-            <ChevronDown className="absolute -bottom-1 -right-1 size-4 rounded-full bg-blue-700 text-white/80" />
+      {/* User info at bottom — click chevron to sign out */}
+      <div className="mt-auto border-t border-white/10 px-3 py-4">
+        <div className="flex items-center gap-2 rounded-xl px-2 py-2">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
+            {userEmail.charAt(0).toUpperCase()}
           </div>
-        </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold text-white" title={companyName ?? userEmail}>
+              {companyName ?? userEmail.split("@")[0]}
+            </p>
+          </div>
+          <button
+            onClick={handleSignOut}
+            title="Odjava"
+            className="flex shrink-0 items-center justify-center rounded-lg p-1 text-white/60 transition-all hover:bg-white/15 hover:text-white"
+          >
+            <ChevronDown className="size-4" />
+          </button>
+        </div>
       </div>
     </aside>
   );

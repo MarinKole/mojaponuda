@@ -23,13 +23,21 @@ export default async function DashboardLayout({
     .maybeSingle();
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="relative flex min-h-screen overflow-hidden">
+      {/* Full-height blue sidebar — no margin, no rounding */}
       <DashboardSidebar
         userEmail={user.email ?? ""}
         companyName={company?.name}
       />
-      <main className="min-h-screen pl-[224px] pr-3 pt-3 pb-3">
-        <div className="min-h-[calc(100vh-32px)] w-full rounded-3xl bg-white p-8 shadow-sm">
+      {/* White content panel with diagonal left edge overlapping sidebar */}
+      <main
+        className="relative z-10 min-h-screen flex-1"
+        style={{
+          marginLeft: "160px",
+          clipPath: "polygon(40px 0, 100% 0, 100% 100%, 0 100%)",
+        }}
+      >
+        <div className="min-h-screen bg-white px-14 py-8">
           {children}
         </div>
       </main>
