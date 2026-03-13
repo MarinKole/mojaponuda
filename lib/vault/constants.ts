@@ -13,6 +13,19 @@ export const DOCUMENT_TYPES = [
 
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
+export const AI_TO_VAULT_TYPE_MAP: Record<string, DocumentType> = {
+  registration: "Uvjerenje o registraciji",
+  tax: "Uvjerenje o porezu",
+  contributions: "Uvjerenje o doprinosima",
+  guarantee: "Bankarska garancija",
+  reference: "Reference projekata",
+  financial: "Finansijski izvještaji",
+  staff: "CV ključnog osoblja",
+  license: "Licenca",
+  declaration: "Izjava",
+  other: "Ostalo",
+};
+
 export type ExpiryStatus = "ok" | "warning" | "danger" | "none";
 
 export function getExpiryStatus(expiresAt: string | null): ExpiryStatus {

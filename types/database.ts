@@ -111,6 +111,7 @@ export interface Database {
           status: string | null;
           portal_url: string | null;
           raw_description: string | null;
+          ai_analysis: Json | null;
           created_at: string;
         };
         Insert: {
@@ -126,6 +127,7 @@ export interface Database {
           status?: string | null;
           portal_url?: string | null;
           raw_description?: string | null;
+          ai_analysis?: Json | null;
           created_at?: string;
         };
         Update: {
@@ -141,6 +143,7 @@ export interface Database {
           status?: string | null;
           portal_url?: string | null;
           raw_description?: string | null;
+          ai_analysis?: Json | null;
           created_at?: string;
         };
         Relationships: [];
@@ -196,6 +199,7 @@ export interface Database {
           description: string | null;
           status: ChecklistStatus;
           document_id: string | null;
+          document_type: string | null;
           risk_note: string | null;
           sort_order: number;
           created_at: string;
@@ -207,6 +211,7 @@ export interface Database {
           description?: string | null;
           status?: ChecklistStatus;
           document_id?: string | null;
+          document_type?: string | null;
           risk_note?: string | null;
           sort_order?: number;
           created_at?: string;
@@ -218,6 +223,7 @@ export interface Database {
           description?: string | null;
           status?: ChecklistStatus;
           document_id?: string | null;
+          document_type?: string | null;
           risk_note?: string | null;
           sort_order?: number;
           created_at?: string;

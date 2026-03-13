@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { BidChecklistItem, ChecklistStatus, Document } from "@/types/database";
-import { getExpiryStatus, getExpiryBadgeClasses, formatExpiryText } from "@/lib/vault/constants";
+import { getExpiryStatus, getExpiryBadgeClasses, formatExpiryText, AI_TO_VAULT_TYPE_MAP } from "@/lib/vault/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +25,7 @@ import {
   Check,
   X,
   ListTodo,
+  Sparkles
 } from "lucide-react";
 
 const STATUS_LABELS: Record<ChecklistStatus, string> = {
@@ -143,7 +144,20 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
     setAttachItemId(itemId);
     setAttachModalOpen(true);
   }
+function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
+    if (!item.document_type) return undefined;
+    const targetType = AI_TO_VAULT_TYPE_MAP[item.document_type];
+    if (!targetType) return undefined;
 
+    // Find first non-expired document of this type
+    return vaultDocuments.find((doc) => {
+      const isTypeMatch = doc.type === targetType;
+      const isExpired = doc.expires_at && new Date(doc.expires_at) < new Date();
+      return isTypeMatch && !isExpired;
+    });
+  }
+
+  
   return (
     <div className="flex flex-col gap-6 rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
@@ -297,6 +311,47 @@ export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelP
 
                       {item.document_id ? (
                         <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700 border border-blue-100">
+
+                      {/* Auto-Suggestion */}
+                      {!item.document_id && item.status === "missing" && (
+                        (() => {
+                          const suggestion = findSuggestedDocument(item);
+                          if (!suggestion) return null;
+                          return (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-slate-400 font-medium">ili</span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2 text-[10px] rounded-lg border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 hover:border-purple-300"
+                                onClick={async () => {
+                                  setAttachItemId(item.id);
+                                  // Wait for state update? No, hooks are async.
+                                  // Direct call logic:
+                                  await fetch(`/api/bids/${bidId}/checklist/${item.id}`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      document_id: suggestion.id,
+                                      status: "attached",
+                                    }),
+                                  });
+                                  // Also add to bid_documents
+                                  await fetch(`/api/bids/${bidId}/documents`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ document_id: suggestion.id }),
+                                  });
+                                  router.refresh();
+                                }}
+                              >
+                                <Sparkles className="mr-1.5 size-3 text-purple-500" />
+                                Sugestija: {suggestion.name}
+                              </Button>
+                            </div>
+                          );
+                        })()
+                      )}
                           <FileText className="size-3" />
                           Dokument priložen
                         </span>

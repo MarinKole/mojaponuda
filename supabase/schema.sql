@@ -52,6 +52,7 @@ CREATE TABLE tenders (
   status                    text,
   portal_url                text,
   raw_description           text,
+  ai_analysis               jsonb,
   created_at                timestamptz NOT NULL DEFAULT now()
 );
 
@@ -76,6 +77,7 @@ CREATE TABLE bid_checklist_items (
   description   text,
   status        checklist_status NOT NULL DEFAULT 'missing',
   document_id   uuid REFERENCES documents(id) ON DELETE SET NULL,
+  document_type text,
   risk_note     text,
   sort_order    integer NOT NULL DEFAULT 0,
   created_at    timestamptz NOT NULL DEFAULT now()

@@ -46,6 +46,9 @@ const STATUS_CONFIG: Record<string, { label: string; colors: string }> = {
   lost: { label: "Izgubljeno", colors: "bg-red-50 text-red-700 border-red-200" },
 };
 
+import { RecommendedTenders } from "@/components/dashboard/recommended-tenders";
+import { Suspense } from "react";
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -156,10 +159,14 @@ export default async function DashboardPage() {
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-0.5"
           >
             <Plus className="size-4" />
-            Nova ponuda
           </Link>
         </div>
       </div>
+
+      {/* Recommended Tenders Widget */}
+      <Suspense fallback={<div className="h-48 rounded-2xl bg-slate-50 animate-pulse" />}>
+        <RecommendedTenders />
+      </Suspense>
 
       {/* Top Metrics Row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

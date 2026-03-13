@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Brain, Download, ArrowLeft, Loader2, AlertTriangle, X, Building2 } from "lucide-react";
+import { Brain, Download, ArrowLeft, Loader2, AlertTriangle, X, Building2, FileText } from "lucide-react";
 import Link from "next/link";
 
 interface TopBarProps {
@@ -198,8 +198,19 @@ export function TopBar({
               }}
               className="h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-primary font-bold flex-1 sm:flex-none"
             >
-              <Download className="mr-2 size-4 text-blue-500" />
-              Izvoz
+              <FileText className="mr-2 size-4 text-slate-500" />
+              PDF
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => {
+                window.open(`/api/bids/package?bid_id=${bidId}`, "_blank");
+              }}
+              className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 font-bold flex-1 sm:flex-none"
+            >
+              <Download className="mr-2 size-4" />
+              Preuzmi paket
             </Button>
           </div>
         </div>

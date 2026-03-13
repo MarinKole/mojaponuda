@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { Tender, Company } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { StartBidButton } from "@/components/tenders/start-bid-button";
+import { QuickScanButton } from "@/components/tenders/quick-scan-button";
+import { getSubscriptionStatus } from "@/lib/subscription";
 import {
   ArrowLeft,
   Building2,
@@ -58,6 +60,9 @@ export default async function TenderDetailPage({
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
+
+  // Check subscription
+  const { isSubscribed } = await getSubscriptionStatus(user.id, user.email);
 
   // Dohvati tender
   const { data: tenderData } = await supabase
@@ -141,6 +146,8 @@ export default async function TenderDetailPage({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Link href="/dashboard/tenders">
           <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-900 -ml-2">
+          <QuickScanButton tenderId={id} isSubscribed={isSubscribed} />
+          
             <ArrowLeft className="mr-2 size-4" />
             Nazad na tendere
           </Button>
