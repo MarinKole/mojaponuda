@@ -25,7 +25,7 @@ export default async function CompetitorsPage() {
 
   const { data: companyData } = await supabase
     .from("companies")
-    .select("id, jib")
+    .select("id, jib, keywords, operating_regions")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -33,17 +33,9 @@ export default async function CompetitorsPage() {
   if (!isCompanyProfileComplete(company)) redirect("/onboarding");
 
   const resolvedCompany = company as Company;
+  const keywords = resolvedCompany.keywords || [];
+  const regions = resolvedCompany.operating_regions || [];
 
-  // Naše kategorije
-  const { data: ourAwards } = await supabase
-    .from("award_decisions")
-    .select("contract_type")
-    .eq("winner_jib", resolvedCompany.jib)
-    .not("contract_type", "is", null);
-
-  const ourCategories = [...new Set((ourAwards ?? []).map((a) => a.contract_type!))];
-
-  // Konkurenti u istim kategorijama
   let competitors: {
     name: string;
     jib: string;
@@ -54,68 +46,117 @@ export default async function CompetitorsPage() {
     win_rate: number | null;
   }[] = [];
 
-  if (ourCategories.length > 0) {
-    const { data: catAwards } = await supabase
-      .from("award_decisions")
-      .select("winner_name, winner_jib, winning_price, contract_type, award_date")
-      .in("contract_type", ourCategories)
-      .not("winner_jib", "is", null)
-      .order("award_date", { ascending: false });
-
-    const cMap = new Map<string, {
-      name: string; jib: string; wins: number; total_value: number;
-      categories: Set<string>; last_win_date: string | null;
-    }>();
-
-    for (const a of catAwards ?? []) {
-      if (a.winner_jib === resolvedCompany.jib) continue;
-      const key = a.winner_jib!;
-      const price = Number(a.winning_price) || 0;
-      const cat = a.contract_type ?? "";
-      const e = cMap.get(key);
-      if (e) {
-        e.wins++;
-        e.total_value += price;
-        if (cat) e.categories.add(cat);
-        if (a.award_date && (!e.last_win_date || a.award_date > e.last_win_date))
-          e.last_win_date = a.award_date;
-      } else {
-        const cats = new Set<string>();
-        if (cat) cats.add(cat);
-        cMap.set(key, {
-          name: a.winner_name ?? key, jib: key, wins: 1,
-          total_value: price, categories: cats, last_win_date: a.award_date,
-        });
+  // Find competitors based on user's keywords and regions
+  if (keywords.length > 0) {
+    let tenderQuery = supabase.from("tenders").select("contracting_authority_jib");
+    
+    const keywordConditions = keywords
+      .map((kw) => `title.ilike.%${kw}%,raw_description.ilike.%${kw}%`)
+      .join(",");
+      
+    if (keywordConditions) {
+      tenderQuery = tenderQuery.or(keywordConditions);
+    }
+    
+    if (regions.length > 0) {
+      const regionConditions = regions
+        .map((reg) => `title.ilike.%${reg}%,raw_description.ilike.%${reg}%,contracting_authority.ilike.%${reg}%`)
+        .join(",");
+      if (regionConditions) {
+        tenderQuery = tenderQuery.or(regionConditions);
       }
     }
+    
+    const { data: relevantTenders } = await tenderQuery.limit(500);
+    const authorityJibs = [...new Set((relevantTenders ?? []).map(t => t.contracting_authority_jib).filter(Boolean) as string[])];
+    
+    if (authorityJibs.length > 0) {
+      const { data: catAwards } = await supabase
+        .from("award_decisions")
+        .select("winner_name, winner_jib, winning_price, contract_type, award_date")
+        .in("contracting_authority_jib", authorityJibs)
+        .not("winner_jib", "is", null)
+        .order("award_date", { ascending: false })
+        .limit(1000);
 
-    const jibs = [...cMap.keys()].slice(0, 50);
-    const { data: marketData } = jibs.length > 0
-      ? await supabase.from("market_companies").select("jib, win_rate").in("jib", jibs)
-      : { data: [] };
-    const wrMap = new Map((marketData ?? []).map((m) => [m.jib, m.win_rate]));
+      const cMap = new Map<string, {
+        name: string; jib: string; wins: number; total_value: number;
+        categories: Set<string>; last_win_date: string | null;
+      }>();
 
-    competitors = [...cMap.values()]
-      .map((c) => ({
-        name: c.name, jib: c.jib, wins: c.wins, total_value: c.total_value,
-        categories: [...c.categories], last_win_date: c.last_win_date,
-        win_rate: wrMap.get(c.jib) ?? null,
-      }))
-      .sort((a, b) => b.wins - a.wins)
-      .slice(0, 20);
+      for (const a of catAwards ?? []) {
+        if (a.winner_jib === resolvedCompany.jib) continue;
+        const key = a.winner_jib!;
+        const price = Number(a.winning_price) || 0;
+        const cat = a.contract_type || "Usluge/Radovi"; // Default
+        const e = cMap.get(key);
+        if (e) {
+          e.wins++;
+          e.total_value += price;
+          if (cat) e.categories.add(cat);
+          if (a.award_date && (!e.last_win_date || a.award_date > e.last_win_date))
+            e.last_win_date = a.award_date;
+        } else {
+          const cats = new Set<string>();
+          if (cat) cats.add(cat);
+          cMap.set(key, {
+            name: a.winner_name ?? key, jib: key, wins: 1,
+            total_value: price, categories: cats, last_win_date: a.award_date,
+          });
+        }
+      }
+
+      const jibs = [...cMap.keys()].slice(0, 50);
+      const { data: marketData } = jibs.length > 0
+        ? await supabase.from("market_companies").select("jib, win_rate").in("jib", jibs)
+        : { data: [] };
+      const wrMap = new Map((marketData ?? []).map((m) => [m.jib, m.win_rate]));
+
+      competitors = [...cMap.values()]
+        .map((c) => ({
+          name: c.name, jib: c.jib, wins: c.wins, total_value: c.total_value,
+          categories: [...c.categories], last_win_date: c.last_win_date,
+          win_rate: wrMap.get(c.jib) ?? null,
+        }))
+        .sort((a, b) => b.wins - a.wins)
+        .slice(0, 20);
+    }
   }
 
-  const displayCompetitors = competitors.length > 0 ? competitors : isDemoAccount ? demoCompetitors : [];
+  let displayCompetitors = competitors;
+  
+  // Custom demo override based on user profile for demo/admin account
+  if (displayCompetitors.length === 0 && isDemoAccount) {
+    displayCompetitors = demoCompetitors.map((dc, i) => {
+      // Create a custom name using one of their regions if available
+      const baseName = dc.name.split(" ")[0] || "Firma";
+      const regionName = regions.length > 0 ? regions[i % regions.length] : "BiH";
+      
+      // Inject user's actual keywords as the competitor's categories
+      const customCategories = keywords.length > 0 
+        ? keywords.slice(i % keywords.length, (i % keywords.length) + 2) 
+        : dc.categories;
+        
+      // Fallback if the slice was empty
+      const finalCategories = customCategories.length > 0 ? customCategories : dc.categories;
+
+      return {
+        ...dc,
+        name: `${baseName} ${regionName} d.o.o.`,
+        categories: finalCategories,
+      };
+    });
+  }
 
   return (
     <div className="space-y-8 max-w-[1200px]">
       <div>
-        <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Analiza Konkurencije</h1>
+        <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Analiza Konkurencije</h1>  
         <p className="mt-2 text-base text-slate-500">
-          Uvid u firme koje se takmiče u istim kategorijama kao vi
-          {ourCategories.length > 0 && (
+          Uvid u firme koje se takmiče u istim kategorijama i regijama kao vi
+          {keywords.length > 0 && (
             <span className="ml-1 font-mono text-xs font-bold text-slate-400">
-              ({ourCategories.join(", ")})
+              ({keywords.slice(0, 3).join(", ")})
             </span>
           )}
         </p>
@@ -128,9 +169,9 @@ export default async function CompetitorsPage() {
           </div>
           <h3 className="text-lg font-bold text-slate-900">Nema dovoljno podataka</h3>
           <p className="mt-2 text-sm text-slate-500 max-w-sm">
-            {ourCategories.length === 0
-              ? "Potrebno je da osvojite bar jedan ugovor kako bismo identifikovali vašu konkurenciju."
-              : "Trenutno nema drugih firmi sa pobjedama u vašim kategorijama."}
+            {keywords.length === 0
+              ? "Potrebno je da unesete ključne riječi u profil firme kako bismo identifikovali vašu konkurenciju."
+              : "Trenutno nema drugih firmi sa pobjedama u vašim kategorijama na vašim regijama rada."}
           </p>
         </div>
       ) : (
@@ -139,8 +180,8 @@ export default async function CompetitorsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50 text-left">
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">#</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Firma</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">#</th>     
+                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Firma</th> 
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Pobjede</th>
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Uspješnost</th>
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Vrijednost</th>

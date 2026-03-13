@@ -7,7 +7,7 @@ import type {
   SubscriptionInsert,
 } from "@/types/database";
 
-export const DEMO_USER_EMAIL = "marin.kolenda@outlook.com";
+export const DEMO_USER_EMAIL = "admin@mojaponuda.ba";
 
 export function isDemoUser(email?: string | null): boolean {
   return email?.trim().toLowerCase() === DEMO_USER_EMAIL;

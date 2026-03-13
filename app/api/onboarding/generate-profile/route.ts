@@ -4,13 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 30;
 
-const SYSTEM_PROMPT = `Ti si ekspert za javne nabavke i CPV (Common Procurement Vocabulary) kodove. 
+const SYSTEM_PROMPT = `Ti si ekspert za javne nabavke i CPV (Common Procurement Vocabulary) kodove.
 Tvoj zadatak je da na osnovu opisa djelatnosti firme generišeš profil za pretragu tendera.
 
 Izlaz mora biti JSON objekat sa sljedećim poljima:
 - cpv_codes: niz stringova (samo glavni kodovi, npr. "45000000-7")
-- keywords: niz stringova (ključne riječi za pretragu, na bosanskom jeziku, max 10)
-- suggested_regions: niz stringova (npr. "Sarajevo", "Banja Luka", ili "Cijela BiH" ako nije specifično)
+- keywords: niz stringova (ključne riječi za pretragu, na bosanskom jeziku, skraćene na korijen riječi kako bi hvatale sve padeže npr. umjesto "gradnja" koristi "gradnj", umjesto "rekonstrukcija" koristi "rekonstrukcij", max 15 riječi)
 
 Budi precizan i fokusiraj se na ono što je najrelevantnije za javne nabavke.`;
 

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Brain, Download, ArrowLeft, Loader2, AlertTriangle, X, Building2, FileText } from "lucide-react";
+import { Brain, Download, ArrowLeft, Loader2, AlertTriangle, X, Building2, FileText, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 interface TopBarProps {
@@ -44,6 +44,7 @@ export function TopBar({
 }: TopBarProps) {
   const router = useRouter();
   const [analyzing, setAnalyzing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [riskFlags, setRiskFlags] = useState<string[]>(initialRiskFlags);
   const [riskDismissed, setRiskDismissed] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
@@ -55,6 +56,32 @@ export function TopBar({
       body: JSON.stringify({ status: newStatus }),
     });
     router.refresh();
+  }
+
+  async function handleDelete() {
+    if (!window.confirm("Da li ste sigurni da želite obrisati ovu ponudu? Ova akcija je nepovratna.")) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/bids/${bidId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        router.push("/dashboard/bids");
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setAnalyzeError(data.error || "Greška pri brisanju ponude.");
+        setDeleting(false);
+      }
+    } catch (err) {
+      setAnalyzeError("Greška pri komunikaciji sa serverom.");
+      console.error("Delete error:", err);
+      setDeleting(false);
+    }
   }
 
   async function handleAnalyze() {
@@ -190,7 +217,7 @@ export function TopBar({
               variant="outline"
               size="sm"
               onClick={handleAnalyze}
-              disabled={analyzing}
+              disabled={analyzing || deleting}
               className="h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-primary font-bold flex-1 sm:flex-none"
             >
               {analyzing ? (
@@ -207,6 +234,7 @@ export function TopBar({
               onClick={() => {
                 window.open(`/api/bids/export?bid_id=${bidId}`, "_blank");
               }}
+              disabled={deleting}
               className="h-10 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-primary font-bold flex-1 sm:flex-none"
             >
               <FileText className="mr-2 size-4 text-slate-500" />
@@ -218,10 +246,26 @@ export function TopBar({
               onClick={() => {
                 window.open(`/api/bids/package?bid_id=${bidId}`, "_blank");
               }}
+              disabled={deleting}
               className="h-10 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 font-bold flex-1 sm:flex-none"
             >
               <Download className="mr-2 size-4" />
-              Preuzmi paket
+              Preuzmi
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDelete}
+              disabled={deleting || analyzing}
+              className="h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold flex-1 sm:flex-none"
+              title="Obriši ponudu"
+            >
+              {deleting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
             </Button>
           </div>
         </div>

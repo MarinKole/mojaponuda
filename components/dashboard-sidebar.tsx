@@ -26,17 +26,18 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   pro?: boolean;
+  exact?: boolean;
 }
 
 const coreItems: NavItem[] = [
-  { href: "/dashboard", label: "Pregled", icon: LayoutDashboard },
-  { href: "/dashboard/vault", label: "Trezor", icon: FileText },
-  { href: "/dashboard/bids", label: "Ponude", icon: Briefcase },
+  { href: "/dashboard", label: "Pregled", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/tenders", label: "Skener", icon: Search },
+  { href: "/dashboard/vault", label: "Dokumenti", icon: FileText },
+  { href: "/dashboard/bids", label: "Ponude", icon: Briefcase },
 ];
 
 const intelligenceItems: NavItem[] = [
-  { href: "/dashboard/intelligence", label: "Analitika", icon: BarChart3, pro: true },
+  { href: "/dashboard/intelligence", label: "Analitika", icon: BarChart3, pro: true, exact: true },
   { href: "/dashboard/intelligence/competitors", label: "Konkurencija", icon: Swords, pro: true },
   { href: "/dashboard/intelligence/upcoming", label: "Planirano", icon: Calendar, pro: true },
 ];
@@ -63,9 +64,9 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
   }
 
   function NavLink({ item }: { item: NavItem }) {
-    const isActive =
-      pathname === item.href ||
-      (item.href !== "/dashboard" && pathname.startsWith(item.href));
+    const isActive = item.exact
+      ? pathname === item.href
+      : pathname === item.href || pathname.startsWith(item.href);
 
     return (
       <Link href={item.href} className="block relative z-10">
@@ -77,11 +78,11 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
               : "text-slate-300 border-transparent hover:text-white hover:bg-white/5 hover:border-slate-500"
           )}
         >
-          <item.icon 
+          <item.icon
             className={cn(
-              "size-4 shrink-0", 
+              "size-4 shrink-0",
               isActive ? "text-blue-400" : "text-slate-400 group-hover:text-slate-300"
-            )} 
+            )}
           />
           <span className="flex-1 truncate tracking-wide">{item.label}</span>
           {item.pro && (

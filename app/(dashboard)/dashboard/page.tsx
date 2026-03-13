@@ -48,6 +48,7 @@ const STATUS_CONFIG: Record<string, { label: string; colors: string }> = {
 
 import { RecommendedTenders } from "@/components/dashboard/recommended-tenders";
 import { Suspense } from "react";
+import { BidQuickActions } from "@/components/bids/bid-quick-actions";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -297,17 +298,7 @@ export default async function DashboardPage() {
                             </span>
                           </td>
                           <td className="p-4 pr-6">
-                            <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Link href={`/dashboard/bids/${bid.id}`} className="p-1.5 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors" title="Pregledaj">
-                                <Eye className="size-4" />
-                              </Link>
-                              <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Uredi">
-                                <PenLine className="size-4" />
-                              </button>
-                              <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Obriši">
-                                <Trash2 className="size-4" />
-                              </button>
-                            </div>
+                            <BidQuickActions bidId={bid.id} currentStatus={bid.status} />
                           </td>
                         </tr>
                       );

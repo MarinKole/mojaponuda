@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { BidStatus } from "@/types/database";
 import {
   BID_STATUSES,
@@ -15,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Eye, Filter, Briefcase, Calendar, Building2 } from "lucide-react";
+import { Eye, Filter, Briefcase, Calendar, Building2, CheckCircle2, XCircle, Edit, Loader2 } from "lucide-react";
 
 interface BidRow {
   id: string;
@@ -51,12 +52,30 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export function BidsTable({ bids }: BidsTableProps) {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     if (statusFilter === "all") return bids;
     return bids.filter((b) => b.status === statusFilter);
   }, [bids, statusFilter]);
+
+  async function updateBidStatus(bidId: string, newStatus: BidStatus) {
+    setUpdatingId(bidId);
+    try {
+      await fetch(`/api/bids/${bidId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -105,7 +124,7 @@ export function BidsTable({ bids }: BidsTableProps) {
                 <th className="px-6 py-4 font-bold">Naručilac</th>
                 <th className="px-6 py-4 font-bold">Rok</th>
                 <th className="px-6 py-4 font-bold">Status</th>
-                <th className="px-6 py-4 font-bold text-right">Akcija</th>
+                <th className="px-6 py-4 font-bold text-right">Akcije</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -143,11 +162,38 @@ export function BidsTable({ bids }: BidsTableProps) {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Link href={`/dashboard/bids/${bid.id}`}>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-primary hover:bg-blue-50">
-                        <Eye className="size-4" />
-                      </Button>
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      {bid.status !== "won" && bid.status !== "lost" && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={updatingId === bid.id}
+                            onClick={() => updateBidStatus(bid.id, "won")}
+                            className="h-8 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200"
+                            title="Tender dobijen"
+                          >
+                            {updatingId === bid.id ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={updatingId === bid.id}
+                            onClick={() => updateBidStatus(bid.id, "lost")}
+                            className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            title="Tender nije prošao"
+                          >
+                            {updatingId === bid.id ? <Loader2 className="size-4 animate-spin" /> : <XCircle className="size-4" />}
+                          </Button>
+                        </>
+                      )}
+                      <Link href={`/dashboard/bids/${bid.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 px-2 rounded-lg text-slate-500 hover:text-primary hover:bg-blue-50">
+                          <Edit className="size-4 mr-1.5" />
+                          Uredi
+                        </Button>
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

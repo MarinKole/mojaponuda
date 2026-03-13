@@ -59,3 +59,52 @@ export async function PATCH(
 
   return NextResponse.json({ success: true });
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Neautorizovan pristup." }, { status: 401 });
+  }
+
+  const { data: company } = await supabase
+    .from("companies")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!company) {
+    return NextResponse.json({ error: "Firma nije pronađena." }, { status: 403 });
+  }
+
+  // Provjeri vlasništvo
+  const { data: bid } = await supabase
+    .from("bids")
+    .select("id, company_id")
+    .eq("id", id)
+    .single();
+
+  if (!bid || bid.company_id !== company.id) {
+    return NextResponse.json({ error: "Ponuda nije pronađena." }, { status: 404 });
+  }
+
+  const { error } = await supabase
+    .from("bids")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Bid delete error:", error);
+    return NextResponse.json({ error: "Greška pri brisanju ponude." }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
