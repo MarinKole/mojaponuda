@@ -70,16 +70,16 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
       <Link href={item.href} className="block">
         <span
           className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+            "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] font-medium transition-all",
             isActive
-              ? "bg-white/20 text-white"
-              : "text-white/70 hover:bg-white/10 hover:text-white"
+              ? "bg-white text-blue-600 shadow-sm"
+              : "text-white/90 hover:bg-white/15"
           )}
         >
-          <item.icon className="size-[18px] shrink-0" />
+          <item.icon className="size-4 shrink-0" />
           <span className="flex-1 truncate">{item.label}</span>
           {item.pro && (
-            <span className="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white/80">
+            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-blue-600">
               PRO
             </span>
           )}
@@ -89,15 +89,12 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 flex h-screen w-[220px] flex-col overflow-hidden bg-[linear-gradient(180deg,#2563eb_0%,#1d4ed8_50%,#1e40af_100%)]">
-      <div className="flex flex-col px-5 py-6">
-        <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-white/20 text-white">
+    <aside className="fixed inset-y-0 left-0 z-40 m-4 flex h-[calc(100vh-32px)] w-[200px] flex-col overflow-hidden rounded-3xl bg-gradient-to-b from-blue-500 via-blue-600 to-blue-700 shadow-xl">
+      <div className="flex flex-col items-center px-4 py-6">
+        <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-white/20 text-white">
             <Box className="size-4" />
           </div>
-          <span className="font-heading text-lg font-bold tracking-tight text-white">
-            MojaPonuda
-          </span>
         </Link>
       </div>
 
@@ -108,36 +105,28 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
           ))}
         </div>
 
-        <div className="mt-6 space-y-1">
+        <div className="mt-4 space-y-1">
           {intelligenceItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </div>
 
-        <div className="mt-6 space-y-1">
+        <div className="mt-4 space-y-1">
           {accountItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </div>
       </nav>
 
-      <div className="mt-auto border-t border-white/20 px-3 py-4">
-        <div className="mb-3 flex items-center gap-2.5 px-2">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
-            {userEmail.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white/90" title={companyName ?? userEmail}>
-              {companyName ?? userEmail}
-            </p>
-          </div>
-        </div>
+      <div className="mt-auto px-3 pb-6">
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-medium text-white/80 transition-all hover:bg-white/20 hover:text-white"
+          className="group flex w-full items-center justify-center rounded-xl p-2 transition-all hover:bg-white/10"
+          title="Odjava"
         >
-          <LogOut className="size-4" />
-          Odjava
+          <div className="flex size-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white shadow-sm">
+            {userEmail.charAt(0).toUpperCase()}
+          </div>
         </button>
       </div>
     </aside>

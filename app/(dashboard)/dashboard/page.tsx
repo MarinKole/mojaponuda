@@ -12,11 +12,12 @@ import {
   Briefcase,
   Search,
   Award,
-  AlertTriangle,
   Clock,
-  Plus,
   TrendingUp,
-  Upload
+  Eye,
+  Pencil,
+  Trash2,
+  ChevronDown
 } from "lucide-react";
 import type { BidStatus, Document as DocType } from "@/types/database";
 
@@ -132,138 +133,145 @@ export default async function DashboardPage() {
 
   
   return (
-    <div className="space-y-6">
-      {/* Top bar with action */}
-      <div className="flex items-center justify-end">
+    <div className="space-y-8">
+      {/* Top row: Hero stat + 3 metric cards + action button */}
+      <div className="flex items-start justify-between gap-6">
+        {/* Hero stat */}
+        <div className="flex items-center gap-4">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-blue-100">
+            <FileText className="size-7 text-blue-600" />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500">Ukupno ponuda</p>
+            <p className="font-heading text-3xl font-bold text-slate-900">{displayTotalBids}</p>
+          </div>
+        </div>
+
+        {/* 3 metric cards */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-blue-100">
+              <Clock className="size-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">U pripremi</p>
+              <p className="font-heading text-xl font-bold text-slate-900">{displayDraftBids}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-amber-100">
+              <Award className="size-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Pobijeđeno</p>
+              <p className="font-heading text-xl font-bold text-slate-900">{displayWonBids}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-orange-100">
+              <TrendingUp className="size-5 rotate-180 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Izgubljeno</p>
+              <p className="font-heading text-xl font-bold text-slate-900">{displayLostBids}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action button */}
         <Link
-          href="/dashboard/bids"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+          href="/dashboard/tenders"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
         >
-          <Plus className="size-4" />
-          Nova ponuda
+          Novi tender
+          <ChevronDown className="size-4" />
         </Link>
       </div>
 
-      {/* Stats row: hero stat + 3 compact metrics */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
-        {/* Hero stat card */}
-        <div className="flex items-center gap-5 rounded-2xl bg-white p-6 shadow-sm lg:min-w-[200px]">
-          <div className="flex size-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
-            <FileText className="size-6" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500">Ukupno ponuda</p>
-            <p className="mt-1 font-heading text-4xl font-bold text-slate-900">
-              {displayTotalBids}
-            </p>
-          </div>
-        </div>
-
-        {/* 3 compact metric cards */}
-        <div className="grid flex-1 grid-cols-3 gap-4">
-          <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-              <Clock className="size-5" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500">U pripremi</p>
-              <p className="mt-0.5 font-heading text-2xl font-bold text-slate-900">
-                {displayDraftBids}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-              <Award className="size-5" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500">Pobijeđeno</p>
-              <p className="mt-0.5 font-heading text-2xl font-bold text-slate-900">
-                {displayWonBids}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
-              <TrendingUp className="size-5 rotate-180" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-slate-500">Izgubljeno</p>
-              <p className="mt-0.5 font-heading text-2xl font-bold text-slate-900">
-                {displayLostBids}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Active Tenders Table */}
-      <div className="rounded-2xl bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-          <h2 className="font-heading text-xl font-bold text-slate-900">Aktivne ponude</h2>
+      {/* Active Tenders section */}
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-heading text-2xl font-bold text-slate-900">Aktivne ponude</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
             <input 
               type="text" 
               placeholder="Pretraži..." 
-              className="h-9 w-48 rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="h-10 w-52 rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left">
+        {/* Table */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200">
+          <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-slate-100 text-xs font-medium uppercase tracking-wider text-slate-400">
-                <th className="px-6 py-4 font-medium">Naziv tendera</th>
-                <th className="px-6 py-4 font-medium">Rok</th>
-                <th className="px-6 py-4 font-medium">Budžet</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 text-right font-medium">Akcije</th>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Naziv tendera</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Rok</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Budžet</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Akcije</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {bids.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center">
-                      <Briefcase className="mb-3 size-10 text-slate-300" />
-                      <p className="mb-1 font-semibold text-slate-900">Nema aktivnih ponuda</p>
-                      <p className="mb-4 text-sm text-slate-500">Započnite pripremu ponude za tender.</p>
-                      <Link
-                        href="/dashboard/tenders"
-                        className="inline-flex h-9 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
-                      >
-                        Pretraži tendere
-                      </Link>
-                    </div>
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <Briefcase className="mx-auto mb-3 size-10 text-slate-300" />
+                    <p className="mb-1 font-semibold text-slate-900">Nema aktivnih ponuda</p>
+                    <p className="mb-4 text-sm text-slate-500">Započnite pripremu ponude za tender.</p>
+                    <Link
+                      href="/dashboard/tenders"
+                      className="inline-flex h-9 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                      Pretraži tendere
+                    </Link>
                   </td>
                 </tr>
               ) : (
                 bids.map((bid) => {
                   const status = STATUS_CONFIG[bid.status] || STATUS_CONFIG.draft;
                   return (
-                    <tr key={bid.id} className="transition-colors hover:bg-slate-50">
-                      <td className="px-6 py-4">
-                        <Link href={`/dashboard/bids/${bid.id}`} className="font-medium text-slate-900 hover:text-blue-600" title={bid.tenders?.title}>
+                    <tr key={bid.id} className="border-b border-slate-50 transition-colors hover:bg-slate-50/50">
+                      <td className="px-6 py-5">
+                        <Link href={`/dashboard/bids/${bid.id}`} className="font-medium text-slate-900 hover:text-blue-600">
                           {bid.tenders?.title ?? "Nepoznat tender"}
                         </Link>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td className="px-6 py-5 text-sm text-slate-600">
                         {formatDate(bid.tenders?.deadline)}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-700">
-                        {bid.tenders?.estimated_value ? `${bid.tenders.estimated_value.toLocaleString("bs-BA")} KM` : "—"}
+                      <td className="px-6 py-5 text-sm text-slate-900">
+                        {bid.tenders?.estimated_value ? `$${bid.tenders.estimated_value.toLocaleString("en-US")}` : "—"}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${status.colors}`}>
+                      <td className="px-6 py-5">
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${status.colors}`}>
                           {status.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <BidQuickActions bidId={bid.id} currentStatus={bid.status} />
+                      <td className="px-6 py-5">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/dashboard/bids/${bid.id}`}
+                            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                          >
+                            <Eye className="size-4" />
+                          </Link>
+                          <Link
+                            href={`/dashboard/bids/${bid.id}`}
+                            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                          >
+                            <Pencil className="size-4" />
+                          </Link>
+                          <button
+                            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -275,7 +283,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recommended Tenders */}
-      <Suspense fallback={<div className="h-48 rounded-2xl bg-white shadow-sm animate-pulse" />}>
+      <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />}>
         <RecommendedTenders />
       </Suspense>
     </div>

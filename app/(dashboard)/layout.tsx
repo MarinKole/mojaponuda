@@ -23,15 +23,13 @@ export default async function DashboardLayout({
     .maybeSingle();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#eef3fb_0%,#f8fafc_22%,#f8fafc_100%)]">
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-[420px] bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.2),transparent_55%)]" />
-      <div className="pointer-events-none absolute right-[-120px] top-[-120px] size-[420px] rounded-full bg-[radial-gradient(circle,rgba(148,163,184,0.18),transparent_65%)] blur-3xl" />
+    <div className="min-h-screen bg-slate-100">
       <DashboardSidebar
         userEmail={user.email ?? ""}
         companyName={company?.name}
       />
-      <main className="relative min-h-screen bg-slate-50/50 pl-[220px]">
-        <div className="min-h-screen w-full px-8 py-6 lg:px-10 lg:py-8">
+      <main className="min-h-screen pl-[232px] pr-4 pt-4 pb-4">
+        <div className="min-h-[calc(100vh-32px)] w-full rounded-3xl bg-white p-8 shadow-sm">
           {children}
         </div>
       </main>
