@@ -73,6 +73,7 @@ export function getDemoDocuments(companyId: string): Document[] {
       file_path: "demo/porezno-uvjerenje-2026.pdf",
       expires_at: thirtyDays,
       created_at: createdAt,
+      size: 1024 * 1024 * 2.5, // 2.5 MB
     },
     {
       id: "demo-doc-2",
@@ -82,6 +83,7 @@ export function getDemoDocuments(companyId: string): Document[] {
       file_path: "demo/rjesenje-o-registraciji.pdf",
       expires_at: oneYear,
       created_at: createdAt,
+      size: 1024 * 1024 * 1.2, // 1.2 MB
     },
     {
       id: "demo-doc-3",
@@ -91,6 +93,7 @@ export function getDemoDocuments(companyId: string): Document[] {
       file_path: "demo/doprinosi-uvjerenje.pdf",
       expires_at: ninetyDays,
       created_at: createdAt,
+      size: 1024 * 500, // 500 KB
     },
   ];
 }

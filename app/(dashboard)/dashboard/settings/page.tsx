@@ -7,6 +7,7 @@ import { DangerZone } from "@/components/settings/danger-zone";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { Building2, ShieldAlert, Users } from "lucide-react";
 import type { Company } from "@/types/database";
+import { getSubscriptionStatus } from "@/lib/subscription";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -29,6 +30,8 @@ export default async function SettingsPage() {
   if (!company) {
     redirect("/onboarding");
   }
+
+  const status = await getSubscriptionStatus(user.id, user.email);
 
   return (
     <div className="max-w-[1000px] mx-auto space-y-8">
@@ -84,7 +87,7 @@ export default async function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="team" className="focus-visible:ring-0">
-          <TeamSettings />
+          <TeamSettings status={status} />
         </TabsContent>
 
         <TabsContent value="account" className="focus-visible:ring-0">

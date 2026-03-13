@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,33 +8,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Mail, Shield, User, Trash2 } from "lucide-react";
 import { PaywallModal } from "@/components/subscription/paywall-modal";
-import { getSubscriptionStatus, type SubscriptionStatus } from "@/lib/subscription";
-import { createClient } from "@/lib/supabase/client";
+import type { SubscriptionStatus } from "@/lib/subscription";
 
-export function TeamSettings() {
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<SubscriptionStatus | null>(null);
+interface TeamSettingsProps {
+  status: SubscriptionStatus;
+}
+
+export function TeamSettings({ status }: TeamSettingsProps) {
   const [showPaywall, setShowPaywall] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const s = await getSubscriptionStatus(user.id, user.email);
-        setStatus(s);
-      }
-    }
-    load();
-  }, []);
 
   // Mock current members (since we don't have a backend table yet)
   const members = [
     { id: "1", email: "marin.kolenda@outlook.com", role: "vlasnik", name: "Marin Kolenda" },
   ];
 
-  const maxMembers = status?.plan.limits.maxTeamMembers || 1;
+  const maxMembers = status.plan.limits.maxTeamMembers || 1;
   const currentMembers = members.length;
 
   function handleInvite(e: React.FormEvent) {
@@ -66,7 +55,7 @@ export function TeamSettings() {
               </p>
             </div>
           </div>
-          {status?.plan.id === "agency" && (
+          {status.plan.id === "agency" && (
             <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100">
               Agencijski Tim
             </Badge>

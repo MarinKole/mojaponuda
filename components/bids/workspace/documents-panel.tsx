@@ -127,10 +127,6 @@ export function DocumentsPanel({
         )}
       </div>
 
-import { AddDocumentModal } from "@/components/vault/add-document-modal";
-
-// ... inside DocumentsPanel ...
-
       {/* Modal: Dodaj iz Trezora */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="border-slate-100 bg-white sm:max-w-md p-6 rounded-2xl shadow-xl">
