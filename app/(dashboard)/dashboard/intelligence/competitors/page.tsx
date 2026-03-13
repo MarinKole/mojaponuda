@@ -142,7 +142,7 @@ export default async function CompetitorsPage() {
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">#</th>
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Firma</th>
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Pobjede</th>
-                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Win rate</th>
+                  <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Uspješnost</th>
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Vrijednost</th>
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Kategorije</th>
                   <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-right">Zadnja pobjeda</th>

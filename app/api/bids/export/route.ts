@@ -136,6 +136,35 @@ export async function GET(request: NextRequest) {
   doc.line(margin, y, pageWidth - margin, y);
   y += 8;
 
+  // --- UPOZORENJE ZA NEDOSTAJUĆE STAVKE ---
+  const missingItems = checklistItems.filter((i) => i.status === "missing");
+  if (missingItems.length > 0) {
+    doc.setFillColor(254, 242, 242); // Red-50
+    doc.setDrawColor(252, 165, 165); // Red-200
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, 25 + (missingItems.length * 5), 3, 3, "FD");
+    
+    y += 6;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(220, 38, 38); // Red-600
+    doc.text("UPOZORENJE: Nedostaju obavezni dokumenti!", margin + 5, y);
+    y += 6;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(185, 28, 28); // Red-700
+    doc.text("Sljedece stavke nisu prilozene:", margin + 5, y);
+    y += 6;
+
+    doc.setFontSize(9);
+    missingItems.forEach((item) => {
+      doc.text(`• ${item.title}`, margin + 8, y);
+      y += 5;
+    });
+
+    y += 8;
+  }
+
   // --- Podaci o firmi ---
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(11);

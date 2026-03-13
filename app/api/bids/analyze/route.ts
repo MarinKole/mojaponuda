@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import type { Bid, Tender, Company, Json } from "@/types/database";
 import { analyzeTender } from "@/lib/ai/tender-analysis";
+import { AI_TO_VAULT_TYPE_MAP } from "@/lib/vault/constants";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -15,11 +16,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Niste prijavljeni." }, { status: 401 });
   }
   
-  // Provjera pretplate (AI je premium feature)
-  const { isSubscribed } = await getSubscriptionStatus(user.id, user.email);
+  // Provjera pretplate i feature-a
+  const { isSubscribed, plan } = await getSubscriptionStatus(user.id, user.email);
+  
   if (!isSubscribed) {
     return NextResponse.json(
-      { error: "AI analiza je dostupna samo u Professional paketu." },
+      { error: "Morate imati aktivnu pretplatu za AI analizu." },
+      { status: 403 }
+    );
+  }
+
+  if (!plan.limits.features.advancedAnalysis) {
+    return NextResponse.json(
+      { 
+        error: "Napredna AI analiza nije dostupna u vašem paketu.",
+        code: "FEATURE_LOCKED",
+        feature: "advancedAnalysis",
+        upgradeRequired: true
+      },
       { status: 403 }
     );
   }
@@ -67,6 +81,12 @@ export async function POST(request: NextRequest) {
 
   const tender = bid.tenders;
 
+  // Dohvati dokumente iz trezora za automatsko uparivanje
+  const { data: vaultDocs } = await supabase
+    .from("documents")
+    .select("id, type, expires_at")
+    .eq("company_id", company.id);
+
   try {
     // Koristi dijeljenu logiku za analizu (ovo rješava i caching)
     const analysis = await analyzeTender(tender);
@@ -85,18 +105,55 @@ export async function POST(request: NextRequest) {
 
     const startOrder = (existingChecklist.data?.length ?? 0);
 
-    const checklistRows = analysis.checklist_items.map((item, idx) => ({
-      bid_id,
-      title: item.name,
-      description: item.description,
-      status: "missing" as const,
-      document_type: item.document_type, // Sada spremamo i tip dokumenta!
-      risk_note: item.risk_note || null,
-      sort_order: startOrder + idx,
-    }));
+    const checklistRows = analysis.checklist_items.map((item, idx) => {
+      let docId = null;
+      let status: "missing" | "attached" = "missing";
+
+      // Pokušaj automatskog uparivanja
+      if (item.document_type && vaultDocs) {
+        const targetType = AI_TO_VAULT_TYPE_MAP[item.document_type];
+        if (targetType) {
+          // Nađi prvi odgovarajući dokument koji nije istekao
+          const match = vaultDocs.find(d => 
+            d.type === targetType && 
+            (!d.expires_at || new Date(d.expires_at) > new Date())
+          );
+          
+          if (match) {
+            docId = match.id;
+            status = "attached";
+          }
+        }
+      }
+
+      return {
+        bid_id,
+        title: item.name,
+        description: item.description,
+        status: status,
+        document_id: docId,
+        document_type: item.document_type,
+        risk_note: item.risk_note || null,
+        sort_order: startOrder + idx,
+      };
+    });
 
     if (checklistRows.length > 0) {
       await supabase.from("bid_checklist_items").insert(checklistRows);
+
+      // Dodaj u bid_documents one koji su automatski pronađeni
+      const autoAttachedDocs = checklistRows
+        .filter(r => r.document_id)
+        .map(r => ({
+          bid_id,
+          document_id: r.document_id!,
+          checklist_item_name: r.title,
+          is_confirmed: false // Korisnik treba potvrditi
+        }));
+
+      if (autoAttachedDocs.length > 0) {
+        await supabase.from("bid_documents").insert(autoAttachedDocs);
+      }
     }
 
     // Pozadinski upis: authority_requirement_patterns
@@ -125,6 +182,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       analysis,
       checklist_items_added: checklistRows.length,
+      auto_attached: checklistRows.filter(r => r.document_id).length
     });
   } catch (err) {
     console.error("AI analysis error:", err);

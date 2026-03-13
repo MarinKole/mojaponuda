@@ -113,7 +113,7 @@ export default async function IntelligencePage() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="flex h-6 items-center rounded-full bg-blue-50 px-2 text-[10px] font-bold uppercase tracking-wider text-blue-600 border border-blue-100">
-              Market Intelligence
+              Tržišni Uvid
             </span>
           </div>
           <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
@@ -153,7 +153,7 @@ export default async function IntelligencePage() {
         {/* Annual Volume Card */}
         <div className="rounded-[1.5rem] bg-white p-6 shadow-sm border border-slate-100 transition-all hover:shadow-md hover:border-emerald-200 group">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Godišnji Volumen</p>
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Godišnji Promet</p>
             <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
               <TrendingUp className="size-5" />
             </div>
@@ -161,7 +161,7 @@ export default async function IntelligencePage() {
           <p className="font-heading text-4xl font-extrabold text-slate-900">{formatKM(yearTotalValue)}</p>
           <div className="mt-3 flex items-center gap-2">
             <span className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
-              YTD {now.getFullYear()}
+              {now.getFullYear()}
             </span>
             <p className="text-xs text-slate-500">Ukupna vrijednost ugovora</p>
           </div>

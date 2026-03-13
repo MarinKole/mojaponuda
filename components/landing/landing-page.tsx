@@ -34,7 +34,11 @@ function ImagePlaceholder({ text, width, height, aspect }: { text: string, width
   );
 }
 
-function NavBar() {
+interface LandingPageProps {
+  isLoggedIn?: boolean;
+}
+
+function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -66,23 +70,38 @@ function NavBar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="hidden text-sm font-bold text-slate-600 transition-colors hover:text-primary sm:block"
-          >
-            Prijava
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5"
-          >
-            Isprobaj besplatno
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5"
+            >
+              Otvori Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden text-sm font-bold text-slate-600 transition-colors hover:text-primary sm:block"
+              >
+                Prijava
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5"
+              >
+                Isprobaj besplatno
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
   );
 }
+
+import { DemoWidget } from "@/components/landing/demo-widget";
+
+// ... inside HeroSection ...
 
 function HeroSection() {
   return (
@@ -92,7 +111,7 @@ function HeroSection() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full -z-10" />
       
       <div className="relative mx-auto max-w-7xl">
-        <div className="text-center max-w-4xl mx-auto">
+        <div className="text-center max-w-4xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-4 py-1.5 mb-8 animate-fade-in-up">
             <span className="flex size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
             <span className="text-xs font-bold uppercase tracking-wide text-blue-700">
@@ -123,7 +142,7 @@ function HeroSection() {
               <ArrowRight className="size-4" />
             </Link>
             <a
-              href="#kako-radi"
+              href="#demo"
               className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-8 text-base font-bold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
             >
               <PlayCircle className="size-5 text-slate-400" />
@@ -142,45 +161,8 @@ function HeroSection() {
           </div>
         </div>
 
-        <div className="mt-20 mx-auto max-w-6xl px-4">
-          <div className="relative rounded-2xl border border-slate-200/60 bg-white/50 p-2 shadow-2xl backdrop-blur-sm">
-            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-b from-blue-500/10 to-transparent opacity-50 blur-2xl -z-10" />
-            <div className="overflow-hidden rounded-xl bg-slate-50 border border-slate-100 shadow-inner relative aspect-[16/9]">
-               <ImagePlaceholder 
-                 text="MAIN DASHBOARD UI: Modern SaaS Dashboard showing 'Active Tenders' table, metrics cards (70% win rate), vibrant blue sidebar, clean white background, Inter font." 
-                 aspect="aspect-[16/9]" 
-               />
-               
-               {/* Floating UI Elements Mockup */}
-               <div className="absolute -right-12 top-12 w-64 rounded-xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-200/50 hidden lg:block animate-float-slow">
-                 <div className="flex items-center gap-3 mb-3">
-                   <div className="size-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                     <TrendingUp className="size-4 text-emerald-600" />
-                   </div>
-                   <div>
-                     <p className="text-xs text-slate-500 font-medium">Win Rate</p>
-                     <p className="text-lg font-bold text-slate-900">72.4%</p>
-                   </div>
-                 </div>
-                 <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                   <div className="h-full w-[72%] bg-emerald-500" />
-                 </div>
-               </div>
-
-               <div className="absolute -left-8 bottom-20 w-72 rounded-xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-200/50 hidden lg:block animate-float-slower">
-                 <div className="flex items-center gap-3">
-                   <div className="size-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                     <Clock className="size-5" />
-                   </div>
-                   <div>
-                     <p className="text-sm font-bold text-slate-900">Rok ističe uskoro</p>
-                     <p className="text-xs text-slate-500">Nabavka računarske opreme</p>
-                   </div>
-                   <span className="ml-auto text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">2 dana</span>
-                 </div>
-               </div>
-            </div>
-          </div>
+        <div id="demo" className="mt-10 mx-auto max-w-5xl px-4 scroll-mt-24">
+          <DemoWidget />
         </div>
       </div>
     </section>
@@ -451,25 +433,26 @@ function PricingSection() {
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-2 lg:items-center">
-          {/* Starter */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <h3 className="font-heading text-xl font-bold text-slate-900">Starter</h3>
-            <p className="mt-2 text-sm text-slate-500">Za male firme koje tek kreću sa tenderima.</p>
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-3 lg:items-start">
+          {/* Osnovni */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="font-heading text-xl font-bold text-slate-900">Osnovni</h3>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za male firme koje povremeno sudjeluju na tenderima.</p>
             <div className="mt-6 flex items-baseline gap-1">
-              <span className="font-heading text-4xl font-bold text-slate-900">0</span>
-              <span className="text-sm font-medium text-slate-500">BAM / mjesečno</span>
+              <span className="font-heading text-4xl font-bold text-slate-900">50</span>
+              <span className="text-sm font-medium text-slate-500">KM / mj.</span>
             </div>
             <div className="mt-8 space-y-4">
               {[
-                "Do 3 ponude mjesečno",
-                "Trezor dokumenata",
-                "Pretraga tendera",
-                "Osnovna analitika",
+                "Do 3 aktivna tendera",
+                "1 korisnik",
+                "1 GB prostora",
+                "Osnovna analiza",
+                "Automatska lista dokumenata",
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-slate-400" />
-                  <span className="text-slate-600">{f}</span>
+                  <span className="text-slate-600 text-sm">{f}</span>
                 </div>
               ))}
             </div>
@@ -477,35 +460,36 @@ function PricingSection() {
               href="/signup"
               className="mt-8 flex w-full items-center justify-center rounded-full border border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
             >
-              Kreni besplatno
+              Odaberi Osnovni
             </Link>
           </div>
 
-          {/* Pro */}
-          <div className="relative rounded-3xl border-2 border-primary bg-white p-8 shadow-2xl shadow-blue-500/10">
+          {/* Puni - Istaknut */}
+          <div className="relative rounded-3xl border-2 border-primary bg-white p-8 shadow-2xl shadow-blue-500/10 transform scale-105 z-10">
             <div className="absolute -top-4 inset-x-0 flex justify-center">
               <span className="rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wider text-white">
-                Najpopularnije
+                Najčešći izbor
               </span>
             </div>
-            <h3 className="font-heading text-xl font-bold text-slate-900">Profesional</h3>
-            <p className="mt-2 text-sm text-slate-500">Puna snaga platforme za redovne ponuđače.</p>
+            <h3 className="font-heading text-xl font-bold text-slate-900">Puni Paket</h3>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje redovno pripremaju ponude.</p>
             <div className="mt-6 flex items-baseline gap-1">
-              <span className="font-heading text-5xl font-bold text-slate-900">150</span>
-              <span className="text-sm font-medium text-slate-500">BAM / mjesečno</span>
+              <span className="font-heading text-5xl font-bold text-slate-900">100</span>
+              <span className="text-sm font-medium text-slate-500">KM / mj.</span>
             </div>
             <div className="mt-8 space-y-4">
               {[
-                "Neograničen broj ponuda",
-                "Neograničen trezor dokumenata",
-                "AI analiza tendera i ekstrakcija",
-                "Automatsko generisanje checkliste",
-                "Napredna tržišna analitika",
-                "Upozorenja o rokovima važenja",
+                "50 aktivnih tendera",
+                "5 članova tima",
+                "10 GB prostora",
+                "Napredna AI analiza",
+                "Timski rad na ponudi",
+                "Trezor dokumenata",
+                "Prioritetna podrška"
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-primary" />
-                  <span className="text-slate-700 font-medium">{f}</span>
+                  <span className="text-slate-700 font-medium text-sm">{f}</span>
                 </div>
               ))}
             </div>
@@ -513,7 +497,38 @@ function PricingSection() {
               href="/signup"
               className="mt-8 flex w-full items-center justify-center rounded-full bg-primary py-3.5 text-sm font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30"
             >
-              Odaberi Profesional
+              Isprobaj besplatno
+            </Link>
+          </div>
+
+          {/* Agencijski */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="font-heading text-xl font-bold text-slate-900">Agencijski</h3>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za konzultante i agencije koje vode više firmi.</p>
+            <div className="mt-6 flex items-baseline gap-1">
+              <span className="font-heading text-4xl font-bold text-slate-900">250</span>
+              <span className="text-sm font-medium text-slate-500">KM / mj.</span>
+            </div>
+            <div className="mt-8 space-y-4">
+              {[
+                "Neograničen broj tendera",
+                "20 članova tima",
+                "Do 10 firmi (klijenata)",
+                "100 GB prostora",
+                "Sve funkcionalnosti Punog paketa",
+                "Odvojeni prostori za klijente",
+              ].map((f) => (
+                <div key={f} className="flex items-start gap-3">
+                  <CheckCircle className="size-5 shrink-0 text-slate-400" />
+                  <span className="text-slate-600 text-sm">{f}</span>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/signup"
+              className="mt-8 flex w-full items-center justify-center rounded-full border border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
+            >
+              Kontaktirajte nas
             </Link>
           </div>
         </div>
@@ -652,10 +667,10 @@ function Footer() {
   );
 }
 
-export function LandingPage() {
+export function LandingPage({ isLoggedIn }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
-      <NavBar />
+      <NavBar isLoggedIn={isLoggedIn} />
       <HeroSection />
       <ProblemSection />
       <HowItWorksSection />

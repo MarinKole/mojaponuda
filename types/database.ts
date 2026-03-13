@@ -68,6 +68,7 @@ export interface Database {
           type: string | null;
           file_path: string;
           expires_at: string | null;
+          size: number;
           created_at: string;
         };
         Insert: {
@@ -77,6 +78,7 @@ export interface Database {
           type?: string | null;
           file_path: string;
           expires_at?: string | null;
+          size?: number;
           created_at?: string;
         };
         Update: {
@@ -86,6 +88,7 @@ export interface Database {
           type?: string | null;
           file_path?: string;
           expires_at?: string | null;
+          size?: number;
           created_at?: string;
         };
         Relationships: [

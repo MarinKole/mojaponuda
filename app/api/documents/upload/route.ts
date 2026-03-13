@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getSubscriptionStatus } from "@/lib/subscription";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -11,6 +12,9 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "Neautorizovan pristup." }, { status: 401 });
   }
+
+  // Check subscription and limits
+  const { plan } = await getSubscriptionStatus(user.id, user.email);
 
   // Dohvati company_id korisnika
   const { data: company } = await supabase
@@ -26,6 +30,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Calculate current storage usage
+  const { data: documents } = await supabase
+    .from("documents")
+    .select("size")
+    .eq("company_id", company.id);
+
+  const currentStorageBytes = documents?.reduce((acc, doc) => acc + (doc.size || 0), 0) || 0;
+
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
   const name = formData.get("name") as string | null;
@@ -36,6 +48,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Naziv i fajl su obavezni." },
       { status: 400 }
+    );
+  }
+
+  // Check if new file fits in storage limit
+  if (currentStorageBytes + file.size > plan.limits.maxStorageBytes) {
+    return NextResponse.json(
+      { 
+        error: "Prekoračen limit prostora za dokumente.",
+        code: "LIMIT_REACHED",
+        limit: plan.limits.maxStorageBytes,
+        current: currentStorageBytes,
+        upgradeRequired: true
+      },
+      { status: 403 }
     );
   }
 
@@ -68,6 +94,7 @@ export async function POST(request: NextRequest) {
       type: type || null,
       file_path: storagePath,
       expires_at: expiresAt || null,
+      size: file.size, // Save file size
     })
     .select()
     .single();
@@ -84,3 +111,4 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ document }, { status: 201 });
 }
+

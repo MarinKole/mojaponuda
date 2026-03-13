@@ -27,6 +27,7 @@ import {
   ListTodo,
   Sparkles
 } from "lucide-react";
+import { AddDocumentModal } from "@/components/vault/add-document-modal";
 
 const STATUS_LABELS: Record<ChecklistStatus, string> = {
   missing: "Nedostaje",
@@ -166,7 +167,7 @@ function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
             <ListTodo className="size-5" />
           </div>
           <h3 className="font-heading font-bold text-lg">
-            Checklist zahtjeva
+            Lista zahtjeva
           </h3>
         </div>
         <Button size="sm" onClick={() => setAddOpen(true)} className="rounded-xl font-bold shadow-blue-500/20 shadow-md">
@@ -311,60 +312,53 @@ function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
 
                       {item.document_id ? (
                         <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700 border border-blue-100">
-
-                      {/* Auto-Suggestion */}
-                      {!item.document_id && item.status === "missing" && (
-                        (() => {
-                          const suggestion = findSuggestedDocument(item);
-                          if (!suggestion) return null;
-                          return (
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-slate-400 font-medium">ili</span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 px-2 text-[10px] rounded-lg border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 hover:border-purple-300"
-                                onClick={async () => {
-                                  setAttachItemId(item.id);
-                                  // Wait for state update? No, hooks are async.
-                                  // Direct call logic:
-                                  await fetch(`/api/bids/${bidId}/checklist/${item.id}`, {
-                                    method: "PATCH",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      document_id: suggestion.id,
-                                      status: "attached",
-                                    }),
-                                  });
-                                  // Also add to bid_documents
-                                  await fetch(`/api/bids/${bidId}/documents`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ document_id: suggestion.id }),
-                                  });
-                                  router.refresh();
-                                }}
-                              >
-                                <Sparkles className="mr-1.5 size-3 text-purple-500" />
-                                Sugestija: {suggestion.name}
-                              </Button>
-                            </div>
-                          );
-                        })()
-                      )}
                           <FileText className="size-3" />
                           Dokument priložen
                         </span>
                       ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 px-2 text-[10px] rounded-lg border-dashed border-slate-300 hover:border-primary hover:text-primary hover:bg-blue-50"
-                          onClick={() => openAttachModal(item.id)}
-                        >
-                          <Link2 className="mr-1.5 size-3" />
-                          Priloži iz Vaulta
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[10px] rounded-lg border-dashed border-slate-300 hover:border-primary hover:text-primary hover:bg-blue-50"
+                            onClick={() => openAttachModal(item.id)}
+                          >
+                            <Link2 className="mr-1.5 size-3" />
+                            Iz Vaulta
+                          </Button>
+                          
+                          <AddDocumentModal 
+                            initialType={item.document_type ? AI_TO_VAULT_TYPE_MAP[item.document_type] : undefined}
+                            onSuccess={(doc) => {
+                              setAttachItemId(item.id);
+                              // Reuse attach logic
+                              const attach = async () => {
+                                await updateItem(item.id, {
+                                  document_id: doc.id,
+                                  status: "attached",
+                                });
+                                await fetch(`/api/bids/${bidId}/documents`, {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ document_id: doc.id }),
+                                });
+                                setAttachItemId(null);
+                                router.refresh();
+                              };
+                              attach();
+                            }}
+                            trigger={
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2 text-[10px] rounded-lg border-dashed border-slate-300 hover:border-primary hover:text-primary hover:bg-blue-50"
+                              >
+                                <Plus className="mr-1.5 size-3" />
+                                Novi upload
+                              </Button>
+                            }
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -379,14 +373,7 @@ function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
                     >
                       <Pencil className="size-3.5" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-8 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600"
-                      onClick={() => deleteItem(item.id)}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
+                    {/* Delete removed as requested */}
                   </div>
                 </div>
               )}

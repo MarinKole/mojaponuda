@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createCheckout } from "@/lib/lemonsqueezy";
+import { PLANS, type PlanTier } from "@/lib/plans";
 
-export async function POST() {
+export async function POST(req: Request) {
   const supabase = await createClient();
 
   const {
@@ -13,17 +14,29 @@ export async function POST() {
     return NextResponse.json({ error: "Niste prijavljeni." }, { status: 401 });
   }
 
-  const storeId = process.env.LEMONSQUEEZY_STORE_ID;
-  const variantId = process.env.LEMONSQUEEZY_VARIANT_ID;
-
-  if (!storeId || !variantId) {
-    return NextResponse.json(
-      { error: "Lemon Squeezy konfiguracija nedostaje." },
-      { status: 500 }
-    );
-  }
-
   try {
+    const body = await req.json();
+    const planId = body.planId as PlanTier;
+
+    if (!planId || !PLANS[planId]) {
+      return NextResponse.json(
+        { error: "Nevažeći plan." },
+        { status: 400 }
+      );
+    }
+
+    const plan = PLANS[planId];
+    const storeId = process.env.LEMONSQUEEZY_STORE_ID;
+    const variantId = plan.lemonSqueezyVariantId;
+
+    if (!storeId || !variantId) {
+      console.error("Missing configuration:", { storeId, variantId, planId });
+      return NextResponse.json(
+        { error: "Konfiguracija naplate nije pronađena." },
+        { status: 500 }
+      );
+    }
+
     const checkoutUrl = await createCheckout({
       storeId,
       variantId,

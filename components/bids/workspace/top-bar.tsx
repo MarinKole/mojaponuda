@@ -22,6 +22,7 @@ interface TopBarProps {
   currentStatus: BidStatus;
   initialRiskFlags?: string[];
   isSubscribed?: boolean;
+  hasMissingItems?: boolean;
 }
 
 const STATUS_COLORS = {
@@ -39,6 +40,7 @@ export function TopBar({
   currentStatus,
   initialRiskFlags = [],
   isSubscribed = false,
+  hasMissingItems = false,
 }: TopBarProps) {
   const router = useRouter();
   const [analyzing, setAnalyzing] = useState(false);
@@ -88,6 +90,15 @@ export function TopBar({
     } finally {
       setAnalyzing(false);
     }
+  }
+
+  function handleDownload() {
+    if (hasMissingItems) {
+      if (!window.confirm("UPOZORENJE: Nedostaju neki obavezni dokumenti iz liste. Želite li ipak preuzeti paket?")) {
+        return;
+      }
+    }
+    window.open(`/api/bids/package?bid_id=${bidId}`, "_blank");
   }
 
   return (

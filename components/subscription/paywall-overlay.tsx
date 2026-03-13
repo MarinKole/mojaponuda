@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2, Lock, Star } from "lucide-react";
 
@@ -10,23 +11,12 @@ interface PaywallOverlayProps {
 }
 
 export function PaywallOverlay({ usedBids, maxFreeBids }: PaywallOverlayProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleCheckout() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/lemonsqueezy/create-checkout", {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url;
-      }
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
+    // Legacy checkout - redirected to subscriptions page instead
+    router.push("/dashboard/subscription");
   }
 
   return (
@@ -61,21 +51,16 @@ export function PaywallOverlay({ usedBids, maxFreeBids }: PaywallOverlayProps) {
           </p>
 
           <div className="mt-6 flex items-baseline justify-center gap-1">
-            <span className="font-heading text-3xl font-extrabold text-slate-900">80 EUR</span>
+            <span className="font-heading text-3xl font-extrabold text-slate-900">100 KM</span>
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">/ mjesečno</span>
           </div>
 
           <Button
             className="mt-6 w-full h-12 rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20"
-            onClick={handleCheckout}
-            disabled={loading}
+            onClick={() => router.push("/dashboard/subscription")}
           >
-            {loading ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Star className="mr-2 size-4 fill-current" />
-            )}
-            Otključaj neograničen pristup
+            <Star className="mr-2 size-4 fill-current" />
+            Pogledaj pakete
           </Button>
 
           <p className="mt-4 text-xs text-slate-400">

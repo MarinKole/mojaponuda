@@ -21,7 +21,7 @@ export function ProGate() {
         </p>
 
         <div className="mt-8 flex items-baseline justify-center gap-1">
-          <span className="font-heading text-4xl font-extrabold text-slate-900">80 EUR</span>
+          <span className="font-heading text-4xl font-extrabold text-slate-900">100 KM</span>
           <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">/ mjesečno</span>
         </div>
 
@@ -31,7 +31,7 @@ export function ProGate() {
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-0.5"
           >
             <CreditCard className="size-4" />
-            Pretplatite se
+            Pogledaj pakete
           </Link>
           <p className="text-xs text-slate-400">
             Bez ugovorne obaveze. Otkažite bilo kada.

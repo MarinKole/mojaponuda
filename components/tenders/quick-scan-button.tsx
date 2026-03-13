@@ -67,10 +67,10 @@ export function QuickScanButton({ tenderId, isSubscribed }: QuickScanButtonProps
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-heading text-xl">
               <Brain className="size-6 text-purple-600" />
-              AI Brza Analiza
+              Automatska Analiza
             </DialogTitle>
             <DialogDescription>
-              Pregled ključnih zahtjeva i rizika prije početka pripreme ponude.
+              Sistem analizira dokumentaciju i izdvaja ključne zahtjeve i rokove.
             </DialogDescription>
           </DialogHeader>
 

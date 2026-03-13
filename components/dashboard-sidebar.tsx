@@ -107,7 +107,7 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
       
       {/* Brand */}
       <div className="flex flex-col px-6 py-8 relative z-10">
-        <div className="flex items-center gap-2 mb-8">
+        <Link href="/" className="flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity">
           <div className="flex size-8 items-center justify-center rounded-xl bg-white text-primary shadow-sm">
             <Box className="size-5" />
           </div>
@@ -117,7 +117,7 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
             </span>
             <span className="font-heading text-xl font-bold text-blue-200">.ba</span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}

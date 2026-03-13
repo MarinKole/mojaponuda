@@ -114,6 +114,9 @@ export default async function BidWorkspacePage({
     showPaywall = totalBids > MAX_FREE_BIDS;
   }
 
+  // Calculate missing items for TopBar warning
+  const hasMissingItems = checklistItems.some(item => item.status === "missing");
+
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
       {/* Gornji bar */}
@@ -124,6 +127,7 @@ export default async function BidWorkspacePage({
         currentStatus={bid.status as BidStatus}
         initialRiskFlags={extractRiskFlags(bid.ai_analysis)}
         isSubscribed={isSubscribed}
+        hasMissingItems={hasMissingItems}
       />
 
       {showPaywall ? (

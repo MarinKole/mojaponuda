@@ -15,10 +15,15 @@ export async function analyzeTenderAction(tenderId: string) {
     throw new Error("Niste prijavljeni.");
   }
 
-  // Check subscription
-  const { isSubscribed } = await getSubscriptionStatus(user.id, user.email);
+  // Check subscription and limits
+  const { isSubscribed, plan } = await getSubscriptionStatus(user.id, user.email);
+  
   if (!isSubscribed) {
-    throw new Error("AI analiza je dostupna samo u Professional paketu.");
+    throw new Error("Morate imati aktivnu pretplatu za AI analizu.");
+  }
+
+  if (!plan.limits.features.advancedAnalysis) {
+    throw new Error("Napredna AI analiza nije dostupna u vašem paketu. Nadogradite na Pro.");
   }
 
   // Fetch tender

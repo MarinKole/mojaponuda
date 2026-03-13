@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileText, Plus, X, AlertTriangle, Paperclip } from "lucide-react";
+import { AddDocumentModal } from "@/components/vault/add-document-modal";
 
 interface AttachedDoc {
   id: string;
@@ -126,15 +127,44 @@ export function DocumentsPanel({
         )}
       </div>
 
+import { AddDocumentModal } from "@/components/vault/add-document-modal";
+
+// ... inside DocumentsPanel ...
+
       {/* Modal: Dodaj iz Trezora */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="border-slate-100 bg-white sm:max-w-md p-6 rounded-2xl shadow-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-heading font-bold text-slate-900">Dodaj iz Trezora</DialogTitle>
+            <DialogTitle className="text-xl font-heading font-bold text-slate-900">Dodaj dokument</DialogTitle>
             <DialogDescription className="text-slate-500">
-              Odaberite dokument koji želite priložiti uz ovu ponudu.
+              Odaberite postojeći dokument ili dodajte novi.
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="flex gap-2 mb-4">
+             <AddDocumentModal 
+                onSuccess={(doc) => {
+                  handleAttach(doc.id);
+                  setAddOpen(false);
+                }}
+                trigger={
+                  <Button className="w-full rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 shadow-sm font-bold">
+                    <Plus className="mr-2 size-4" />
+                    Novi dokument
+                  </Button>
+                }
+             />
+          </div>
+
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-slate-500 font-bold tracking-wider">Ili odaberite iz Vaulta</span>
+            </div>
+          </div>
+
           <div className="max-h-80 space-y-2 overflow-y-auto pr-2 custom-scrollbar">
             {availableDocs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">

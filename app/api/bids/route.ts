@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getSubscriptionStatus } from "@/lib/subscription";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -12,6 +13,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Niste prijavljeni." }, { status: 401 });
   }
 
+  // Check subscription limits
+  const { plan } = await getSubscriptionStatus(user.id, user.email);
+
   const { data: company } = await supabase
     .from("companies")
     .select("id")
@@ -20,6 +24,34 @@ export async function POST(request: NextRequest) {
 
   if (!company) {
     return NextResponse.json({ error: "Firma nije pronađena." }, { status: 403 });
+  }
+
+  // Count active bids
+  const { count: activeBidsCount, error: countError } = await supabase
+    .from("bids")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", company.id)
+    .in("status", ["draft", "in_review", "submitted"]);
+
+  if (countError) {
+    console.error("Error counting bids:", countError);
+    return NextResponse.json(
+      { error: "Greška pri provjeri limita." },
+      { status: 500 }
+    );
+  }
+
+  if ((activeBidsCount || 0) >= plan.limits.maxActiveTenders) {
+    return NextResponse.json(
+      { 
+        error: "Dostigli ste limit aktivnih tendera za vaš paket.",
+        code: "LIMIT_REACHED",
+        limit: plan.limits.maxActiveTenders,
+        current: activeBidsCount,
+        upgradeRequired: true
+      },
+      { status: 403 }
+    );
   }
 
   const body = await request.json();
