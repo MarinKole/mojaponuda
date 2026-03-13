@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { SubscriptionCard } from "@/components/subscription/subscription-card";
 import { PricingTable } from "@/components/subscription/pricing-table";
 import { type PlanTier } from "@/lib/plans";
@@ -8,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import type { SubscriptionStatus } from "@/lib/subscription";
 
 export function SubscriptionClientPage({ initialStatus }: { initialStatus: SubscriptionStatus }) {
+  const router = useRouter();
   const { toast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<PlanTier | null>(null);
 
@@ -31,7 +33,16 @@ export function SubscriptionClientPage({ initialStatus }: { initialStatus: Subsc
         throw new Error(data.error || "Greška pri kreiranju narudžbe.");
       }
       
-      window.location.href = data.url;
+      // If it's a demo user, the API returns a local URL to redirect to instead of Lemon Squeezy
+      if (data.url && data.url.startsWith("/")) {
+        toast({
+          title: "Pretplata ažurirana",
+          description: "Demo nalog: Uspješno ste promijenili paket.",
+        });
+        router.refresh();
+      } else {
+        window.location.href = data.url;
+      }
     } catch (error) {
       console.error(error);
       toast({

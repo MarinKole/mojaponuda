@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getDemoSubscription, isDemoUser } from "@/lib/demo";
 import type { Subscription } from "@/types/database";
-import { DEFAULT_PLAN, getPlanFromVariantId, type Plan } from "@/lib/plans";
+import { DEFAULT_PLAN, getPlanFromVariantId, type Plan, PLANS } from "@/lib/plans";
 
 export type SubscriptionStatus = {
   isSubscribed: boolean;
@@ -15,14 +15,6 @@ export async function getSubscriptionStatus(
 ): Promise<SubscriptionStatus> {
   const supabase = await createClient();
 
-  if (isDemoUser(email)) {
-    return {
-      isSubscribed: true,
-      subscription: getDemoSubscription(userId),
-      plan: DEFAULT_PLAN, // Demo users get basic plan by default or we could make a specific demo plan
-    };
-  }
-
   const { data } = await supabase
     .from("subscriptions")
     .select("*")
@@ -30,12 +22,36 @@ export async function getSubscriptionStatus(
     .maybeSingle();
 
   const subscription = data as Subscription | null;
+
+  if (isDemoUser(email)) {
+    // Ako admin ima pretplatu u bazi, koristi nju da bi se mogao prebacivati između paketa
+    if (subscription) {
+      const plan = getPlanFromVariantId(subscription.lemonsqueezy_variant_id || null);
+      return {
+        isSubscribed: true,
+        subscription,
+        plan,
+      };
+    }
+
+    // Default za admina ako nema ništa u bazi je Agencijski paket
+    const demoSub = getDemoSubscription(userId);
+    const agencyPlan = PLANS.agency;
+    demoSub.lemonsqueezy_variant_id = agencyPlan.lemonSqueezyVariantId;
+
+    return {
+      isSubscribed: true,
+      subscription: demoSub,
+      plan: agencyPlan,
+    };
+  }
+
   const isSubscribed =
     subscription?.status === "active" || subscription?.status === "past_due";
 
   const plan = isSubscribed
     ? getPlanFromVariantId(subscription?.lemonsqueezy_variant_id || null)
-    : DEFAULT_PLAN; // Free users get default (basic) plan limits but are not "subscribed" in terms of payment status if we had a free tier, but here Basic is paid. 
+    : DEFAULT_PLAN; // Free users get default (basic) plan limits but are not "subscribed" in terms of payment status if we had a free tier, but here Basic is paid.
     // Wait, the user requirements say:
     // OSNOVNI PAKET: 50 KM.
     // So if they are NOT subscribed, they probably shouldn't have access to paid features.
@@ -49,4 +65,3 @@ export async function getSubscriptionStatus(
     
   return { isSubscribed, subscription, plan };
 }
-
