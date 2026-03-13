@@ -29,18 +29,20 @@ async function TendersContent({ searchParams }: TendersPageProps) {
   } = await supabase.auth.getUser();
 
   let companyKeywords: string[] = [];
+  let companyRegions: string[] = [];
   let hasProfile = false;
 
   if (activeTab === "recommended" && user) {
     const { data: company } = await supabase
       .from("companies")
-      .select("keywords")
+      .select("keywords, operating_regions")
       .eq("user_id", user.id)
       .single();
 
     if (company) {
       hasProfile = true;
       companyKeywords = company.keywords || [];
+      companyRegions = company.operating_regions || [];
     }
   }
 
@@ -87,6 +89,15 @@ async function TendersContent({ searchParams }: TendersPageProps) {
     }
   }
 
+  const hasFilters =
+    params.q ||
+    (params.contract_type && params.contract_type !== "all") ||
+    (params.procedure_type && params.procedure_type !== "all") ||
+    params.deadline_from ||
+    params.deadline_to ||
+    params.value_min ||
+    params.value_max;
+
   // Build query
   let query = supabase
     .from("tenders")
@@ -96,13 +107,26 @@ async function TendersContent({ searchParams }: TendersPageProps) {
   // Apply recommendation filter
   if (activeTab === "recommended" && companyKeywords.length > 0) {
     // Construct OR filter for keywords in title or description
-    // Syntax: title.ilike.%kw1%,raw_description.ilike.%kw1%,title.ilike.%kw2%...
-    const orConditions = companyKeywords
+    const keywordConditions = companyKeywords
       .map((kw) => `title.ilike.%${kw}%,raw_description.ilike.%${kw}%`)
       .join(",");
-    
-    if (orConditions) {
-      query = query.or(orConditions);
+
+    if (keywordConditions) {
+      query = query.or(keywordConditions);
+    }
+
+    // If company has specified regions, also filter by those regions
+    if (companyRegions.length > 0) {
+      const regionConditions = companyRegions
+        .map(
+          (reg) =>
+            `title.ilike.%${reg}%,raw_description.ilike.%${reg}%,contracting_authority.ilike.%${reg}%`
+        )
+        .join(",");
+      
+      if (regionConditions) {
+        query = query.or(regionConditions);
+      }
     }
   }
 
@@ -145,17 +169,7 @@ async function TendersContent({ searchParams }: TendersPageProps) {
 
   const tenders = (data ?? []) as Tender[];
   const totalCount = count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-
-  const hasFilters = !!(
-    params.q ||
-    (params.contract_type && params.contract_type !== "all") ||
-    (params.procedure_type && params.procedure_type !== "all") ||
-    params.deadline_from ||
-    params.deadline_to ||
-    params.value_min ||
-    params.value_max
-  );
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
     <>
@@ -168,11 +182,11 @@ async function TendersContent({ searchParams }: TendersPageProps) {
       </div>
 
       {tenders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-20">
-          <div className="flex size-16 items-center justify-center rounded-full bg-blue-50 text-blue-500 mb-4 shadow-sm shadow-blue-500/20">
+        <div className="flex flex-col items-center justify-center rounded-sm border border-dashed border-slate-300 bg-slate-50 py-20">
+          <div className="flex size-14 items-center justify-center rounded-sm bg-slate-200/50 text-slate-500 mb-4 border border-slate-300">
             <Search className="size-6" />
           </div>
-          <h3 className="text-lg font-heading font-bold text-slate-900 mb-2">
+          <h3 className="text-lg font-heading font-semibold text-slate-900 mb-2">
             {activeTab === "recommended"
               ? "Nema preporučenih tendera"
               : hasFilters
@@ -181,14 +195,14 @@ async function TendersContent({ searchParams }: TendersPageProps) {
           </h3>
           <p className="text-sm text-slate-500 text-center max-w-sm">
             {activeTab === "recommended"
-              ? "Pokušajte dodati više ključnih riječi u profil ili promijenite filtere."
+              ? "Trenutno nema aktivnih tendera koji odgovaraju vašim ključnim riječima i regijama."
               : hasFilters
               ? "Pokušajte sa drugačijim filterima ili resetujte pretragu."
               : "Podaci se automatski sinhronizuju sa e-Nabavke portala."}
           </p>
           {activeTab === "recommended" && (
-            <Button variant="outline" className="mt-4" asChild>
-               <Link href="/dashboard/settings">Ažuriraj ključne riječi</Link>
+            <Button variant="outline" className="mt-6 rounded-sm" asChild>
+               <Link href="/dashboard/settings">Ažuriraj Profil</Link>
             </Button>
           )}
         </div>
