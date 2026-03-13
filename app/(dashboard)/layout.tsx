@@ -23,22 +23,17 @@ export default async function DashboardLayout({
     .maybeSingle();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-100">
-      {/* Full-height blue sidebar — no margin, no rounding */}
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#f8fbff_12%,#f1f5f9_100%)]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(226,232,240,0.55)_1px,transparent_1px),linear-gradient(to_bottom,rgba(226,232,240,0.55)_1px,transparent_1px)] bg-[size:72px_72px] [mask-image:radial-gradient(circle_at_top_left,#000_15%,transparent_70%)]" />
+      <div className="pointer-events-none absolute -right-32 top-0 h-[420px] w-[420px] rounded-full bg-blue-500/10 blur-[110px]" />
+      <div className="pointer-events-none absolute left-[210px] top-24 h-[280px] w-[280px] rounded-full bg-slate-900/5 blur-[100px]" />
       <DashboardSidebar
         userEmail={user.email ?? ""}
         companyName={company?.name}
       />
-      {/* White content panel with diagonal left edge overlapping sidebar */}
-      <main className="relative z-10 min-h-screen pl-[120px] pr-3 pt-3 pb-3">
-        <div className="relative min-h-[calc(100vh-24px)] overflow-visible rounded-[2rem] bg-white shadow-[0_20px_60px_-35px_rgba(15,23,42,0.28)]">
-          <div
-            className="pointer-events-none absolute inset-y-0 -left-[72px] w-[96px] bg-white"
-            style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
-          />
-          <div className="relative z-10 min-h-[calc(100vh-24px)] px-14 py-8">
-            {children}
-          </div>
+      <main className="relative z-10 min-h-screen pl-[232px]">
+        <div className="mx-auto min-h-screen w-full max-w-[1640px] px-8 py-8 lg:px-10 lg:py-10 xl:px-12">
+          {children}
         </div>
       </main>
     </div>
