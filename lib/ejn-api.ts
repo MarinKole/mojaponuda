@@ -169,7 +169,7 @@ export async function fetchProcurementNotices(
     ContractType: CONTRACT_TYPE_MAP[r.ContractType] || r.ContractType || null,
     ProcedureType: PROCEDURE_TYPE_MAP[r.ProcedureType] || r.ProcedureType || null,
     Status: null,
-    NoticeUrl: r.Id ? `https://www.ejn.gov.ba/Notice/${r.Id}` : null,
+    NoticeUrl: r.Id ? `https://next.ejn.gov.ba/advertisement/procurement/${r.Id}` : null,
     Description: r.AdditionalInformation || null,
   }));
 }

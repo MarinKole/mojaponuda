@@ -3,21 +3,66 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, CheckCircle, AlertTriangle, ArrowRight, Loader2, Search } from "lucide-react";
+import { FileText, CheckCircle, AlertTriangle, ArrowRight, Loader2, Search, XCircle } from "lucide-react";
 import Link from "next/link";
+import { demoAnalyzeTender, type DemoTenderResult } from "@/app/actions/demo-analyze";
+
+function formatValue(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "—";
+  return (
+    new Intl.NumberFormat("bs-BA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value) + " KM"
+  );
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("bs-BA", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function getDaysLeft(dateStr: string | null | undefined): { text: string; color: string } | null {
+  if (!dateStr) return null;
+  const diff = Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return { text: "Rok istekao", color: "text-slate-400" };
+  if (diff <= 7) return { text: `Još ${diff} dana`, color: "text-red-600" };
+  return { text: `Još ${diff} dana`, color: "text-emerald-600" };
+}
 
 export function DemoWidget() {
-  const [step, setStep] = useState<"input" | "analyzing" | "result">("input");
+  const [step, setStep] = useState<"input" | "analyzing" | "result" | "not_found">("input");
   const [inputValue, setInputValue] = useState("");
+  const [result, setResult] = useState<DemoTenderResult | null>(null);
 
-  function handleAnalyze() {
+  async function handleAnalyze() {
     if (!inputValue.trim()) return;
     setStep("analyzing");
-    // Simulate analysis delay
-    setTimeout(() => {
-      setStep("result");
-    }, 2000);
+
+    try {
+      const data = await demoAnalyzeTender(inputValue.trim());
+      if (data.found) {
+        setResult(data);
+        setStep("result");
+      } else {
+        setStep("not_found");
+      }
+    } catch {
+      setStep("not_found");
+    }
   }
+
+  function handleReset() {
+    setStep("input");
+    setInputValue("");
+    setResult(null);
+  }
+
+  const daysLeft = result?.deadline ? getDaysLeft(result.deadline) : null;
 
   return (
     <div className="w-full max-w-4xl mx-auto rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
@@ -40,7 +85,7 @@ export function DemoWidget() {
                 Isprobajte analizu besplatno
               </h3>
               <p className="text-slate-500">
-                Unesite link tendera ili kopirajte tekst iz dokumentacije da vidite kako sistem radi.
+                Zalijepite link tendera s EJN portala da vidite kako sistem radi.
               </p>
             </div>
 
@@ -48,7 +93,7 @@ export function DemoWidget() {
               <div className="flex gap-2 p-2 rounded-2xl border border-slate-200 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                 <Input
                   className="border-none shadow-none focus-visible:ring-0 h-12 text-base"
-                  placeholder="Zalijepite link ili tekst tendera..."
+                  placeholder="https://www.ejn.gov.ba/Notice/..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
@@ -64,9 +109,7 @@ export function DemoWidget() {
                 </Button>
               </div>
               <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-400">
-                <span>Podržani portali: EJN, UNDP, EU</span>
-                <span>•</span>
-                <span>Formati: PDF, DOCX</span>
+                <span>Podržani portal: EJN (ejn.gov.ba)</span>
               </div>
             </div>
 
@@ -93,71 +136,99 @@ export function DemoWidget() {
                 <Loader2 className="size-12 text-primary animate-spin" />
               </div>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Analiziram dokumentaciju...</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Tražim tender u bazi...</h3>
             <div className="space-y-1">
-              <p className="text-sm text-slate-500 animate-pulse">Provjeravam uslove kvalifikacije...</p>
-              <p className="text-sm text-slate-500 animate-pulse delay-75">Tražim potrebne certifikate...</p>
-              <p className="text-sm text-slate-500 animate-pulse delay-150">Računam rokove...</p>
+              <p className="text-sm text-slate-500 animate-pulse">Provjeravam EJN identifikator...</p>
             </div>
           </div>
         )}
 
-        {step === "result" && (
+        {step === "not_found" && (
+          <div className="py-12 flex flex-col items-center justify-center text-center animate-in fade-in duration-500">
+            <div className="bg-slate-100 p-4 rounded-2xl mb-6">
+              <XCircle className="size-12 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Tender nije pronađen</h3>
+            <p className="text-sm text-slate-500 max-w-md mb-6">
+              Nismo pronašli ovaj tender u našoj bazi. Provjerite da li ste zalijepili ispravan EJN link, 
+              ili se registrujte za pristup kompletnoj bazi tendera.
+            </p>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={handleReset} className="rounded-xl font-bold">
+                Pokušaj ponovo
+              </Button>
+              <Link href="/signup">
+                <Button className="rounded-xl font-bold bg-primary hover:bg-blue-700">
+                  Kreiraj nalog
+                  <ArrowRight className="ml-2 size-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {step === "result" && result && (
           <div className="animate-in fade-in zoom-in-95 duration-500">
             <div className="flex flex-col md:flex-row gap-8">
-              {/* Summary */}
               <div className="flex-1 space-y-6">
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 mb-2">
                     REZULTAT ANALIZE
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900">
-                    Nabavka računarske opreme
+                    {result.title}
                   </h3>
-                  <p className="text-slate-500 text-sm mt-1">
-                    Procijenjena vrijednost: 50.000 KM
-                  </p>
+                  {result.contracting_authority && (
+                    <p className="text-slate-500 text-sm mt-1">
+                      {result.contracting_authority}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                     <p className="text-xs font-bold text-slate-500 uppercase">Rok za ponude</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">15.04.2024</p>
-                    <span className="text-xs font-medium text-emerald-600">Još 14 dana</span>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{formatDate(result.deadline)}</p>
+                    {daysLeft && (
+                      <span className={`text-xs font-medium ${daysLeft.color}`}>{daysLeft.text}</span>
+                    )}
                   </div>
-                  <div className="p-4 rounded-xl bg-red-50 border border-red-100">
-                    <p className="text-xs font-bold text-red-500 uppercase">Identifikovani rizici</p>
-                    <p className="text-lg font-bold text-red-700 mt-1">2 Upozorenja</p>
-                    <span className="text-xs font-medium text-red-600">Potrebna pažnja</span>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <p className="text-xs font-bold text-slate-500 uppercase">Procijenjena vrijednost</p>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{formatValue(result.estimated_value)}</p>
+                    {result.contract_type && (
+                      <span className="text-xs font-medium text-slate-500">{result.contract_type}</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="font-bold text-slate-900 text-sm">Potrebni dokumenti (Uzorak)</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">Šta MojaPonuda radi za vas</h4>
                   <ul className="space-y-2">
                     {[
-                      { name: "Izvod iz sudskog registra", type: "Obavezno" },
-                      { name: "Bilans stanja za 2023.", type: "Finansije" },
-                      { name: "Certifikat ISO 9001", type: "Tehnička" },
-                    ].map((doc, i) => (
+                      { name: "Identifikacija svih potrebnih dokumenata", type: "AI" },
+                      { name: "Detekcija rizika diskvalifikacije", type: "AI" },
+                      { name: "Automatsko uparivanje s vašim Document Vaultom", type: "Auto" },
+                      { name: "Praćenje rokova i notifikacije", type: "Auto" },
+                    ].map((item, i) => (
                       <li key={i} className="flex items-center justify-between p-2 rounded-lg border border-slate-100 bg-white">
                         <div className="flex items-center gap-2">
-                          <FileText className="size-4 text-slate-400" />
-                          <span className="text-sm font-medium text-slate-700">{doc.name}</span>
+                          <CheckCircle className="size-4 text-emerald-500" />
+                          <span className="text-sm font-medium text-slate-700">{item.name}</span>
                         </div>
-                        <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                          {doc.type}
+                        <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded">
+                          {item.type}
                         </span>
                       </li>
                     ))}
-                    <li className="p-2 text-center text-xs text-slate-400 italic">
-                      + 4 druga dokumenta...
-                    </li>
                   </ul>
                 </div>
+
+                <button onClick={handleReset} className="text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                  ← Analiziraj drugi tender
+                </button>
               </div>
 
-              {/* CTA Side */}
               <div className="w-full md:w-72 shrink-0 flex flex-col justify-center gap-4 bg-slate-900 rounded-2xl p-6 text-white text-center">
                 <div className="mx-auto size-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
                   <CheckCircle className="size-6 text-white" />
