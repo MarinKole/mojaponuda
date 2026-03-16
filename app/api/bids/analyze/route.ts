@@ -91,17 +91,35 @@ export async function POST(request: NextRequest) {
     // Koristi dijeljenu logiku za analizu (ovo rješava i caching)
     const analysis = await analyzeTender(tender);
 
+    if (!analysis.checklist_items.length) {
+      return NextResponse.json(
+        {
+          error:
+            "AI analiza nije pronašla nijednu checklist stavku. Tender vjerovatno nema dovoljno teksta za analizu ili OpenAI nije vratio upotrebljiv rezultat.",
+        },
+        { status: 422 }
+      );
+    }
+
     // Spremi AI analizu u bids.ai_analysis (za arhivu specifičnu za ovaj bid)
-    await supabase
+    const { error: bidUpdateError } = await supabase
       .from("bids")
       .update({ ai_analysis: analysis as unknown as Json })
       .eq("id", bid_id);
+
+    if (bidUpdateError) {
+      throw new Error(`Spremanje AI analize nije uspjelo: ${bidUpdateError.message}`);
+    }
 
     // Kreiraj checklist stavke iz analize
     const existingChecklist = await supabase
       .from("bid_checklist_items")
       .select("id")
       .eq("bid_id", bid_id);
+
+    if (existingChecklist.error) {
+      throw new Error(`Čitanje postojeće checkliste nije uspjelo: ${existingChecklist.error.message}`);
+    }
 
     const startOrder = (existingChecklist.data?.length ?? 0);
 
@@ -139,7 +157,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (checklistRows.length > 0) {
-      await supabase.from("bid_checklist_items").insert(checklistRows);
+      const { error: checklistInsertError } = await supabase
+        .from("bid_checklist_items")
+        .insert(checklistRows);
+
+      if (checklistInsertError) {
+        throw new Error(`Kreiranje checklist stavki nije uspjelo: ${checklistInsertError.message}`);
+      }
 
       // Dodaj u bid_documents one koji su automatski pronađeni
       const autoAttachedDocs = checklistRows
@@ -152,7 +176,13 @@ export async function POST(request: NextRequest) {
         }));
 
       if (autoAttachedDocs.length > 0) {
-        await supabase.from("bid_documents").insert(autoAttachedDocs);
+        const { error: autoAttachError } = await supabase
+          .from("bid_documents")
+          .insert(autoAttachedDocs);
+
+        if (autoAttachError) {
+          throw new Error(`Automatsko povezivanje dokumenata nije uspjelo: ${autoAttachError.message}`);
+        }
       }
     }
 

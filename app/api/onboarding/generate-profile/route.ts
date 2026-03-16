@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { openai } from "@/lib/openai";
+import { getOpenAIClient } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 30;
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [

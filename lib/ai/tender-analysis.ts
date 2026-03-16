@@ -1,4 +1,4 @@
-import { openai } from "@/lib/openai";
+import { getOpenAIClient } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 import type { Tender, Json } from "@/types/database";
 
@@ -152,7 +152,11 @@ export async function analyzeTender(tender: Tender): Promise<AnalysisResult> {
   if (tender.ai_analysis) {
     // Validate that it has the expected structure
     const cached = tender.ai_analysis as unknown as AnalysisResult;
-    if (cached.checklist_items && Array.isArray(cached.checklist_items)) {
+    if (
+      cached.checklist_items &&
+      Array.isArray(cached.checklist_items) &&
+      cached.checklist_items.length > 0
+    ) {
       return cached;
     }
   }
@@ -179,6 +183,7 @@ export async function analyzeTender(tender: Tender): Promise<AnalysisResult> {
     .join("\n");
 
   // 3. Call OpenAI
+  const openai = getOpenAIClient();
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
