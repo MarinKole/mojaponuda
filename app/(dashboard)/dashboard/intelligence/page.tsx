@@ -1,10 +1,25 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { demoTopAuthorities, demoTopWinners, isDemoUser } from "@/lib/demo";
+import {
+  demoTopAuthorities,
+  demoTopWinners,
+  demoUpcomingProcurements,
+  isDemoUser,
+} from "@/lib/demo";
+import { generateMarketSummary } from "@/lib/ai/market-summary";
+import { getMarketOverview } from "@/lib/market-intelligence";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { ProGate } from "@/components/subscription/pro-gate";
 import { CategoryChart } from "@/components/intelligence/category-chart";
-import { TrendingUp, FileText, BarChart3, Database, Building2, Trophy, ArrowUpRight } from "lucide-react";
+import {
+  ArrowUpRight,
+  BarChart3,
+  Building2,
+  CalendarDays,
+  FileText,
+  Trophy,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
 function formatKM(value: number): string {
@@ -25,43 +40,9 @@ export default async function IntelligencePage() {
   if (!isSubscribed) return <ProGate />;
 
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split("T")[0];
-
-  // Aktivni tenderi
-  const { count: activeCount } = await supabase
-    .from("tenders")
-    .select("id", { count: "exact", head: true })
-    .gte("deadline", now.toISOString());
-
-  // Ukupna godišnja vrijednost dodijeljenih ugovora
-  const { data: yearAwards } = await supabase
-    .from("award_decisions")
-    .select("winning_price, contract_type")
-    .gte("award_date", startOfYear)
-    .not("winning_price", "is", null);
-
-  const yearTotalValue = (yearAwards ?? []).reduce(
-    (sum, a) => sum + (Number(a.winning_price) || 0),
-    0
-  );
-
-  // Tenderi po kategoriji
-  const categoryMap = new Map<string, { category: string; count: number; total_value: number }>();
-  for (const a of yearAwards ?? []) {
-    const cat = a.contract_type ?? "Ostalo";
-    const existing = categoryMap.get(cat);
-    const price = Number(a.winning_price) || 0;
-    if (existing) {
-      existing.count++;
-      existing.total_value += price;
-    } else {
-      categoryMap.set(cat, { category: cat, count: 1, total_value: price });
-    }
-  }
-  const categoryData = [...categoryMap.values()].sort((a, b) => b.count - a.count);
-  const displayCategoryData = categoryData.length > 0
-    ? categoryData
+  const marketOverview = await getMarketOverview(supabase);
+  const displayCategoryData = marketOverview.categoryData.length > 0
+    ? marketOverview.categoryData
     : isDemoAccount
       ? [
           { category: "Robe", count: 8, total_value: 420000 },
@@ -69,135 +50,152 @@ export default async function IntelligencePage() {
           { category: "Softver", count: 3, total_value: 180000 },
         ]
       : [];
-
-  // Top 10 naručilaca ovog mjeseca
-  const { data: monthTenders } = await supabase
-    .from("tenders")
-    .select("contracting_authority, contracting_authority_jib")
-    .gte("created_at", startOfMonth)
-    .not("contracting_authority", "is", null);
-
-  const authMap = new Map<string, { name: string; jib: string | null; count: number }>();
-  for (const t of monthTenders ?? []) {
-    const key = t.contracting_authority!;
-    const e = authMap.get(key);
-    if (e) e.count++;
-    else authMap.set(key, { name: key, jib: t.contracting_authority_jib, count: 1 });
-  }
-  const topAuthorities = [...authMap.values()].sort((a, b) => b.count - a.count).slice(0, 10);
-
-  // Top 10 pobjednika ove godine
-  const winnerMap = new Map<string, { name: string; jib: string; wins: number; total_value: number }>();
-  const { data: winnerAwards } = await supabase
-    .from("award_decisions")
-    .select("winner_name, winner_jib, winning_price")
-    .gte("award_date", startOfYear)
-    .not("winner_jib", "is", null)
-    .not("winning_price", "is", null);
-
-  for (const a of winnerAwards ?? []) {
-    const key = a.winner_jib!;
-    const e = winnerMap.get(key);
-    const price = Number(a.winning_price) || 0;
-    if (e) { e.wins++; e.total_value += price; }
-    else winnerMap.set(key, { name: a.winner_name ?? key, jib: key, wins: 1, total_value: price });
-  }
-  const topWinners = [...winnerMap.values()].sort((a, b) => b.total_value - a.total_value).slice(0, 10);
-  const displayTopAuthorities = topAuthorities.length > 0 ? topAuthorities : isDemoAccount ? demoTopAuthorities : [];
-  const displayTopWinners = topWinners.length > 0 ? topWinners : isDemoAccount ? demoTopWinners : [];
+  const displayTopAuthorities = marketOverview.topAuthorities.length > 0
+    ? marketOverview.topAuthorities
+    : isDemoAccount
+      ? demoTopAuthorities.map((authority) => ({
+          ...authority,
+          total_value: 0,
+          city: null,
+          authority_type: null,
+        }))
+      : [];
+  const displayTopWinners = marketOverview.topWinners.length > 0
+    ? marketOverview.topWinners
+    : isDemoAccount
+      ? demoTopWinners.map((winner) => ({
+          ...winner,
+          win_rate: null,
+          total_bids: null,
+          city: null,
+          municipality: null,
+        }))
+      : [];
+  const displayUpcomingPlans = marketOverview.upcomingPlans.length > 0
+    ? marketOverview.upcomingPlans
+    : isDemoAccount
+      ? demoUpcomingProcurements.slice(0, 4)
+      : [];
+  const usingAnyDemoFallback =
+    (displayCategoryData.length === 0 && isDemoAccount) ||
+    (marketOverview.topAuthorities.length === 0 && displayTopAuthorities.length > 0) ||
+    (marketOverview.topWinners.length === 0 && displayTopWinners.length > 0) ||
+    (marketOverview.upcomingPlans.length === 0 && displayUpcomingPlans.length > 0);
+  const marketSummary = await generateMarketSummary(marketOverview);
 
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="flex h-6 items-center rounded-full bg-blue-50 px-2 text-[10px] font-bold uppercase tracking-wider text-blue-600 border border-blue-100">
-              Tržišni Uvid
+          <div className="mb-2 flex items-center gap-2">
+            <span className="flex h-6 items-center rounded-full border border-blue-100 bg-blue-50 px-2 text-[10px] font-bold uppercase tracking-wider text-blue-600">
+              Tržišni uvid
             </span>
           </div>
           <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-            Tržišna Analitika
+            Tržišna analitika
           </h1>
-          <p className="mt-1.5 text-base text-slate-500">
-            Pregled BiH tržišta javnih nabavki u realnom vremenu.
+          <p className="mt-1.5 max-w-3xl text-base text-slate-500">
+            Pregled tržišta javnih nabavki sa fokusom na obim, konkurenciju, naručioce i ono što dolazi narednih 90 dana.
           </p>
         </div>
-        <div className="text-right hidden sm:block">
-          <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 inline-block">
-            Podaci uživo
+        <div className="hidden sm:block text-right">
+          <p className={`inline-block rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${usingAnyDemoFallback ? "border-amber-100 bg-amber-50 text-amber-700" : "border-emerald-100 bg-emerald-50 text-emerald-600"}`}>
+            {usingAnyDemoFallback ? "Demo primjer" : "Podaci uživo"}
           </p>
         </div>
       </div>
 
-      {/* Main Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {/* Active Tenders Card */}
-        <div className="rounded-[1.5rem] bg-white p-6 shadow-sm border border-slate-100 transition-all hover:shadow-md hover:border-blue-200 group">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Aktivni Tenderi</p>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+      <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-sm lg:p-7">
+        <div className="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">AI sažetak tržišta</p>
+            <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">{marketSummary.title}</h2>
+          </div>
+          <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${marketSummary.source === "ai" ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}>
+            {marketSummary.source === "ai" ? "AI uvid" : "Sažetak iz podataka"}
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {marketSummary.sentences.map((sentence, index) => (
+            <div key={`${index}-${sentence.slice(0, 24)}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm leading-6 text-slate-700">
+              {sentence}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Aktivni tenderi</p>
+            <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <FileText className="size-5" />
             </div>
           </div>
-          <p className="font-heading text-4xl font-extrabold text-slate-900">{activeCount ?? 0}</p>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              <ArrowUpRight className="size-3" />
-              Aktuelno
-            </span>
-            <p className="text-xs text-slate-500">Otvoren rok za prijavu</p>
-          </div>
+          <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.activeTenderCount}</p>
+          <p className="mt-3 text-xs text-slate-500">Otvoren rok za prijavu.</p>
         </div>
-
-        {/* Annual Volume Card */}
-        <div className="rounded-[1.5rem] bg-white p-6 shadow-sm border border-slate-100 transition-all hover:shadow-md hover:border-emerald-200 group">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Godišnji Promet</p>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Aktivna vrijednost</p>
+            <div className="flex size-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
+              <ArrowUpRight className="size-5" />
+            </div>
+          </div>
+          <p className="font-heading text-4xl font-extrabold text-slate-900">{formatKM(marketOverview.activeTenderValue)}</p>
+          <p className="mt-3 text-xs text-slate-500">Procijenjena vrijednost otvorenih tendera.</p>
+        </div>
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Dodijeljeno ove godine</p>
+            <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
               <TrendingUp className="size-5" />
             </div>
           </div>
-          <p className="font-heading text-4xl font-extrabold text-slate-900">{formatKM(yearTotalValue)}</p>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
-              {now.getFullYear()}
-            </span>
-            <p className="text-xs text-slate-500">Ukupna vrijednost ugovora</p>
-          </div>
+          <p className="font-heading text-4xl font-extrabold text-slate-900">{formatKM(marketOverview.yearAwardValue)}</p>
+          <p className="mt-3 text-xs text-slate-500">Ukupna vrijednost ugovora u {now.getFullYear()}. godini.</p>
         </div>
-
-        {/* Coverage Card */}
-        <div className="rounded-[1.5rem] bg-white p-6 shadow-sm border border-slate-100 transition-all hover:shadow-md hover:border-purple-200 group">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Pokrivenost</p>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Planirano 90 dana</p>
+            <div className="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+              <CalendarDays className="size-5" />
+            </div>
+          </div>
+          <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.plannedCount90d}</p>
+          <p className="mt-3 text-xs text-slate-500">{formatKM(marketOverview.plannedValue90d)} planirane vrijednosti.</p>
+        </div>
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Prosjek ponuđača</p>
+            <div className="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
               <BarChart3 className="size-5" />
             </div>
           </div>
-          <p className="font-heading text-4xl font-extrabold text-slate-900">100%</p>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="flex items-center gap-1 text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
-              EJN Portal
-            </span>
-            <p className="text-xs text-slate-500">Svi javni podaci</p>
+          <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.avgBidders90d ?? "—"}</p>
+          <p className="mt-3 text-xs text-slate-500">Prosjek po dodijeljenom ugovoru zadnjih 90 dana.</p>
+        </div>
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Prosječni popust</p>
+            <div className="flex size-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+              <Trophy className="size-5" />
+            </div>
           </div>
+          <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.avgDiscount90d !== null ? `${marketOverview.avgDiscount90d}%` : "—"}</p>
+          <p className="mt-3 text-xs text-slate-500">Prosječni pad cijene zadnjih 90 dana.</p>
         </div>
       </div>
 
-      {/* Chart Section */}
-      <div className="rounded-[1.5rem] bg-white p-8 shadow-sm border border-slate-100">
-        <div className="flex items-center justify-between mb-8">
+      <div className="rounded-[1.5rem] border border-slate-100 bg-white p-8 shadow-sm">
+        <div className="mb-8 flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-heading text-xl font-bold text-slate-900">Raspodjela Ugovora Po Kategorijama</h2>
-            <p className="text-sm text-slate-500 mt-1">Pregled vrijednosti i broja ugovora po tipu nabavke za {now.getFullYear()}. godinu</p>
+            <h2 className="font-heading text-xl font-bold text-slate-900">Raspodjela ugovora po kategorijama</h2>
+            <p className="mt-1 text-sm text-slate-500">Pregled vrijednosti i broja ugovora po tipu nabavke za {now.getFullYear()}. godinu.</p>
           </div>
-          <div className="hidden sm:block">
-             <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-               <div className="size-2 rounded-full bg-blue-500" /> Robe
-               <div className="size-2 rounded-full bg-cyan-400 ml-2" /> Usluge
-               <div className="size-2 rounded-full bg-violet-400 ml-2" /> Radovi
-             </div>
+          <div className="hidden sm:block rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+            Vrijednost + broj ugovora
           </div>
         </div>
         <div className="h-[350px] w-full">
@@ -205,22 +203,71 @@ export default async function IntelligencePage() {
         </div>
       </div>
 
-      {/* Two Panels */}
       <div className="grid gap-8 lg:grid-cols-2">
-        {/* Top Buyers Panel */}
-        <div className="rounded-[1.5rem] bg-white shadow-sm border border-slate-100 flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/30">
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="border-b border-slate-100 pb-5">
+            <h2 className="font-heading text-lg font-bold text-slate-900">Kako se nabavke vode</h2>
+            <p className="mt-1 text-xs text-slate-500">Najveći tipovi postupka po vrijednosti i tržišnom pritisku.</p>
+          </div>
+          <div className="mt-5 space-y-3">
+            {marketOverview.procedureData.length > 0 ? (
+              marketOverview.procedureData.map((procedure) => (
+                <div key={procedure.procedure_type} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{procedure.procedure_type}</p>
+                      <p className="mt-1 text-xs text-slate-500">{procedure.count} ugovora · {procedure.avg_bidders ?? "—"} ponuđača · {procedure.avg_discount !== null ? `${procedure.avg_discount}% popust` : "bez popusta"}</p>
+                    </div>
+                    <span className="text-sm font-bold text-blue-700">{formatKM(procedure.total_value)}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-500">
+                Nema dovoljno stvarnih podataka za pregled postupaka.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="border-b border-slate-100 pb-5">
+            <h2 className="font-heading text-lg font-bold text-slate-900">Trend zadnjih mjeseci</h2>
+            <p className="mt-1 text-xs text-slate-500">Broj i vrijednost dodijeljenih ugovora po mjesecu.</p>
+          </div>
+          <div className="mt-5 space-y-3">
+            {marketOverview.monthlyAwards.length > 0 ? (
+              marketOverview.monthlyAwards.map((month) => (
+                <div key={month.month_key} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{month.label}</p>
+                    <p className="mt-1 text-xs text-slate-500">{month.count} ugovora</p>
+                  </div>
+                  <span className="text-sm font-bold text-emerald-700">{formatKM(month.total_value)}</span>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-500">
+                Nema dovoljno podataka za trend po mjesecima.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-slate-100 bg-slate-50/30 p-6">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
                 <Building2 className="size-5" />
               </div>
               <div>
-                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji Naručioci</h2>
-                <p className="text-xs text-slate-500 font-medium">Top 10 po broju raspisanih tendera (Ovaj mjesec)</p>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji naručioci</h2>
+                <p className="text-xs font-medium text-slate-500">Po broju tendera i procijenjenoj vrijednosti u ovom mjesecu.</p>
               </div>
             </div>
           </div>
-          
           <div className="flex-1 p-2">
             {displayTopAuthorities.length === 0 ? (
               <div className="flex h-64 items-center justify-center">
@@ -228,23 +275,26 @@ export default async function IntelligencePage() {
               </div>
             ) : (
               <div className="space-y-1">
-                {displayTopAuthorities.map((a, i) => (
-                  <div key={a.name} className="flex items-center justify-between rounded-xl px-4 py-3 hover:bg-slate-50 transition-colors group">
+                {displayTopAuthorities.map((authority, index) => (
+                  <div key={`${authority.name}-${index}`} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                        {i + 1}
+                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">
+                        {index + 1}
                       </div>
-                      {a.jib ? (
-                        <Link href={`/dashboard/intelligence/authority/${a.jib}`} className="truncate text-sm font-bold text-slate-700 group-hover:text-primary transition-colors">
-                          {a.name}
-                        </Link>
-                      ) : (
-                        <span className="truncate text-sm font-bold text-slate-700">{a.name}</span>
-                      )}
+                      <div className="min-w-0">
+                        {authority.jib ? (
+                          <Link href={`/dashboard/intelligence/authority/${authority.jib}`} className="truncate text-sm font-bold text-slate-700 transition-colors group-hover:text-primary">
+                            {authority.name}
+                          </Link>
+                        ) : (
+                          <span className="truncate text-sm font-bold text-slate-700">{authority.name}</span>
+                        )}
+                        <p className="text-xs text-slate-500">{[authority.city, authority.authority_type].filter(Boolean).join(" · ") || "Javni naručilac"}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-4 shrink-0">
-                      <span className="text-[10px] font-bold uppercase text-slate-400">Tenderi</span>
-                      <span className="font-mono text-sm font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md min-w-[2rem] text-center">{a.count}</span>
+                    <div className="ml-4 shrink-0 text-right">
+                      <p className="text-sm font-bold text-slate-900">{authority.count}</p>
+                      <p className="text-xs text-slate-400">{formatKM(authority.total_value)}</p>
                     </div>
                   </div>
                 ))}
@@ -253,20 +303,18 @@ export default async function IntelligencePage() {
           </div>
         </div>
 
-        {/* Top Winners Panel */}
-        <div className="rounded-[1.5rem] bg-white shadow-sm border border-slate-100 flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50/30">
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-slate-100 bg-slate-50/30 p-6">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                 <Trophy className="size-5" />
               </div>
               <div>
-                <h2 className="font-heading text-lg font-bold text-slate-900">Najuspješniji Ponuđači</h2>
-                <p className="text-xs text-slate-500 font-medium">Top 10 po ukupnoj vrijednosti ugovora (Ova godina)</p>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Najuspješniji ponuđači</h2>
+                <p className="text-xs font-medium text-slate-500">Po ukupnoj vrijednosti ugovora ove godine.</p>
               </div>
             </div>
           </div>
-          
           <div className="flex-1 p-2">
             {displayTopWinners.length === 0 ? (
               <div className="flex h-64 items-center justify-center">
@@ -274,25 +322,65 @@ export default async function IntelligencePage() {
               </div>
             ) : (
               <div className="space-y-1">
-                {displayTopWinners.map((w, i) => (
-                  <div key={w.jib} className="flex items-center justify-between rounded-xl px-4 py-3 hover:bg-slate-50 transition-colors group">
+                {displayTopWinners.map((winner, index) => (
+                  <div key={winner.jib} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
-                        {i + 1}
+                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600">
+                        {index + 1}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-slate-700 group-hover:text-primary transition-colors">{w.name}</p>
-                        <p className="text-xs text-slate-500">Ugovora: {w.wins}</p>
+                        <p className="truncate text-sm font-bold text-slate-700 transition-colors group-hover:text-primary">{winner.name}</p>
+                        <p className="text-xs text-slate-500">{winner.wins} ugovora · {winner.win_rate !== null ? `${winner.win_rate}% uspješnost` : "bez podatka"}</p>
                       </div>
                     </div>
-                    <span className="shrink-0 text-sm font-bold text-emerald-600 ml-4 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
-                      {formatKM(w.total_value)}
-                    </span>
+                    <div className="ml-4 shrink-0 text-right">
+                      <p className="text-sm font-bold text-emerald-600">{formatKM(winner.total_value)}</p>
+                      <p className="text-xs text-slate-400">{winner.total_bids !== null ? `${winner.total_bids} ponuda` : winner.city || winner.municipality || "—"}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
+          <div>
+            <h2 className="font-heading text-lg font-bold text-slate-900">Šta dolazi uskoro</h2>
+            <p className="mt-1 text-xs text-slate-500">Planirane nabavke u narednih 90 dana.</p>
+          </div>
+          <CalendarDays className="size-5 text-violet-600" />
+        </div>
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {displayUpcomingPlans.length > 0 ? (
+            displayUpcomingPlans.map((plan) => (
+              <div key={plan.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <p className="line-clamp-2 text-sm font-semibold text-slate-900">{plan.description || "Bez opisa"}</p>
+                <p className="mt-1 text-xs text-slate-500">{plan.contracting_authorities?.name ?? "Nepoznat naručilac"}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                  <span className="rounded-full bg-white px-2.5 py-1 font-medium">
+                    {plan.planned_date ? new Date(plan.planned_date).toLocaleDateString("bs-BA") : "—"}
+                  </span>
+                  {plan.contract_type ? (
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium">
+                      {plan.contract_type}
+                    </span>
+                  ) : null}
+                  {plan.estimated_value ? (
+                    <span className="rounded-full bg-violet-50 px-2.5 py-1 font-semibold text-violet-700">
+                      {formatKM(plan.estimated_value)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-500 lg:col-span-2">
+              Trenutno nema planiranih nabavki za prikaz.
+            </div>
+          )}
         </div>
       </div>
     </div>

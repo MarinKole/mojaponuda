@@ -16,6 +16,7 @@ import {
   parseCompanyProfile,
 } from "@/lib/company-profile";
 import { DashboardHomeOverview } from "@/components/dashboard/home-overview";
+import { getCompetitorAnalysis } from "@/lib/market-intelligence";
 import { getSubscriptionStatus } from "@/lib/subscription";
 
 function formatCompactCurrency(value: number | null | undefined): string {
@@ -326,6 +327,7 @@ export default async function DashboardPage() {
   const topRelevantAuthorities = [...topAuthoritiesMap.values()]
     .sort((a, b) => b.count - a.count || b.totalValue - a.totalValue)
     .slice(0, 3);
+  const topRelevantAuthoritiesSource = topRelevantAuthorities.length > 0 ? "live" : "empty";
 
   const today = new Date().toISOString().split("T")[0];
   const { data: upcomingRowsData } = await supabase
@@ -359,65 +361,28 @@ export default async function DashboardPage() {
     total_value: number;
     win_rate: number | null;
   }[] = [];
+  let competitorSnapshotSource: "live" | "demo" | "empty" = "empty";
 
   if (subscriptionStatus.isSubscribed) {
-    const authorityJibs = [
-      ...new Set(
-        relevantTenders
-          .map((tender) => tender.contracting_authority_jib)
-          .filter((value): value is string => Boolean(value))
-      ),
-    ];
+    const competitorAnalysis = await getCompetitorAnalysis(supabase, {
+      jib: resolvedCompany.jib,
+      industry: resolvedCompany.industry,
+      keywords: resolvedCompany.keywords || [],
+      operating_regions: resolvedCompany.operating_regions || [],
+    });
 
-    if (authorityJibs.length > 0) {
-      const { data: competitorAwards } = await supabase
-        .from("award_decisions")
-        .select("winner_name, winner_jib, winning_price")
-        .in("contracting_authority_jib", authorityJibs)
-        .not("winner_jib", "is", null)
-        .limit(300);
+    competitorSnapshot = competitorAnalysis.competitors
+      .slice(0, 3)
+      .map((competitor) => ({
+        name: competitor.name,
+        jib: competitor.jib,
+        wins: competitor.wins,
+        total_value: competitor.total_value,
+        win_rate: competitor.win_rate,
+      }));
 
-      const competitorMap = new Map<
-        string,
-        { name: string; jib: string; wins: number; total_value: number }
-      >();
-
-      for (const award of competitorAwards ?? []) {
-        if (!award.winner_jib || award.winner_jib === resolvedCompany.jib) continue;
-        const existing = competitorMap.get(award.winner_jib);
-        const amount = Number(award.winning_price) || 0;
-        if (existing) {
-          existing.wins += 1;
-          existing.total_value += amount;
-        } else {
-          competitorMap.set(award.winner_jib, {
-            name: award.winner_name ?? award.winner_jib,
-            jib: award.winner_jib,
-            wins: 1,
-            total_value: amount,
-          });
-        }
-      }
-
-      const competitorJibs = [...competitorMap.keys()].slice(0, 10);
-      const { data: competitorMarketRows } = competitorJibs.length > 0
-        ? await supabase
-            .from("market_companies")
-            .select("jib, win_rate")
-            .in("jib", competitorJibs)
-        : { data: [] as { jib: string; win_rate: number | null }[] };
-
-      const competitorWinRateMap = new Map(
-        (competitorMarketRows ?? []).map((row) => [row.jib, row.win_rate])
-      );
-
-      competitorSnapshot = [...competitorMap.values()]
-        .map((competitor) => ({
-          ...competitor,
-          win_rate: competitorWinRateMap.get(competitor.jib) ?? null,
-        }))
-        .sort((a, b) => b.wins - a.wins || b.total_value - a.total_value)
-        .slice(0, 3);
+    if (competitorSnapshot.length > 0) {
+      competitorSnapshotSource = "live";
     }
   }
 
@@ -429,6 +394,7 @@ export default async function DashboardPage() {
       total_value: competitor.total_value,
       win_rate: competitor.win_rate,
     }));
+    competitorSnapshotSource = "demo";
   }
 
   const documentsCount = documentsCountValue ?? demoDocuments.length;
@@ -583,7 +549,9 @@ export default async function DashboardPage() {
         contracting_authority: tender.contracting_authority,
       }))}
       topRelevantAuthorities={topRelevantAuthorities}
+      topRelevantAuthoritiesSource={topRelevantAuthoritiesSource}
       competitorSnapshot={competitorSnapshot}
+      competitorSnapshotSource={competitorSnapshotSource}
       displayUpcomingRows={displayUpcomingRows}
       subscriptionActive={subscriptionStatus.isSubscribed}
     />

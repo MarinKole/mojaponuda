@@ -73,6 +73,7 @@ interface DashboardHomeOverviewProps {
   dashboardBidRows: DashboardBidRow[];
   recommendedTenders: DashboardTenderCard[];
   topRelevantAuthorities: Array<{ name: string; count: number; totalValue: number }>;
+  topRelevantAuthoritiesSource: "live" | "empty";
   competitorSnapshot: Array<{
     name: string;
     jib: string;
@@ -80,6 +81,7 @@ interface DashboardHomeOverviewProps {
     total_value: number;
     win_rate: number | null;
   }>;
+  competitorSnapshotSource: "live" | "demo" | "empty";
   displayUpcomingRows: Array<{
     id: string;
     description: string | null;
@@ -147,7 +149,9 @@ export function DashboardHomeOverview({
   dashboardBidRows,
   recommendedTenders,
   topRelevantAuthorities,
+  topRelevantAuthoritiesSource,
   competitorSnapshot,
+  competitorSnapshotSource,
   displayUpcomingRows,
   subscriptionActive,
 }: DashboardHomeOverviewProps) {
@@ -388,7 +392,10 @@ export function DashboardHomeOverview({
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Tržište</p>
-                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Najčešći naručioci</h2>
+                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Naručioci u fokusu</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  {topRelevantAuthoritiesSource === "live" ? "Podaci uživo iz tendera koji odgovaraju vašem profilu." : "Pojavit će se kada sistem nađe dovoljno relevantnih tendera."}
+                </p>
               </div>
               <Swords className="size-5 text-rose-600" />
             </div>
@@ -413,7 +420,18 @@ export function DashboardHomeOverview({
             </div>
 
             <div className="mt-6 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Konkurencija</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Konkurencija</p>
+                {competitorSnapshotSource === "live" ? (
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                    Podaci uživo
+                  </span>
+                ) : competitorSnapshotSource === "demo" ? (
+                  <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-700">
+                    Demo primjer
+                  </span>
+                ) : null}
+              </div>
               {subscriptionActive ? (
                 competitorSnapshot.length > 0 ? (
                   competitorSnapshot.map((competitor) => (
@@ -426,7 +444,7 @@ export function DashboardHomeOverview({
                   ))
                 ) : (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-500">
-                    Trenutno nema dovoljno podataka za pregled konkurencije.
+                    Trenutno nema dovoljno stvarnih podataka za pregled konkurencije.
                   </div>
                 )
               ) : (

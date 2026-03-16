@@ -7,19 +7,17 @@ import type {
   SubscriptionInsert,
 } from "@/types/database";
 
-export const DEMO_USER_EMAIL = "admin@mojaponuda.ba";
-export const ADMIN_TEST_USER_EMAILS = [
-  DEMO_USER_EMAIL,
-  "marin.kolenda@outlook.com",
-] as const;
+const configuredDemoUserEmails = (process.env.NEXT_PUBLIC_DEMO_USER_EMAILS ?? "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+export const DEMO_USER_EMAIL = configuredDemoUserEmails[0] ?? "demo@mojaponuda.ba";
+export const ADMIN_TEST_USER_EMAILS = configuredDemoUserEmails;
 
 export function isDemoUser(email?: string | null): boolean {
   const normalizedEmail = email?.trim().toLowerCase();
-  return normalizedEmail
-    ? ADMIN_TEST_USER_EMAILS.includes(
-        normalizedEmail as (typeof ADMIN_TEST_USER_EMAILS)[number]
-      )
-    : false;
+  return normalizedEmail ? ADMIN_TEST_USER_EMAILS.includes(normalizedEmail) : false;
 }
 
 export function isCompanyProfileComplete(
