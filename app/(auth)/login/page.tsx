@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,10 @@ const errorMessages: Record<string, string> = {
   "Invalid email or password": "Pogrešan email ili lozinka.",
   "Too many requests": "Previše pokušaja. Pokušajte ponovo za nekoliko minuta.",
   "User not found": "Korisnik s ovim emailom ne postoji.",
+  otp_expired:
+    "Signup link je istekao ili je već otvoren. Ako koristite Outlook, otvorite najnoviji email ili pošaljite novi link.",
+  access_denied: "Potvrda email adrese nije uspjela. Pokušajte ponovo iz najnovijeg emaila.",
+  auth_callback_failed: "Prijava preko email linka nije uspjela. Pokušajte ponovo.",
 };
 
 function translateError(message: string): string {
@@ -23,10 +27,25 @@ function translateError(message: string): string {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const redirectError = useMemo(() => {
+    const code = searchParams.get("error_code") ?? searchParams.get("error");
+    const description = searchParams.get("error_description");
+
+    if (code) {
+      return translateError(code);
+    }
+
+    if (description) {
+      return description;
+    }
+
+    return null;
+  }, [searchParams]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -67,9 +86,9 @@ export default function LoginPage() {
       </div>
 
       <form onSubmit={handleLogin} className="space-y-6">
-        {error && (
+        {(error ?? redirectError) && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
-            {error}
+            {error ?? redirectError}
           </div>
         )}
         
