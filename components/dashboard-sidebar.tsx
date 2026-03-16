@@ -31,13 +31,13 @@ interface NavItem {
 
 const coreItems: NavItem[] = [
   { href: "/dashboard", label: "Pregled", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/tenders", label: "Skener", icon: Search },
-  { href: "/dashboard/vault", label: "Dokumenti", icon: FileText },
+  { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
+  { href: "/dashboard/vault", label: "Moja dokumenta", icon: FileText },
   { href: "/dashboard/bids", label: "Ponude", icon: Briefcase },
 ];
 
 const intelligenceItems: NavItem[] = [
-  { href: "/dashboard/intelligence", label: "Analitika", icon: BarChart3, pro: true, exact: true },
+  { href: "/dashboard/intelligence", label: "Analiza tržišta", icon: BarChart3, pro: true, exact: true },
   { href: "/dashboard/intelligence/competitors", label: "Konkurencija", icon: Swords, pro: true },
   { href: "/dashboard/intelligence/upcoming", label: "Planirano", icon: Calendar, pro: true },
 ];
