@@ -8,9 +8,18 @@ import type {
 } from "@/types/database";
 
 export const DEMO_USER_EMAIL = "admin@mojaponuda.ba";
+export const ADMIN_TEST_USER_EMAILS = [
+  DEMO_USER_EMAIL,
+  "marin.kolenda@outlook.com",
+] as const;
 
 export function isDemoUser(email?: string | null): boolean {
-  return email?.trim().toLowerCase() === DEMO_USER_EMAIL;
+  const normalizedEmail = email?.trim().toLowerCase();
+  return normalizedEmail
+    ? ADMIN_TEST_USER_EMAILS.includes(
+        normalizedEmail as (typeof ADMIN_TEST_USER_EMAILS)[number]
+      )
+    : false;
 }
 
 export function isCompanyProfileComplete(company?: Pick<Company, "jib"> | null): boolean {

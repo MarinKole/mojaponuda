@@ -24,9 +24,9 @@ export async function getSubscriptionStatus(
   const subscription = data as Subscription | null;
 
   if (isDemoUser(email)) {
-    // Ako admin ima pretplatu u bazi, koristi nju da bi se mogao prebacivati između paketa
     if (subscription) {
-      const plan = getPlanFromVariantId(subscription.lemonsqueezy_variant_id || null);
+      const resolvedPlan = getPlanFromVariantId(subscription.lemonsqueezy_variant_id || null);
+      const plan = resolvedPlan.id === "basic" ? PLANS.pro : resolvedPlan;
       return {
         isSubscribed: true,
         subscription,
@@ -34,15 +34,14 @@ export async function getSubscriptionStatus(
       };
     }
 
-    // Default za admina ako nema ništa u bazi je Agencijski paket
     const demoSub = getDemoSubscription(userId);
-    const agencyPlan = PLANS.agency;
-    demoSub.lemonsqueezy_variant_id = "agency";
+    const proPlan = PLANS.pro;
+    demoSub.lemonsqueezy_variant_id = "pro";
 
     return {
       isSubscribed: true,
       subscription: demoSub,
-      plan: agencyPlan,
+      plan: proPlan,
     };
   }
 
