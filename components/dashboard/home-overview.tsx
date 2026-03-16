@@ -160,7 +160,7 @@ export function DashboardHomeOverview({
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-3 py-1">
                 <ShieldCheck className="size-4 text-blue-600" />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">
-                  Početna kontrolna tabla
+                  Pregled
                 </span>
               </div>
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
@@ -177,10 +177,10 @@ export function DashboardHomeOverview({
 
             <div className="space-y-3">
               <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl lg:text-[2.7rem]">
-                Dobrodošli nazad. Evo šta je najbitnije za {companyName}.
+                Šta je danas važno za {companyName}
               </h1>
               <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base lg:text-lg">
-                Umjesto da pretražujete cijeli sistem, ovdje odmah vidite šta traži reakciju, koji tenderi su relevantni i koji je vaš naredni korak.
+                Ovdje odmah vidite šta traži pažnju, koje ponude čekaju i koje tendere vrijedi otvoriti.
               </p>
             </div>
 
@@ -189,7 +189,7 @@ export function DashboardHomeOverview({
                 href="/dashboard/tenders?tab=recommended"
                 className="inline-flex h-11 items-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition-all hover:bg-blue-700"
               >
-                Otvori preporučene tendere
+                Preporuke
               </Link>
               <Link
                 href="/dashboard/bids"
@@ -201,13 +201,13 @@ export function DashboardHomeOverview({
                 href="/dashboard/vault"
                 className="inline-flex h-11 items-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50"
               >
-                Document Vault
+                Dokumenti
               </Link>
             </div>
           </div>
 
           <div className={`rounded-[1.75rem] border p-6 shadow-sm ${toneStyles[nextAction.tone]}`}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Sljedeći korak</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Sada</p>
             <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">{nextAction.title}</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">{nextAction.description}</p>
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{nextAction.meta}</p>
@@ -249,8 +249,8 @@ export function DashboardHomeOverview({
         <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-sm lg:p-7">
           <div className="flex items-end justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Današnji redoslijed</p>
-              <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Šta uraditi prvo</h2>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Danas</p>
+              <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Šta prvo</h2>
             </div>
             <Clock className="size-5 text-blue-600" />
           </div>
@@ -276,7 +276,7 @@ export function DashboardHomeOverview({
               ))
             ) : (
               <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-500">
-                Trenutno nema hitnih operativnih akcija. Fokusirajte se na pregled novih tendera i širenje pipeline-a.
+                Trenutno nema hitnih stvari. Pogledajte nove tendere.
               </div>
             )}
           </div>
@@ -285,8 +285,8 @@ export function DashboardHomeOverview({
         <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-sm lg:p-7">
           <div className="flex items-end justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Za pregled</p>
-              <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Tenderi koji djeluju najrelevantnije</h2>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Tenderi</p>
+              <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Vrijedi pogledati</h2>
             </div>
             <Search className="size-5 text-blue-600" />
           </div>
@@ -318,7 +318,7 @@ export function DashboardHomeOverview({
               ))
             ) : (
               <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-500">
-                Još nemamo dovoljno relevantnih tendera za prikaz. Dopunite profil ili proširite regije i ključne riječi u postavkama profila.
+                Još nema dovoljno prijedloga. Dopunite profil u postavkama.
               </div>
             )}
           </div>
@@ -330,7 +330,7 @@ export function DashboardHomeOverview({
           <div className="flex flex-col gap-4 border-b border-slate-100 px-7 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aktivne ponude</p>
-              <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Workspace koji traže pažnju</h2>
+              <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Ponude koje traže pažnju</h2>
             </div>
             <Link
               href="/dashboard/bids"
@@ -377,7 +377,7 @@ export function DashboardHomeOverview({
               <div className="px-7 py-14 text-center">
                 <Briefcase className="mx-auto mb-3 size-10 text-slate-300" />
                 <p className="font-semibold text-slate-900">Još nemate aktivnih ponuda</p>
-                <p className="mt-2 text-sm text-slate-500">Krenite iz preporučenih tendera i otvorite prvi workspace.</p>
+                <p className="mt-2 text-sm text-slate-500">Krenite iz preporuka i otvorite prvu ponudu.</p>
               </div>
             )}
           </div>
@@ -387,8 +387,8 @@ export function DashboardHomeOverview({
           <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Tržišni radar</p>
-                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Ko se najčešće pojavljuje</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Tržište</p>
+                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Najčešći naručioci</h2>
               </div>
               <Swords className="size-5 text-rose-600" />
             </div>
@@ -407,13 +407,13 @@ export function DashboardHomeOverview({
                 ))
               ) : (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-500">
-                  Nakon par preciznijih preporuka ovdje ćete vidjeti naručioce koji se najviše uklapaju u vaš profil.
+                  Ovdje ćete vidjeti naručioce koji se najviše uklapaju u vaš profil.
                 </div>
               )}
             </div>
 
             <div className="mt-6 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Konkurentski snapshot</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Konkurencija</p>
               {subscriptionActive ? (
                 competitorSnapshot.length > 0 ? (
                   competitorSnapshot.map((competitor) => (
@@ -426,12 +426,12 @@ export function DashboardHomeOverview({
                   ))
                 ) : (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-500">
-                    Trenutno nema dovoljno podataka za izdvajanje konkurencije koja dominira vašim prostorom.
+                    Trenutno nema dovoljno podataka za pregled konkurencije.
                   </div>
                 )
               ) : (
                 <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-sm leading-6 text-slate-600">
-                  Konkurencija i dublji tržišni uvidi su dostupni u pretplati.
+                  Pregled konkurencije je dostupan u pretplati.
                   <Link href="/dashboard/subscription" className="mt-3 inline-flex items-center gap-2 font-semibold text-blue-700">
                     Pregled paketa
                     <ArrowUpRight className="size-4" />
@@ -445,7 +445,7 @@ export function DashboardHomeOverview({
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Planirano</p>
-                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Šta dolazi uskoro</h2>
+                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Šta dolazi</h2>
               </div>
               <CalendarDays className="size-5 text-violet-600" />
             </div>
@@ -473,7 +473,7 @@ export function DashboardHomeOverview({
                 )
               ) : (
                 <div className="rounded-2xl border border-violet-100 bg-violet-50/70 p-4 text-sm leading-6 text-slate-600">
-                  Modul planiranih nabavki otkriva tendere prije formalne objave.
+                  Ovdje vidite nabavke prije objave.
                   <Link href="/dashboard/subscription" className="mt-3 inline-flex items-center gap-2 font-semibold text-violet-700">
                     Otključaj planirano
                     <ArrowUpRight className="size-4" />

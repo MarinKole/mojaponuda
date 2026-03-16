@@ -33,7 +33,7 @@ const coreItems: NavItem[] = [
   { href: "/dashboard", label: "Početna", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
   { href: "/dashboard/bids", label: "Moje ponude", icon: Briefcase },
-  { href: "/dashboard/vault", label: "Document Vault", icon: FileText },
+  { href: "/dashboard/vault", label: "Dokumenti", icon: FileText },
 ];
 
 const intelligenceItems: NavItem[] = [
@@ -100,14 +100,14 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
           </div>
           <div>
             <p className="font-heading text-lg font-bold tracking-tight text-white">MojaPonuda.ba</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Operativni centar</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Početna</p>
           </div>
         </Link>
       </div>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+      <nav className="hide-scrollbar min-h-0 flex-1 overflow-y-auto pr-1">
         <div className="mb-6 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Dnevni rad</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Glavno</p>
         </div>
         <div className="space-y-1">
           {coreItems.map((item) => (
@@ -116,7 +116,7 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
         </div>
 
         <div className="mb-6 mt-7 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Tržišni uvid</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Tržište</p>
         </div>
         <div className="space-y-1">
           {intelligenceItems.map((item) => (
@@ -125,7 +125,7 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
         </div>
 
         <div className="mb-6 mt-7 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Profil i račun</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Račun</p>
         </div>
         <div className="space-y-1">
           {accountItems.map((item) => (

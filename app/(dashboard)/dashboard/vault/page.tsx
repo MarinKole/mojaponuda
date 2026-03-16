@@ -19,7 +19,7 @@ export default async function VaultPage() {
   const isDemoAccount = isDemoUser(user.email);
   const { data: companyData } = await supabase
     .from("companies")
-    .select("id, jib")
+    .select("id, jib, industry, keywords")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -49,10 +49,10 @@ export default async function VaultPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-            Trezor Dokumenata
+            Dokumenti
           </h1>
           <p className="mt-1 text-base text-slate-500">
-            Upravljajte dokumentima firme i pratite rokove isteka.
+            Ovdje čuvate dokumente firme i pratite rokove.
           </p>
         </div>
         <AddDocumentModal />

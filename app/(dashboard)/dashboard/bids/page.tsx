@@ -31,7 +31,7 @@ export default async function BidsPage() {
   const isDemoAccount = isDemoUser(user.email);
   const { data: companyData } = await supabase
     .from("companies")
-    .select("id, jib")
+    .select("id, jib, industry, keywords")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -91,10 +91,10 @@ export default async function BidsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-            Upravljanje Ponudama
+            Moje ponude
           </h1>
           <p className="mt-1 text-base text-slate-500">
-            Pregled svih vaših aktivnih i završenih ponuda na jednom mjestu.
+            Sve aktivne i završene ponude na jednom mjestu.
           </p>
         </div>
         <NewBidModal tenders={tenders} />

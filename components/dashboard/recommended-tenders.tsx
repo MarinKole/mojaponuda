@@ -115,12 +115,12 @@ export async function RecommendedTenders() {
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/70 px-3 py-1">
             <Sparkles className="size-4 text-blue-600" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">AI preporuke</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">Preporuke</span>
           </div>
           <div>
             <h2 className="font-heading text-2xl font-bold text-slate-950">Preporučeno za vas</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Tenderi koji najviše odgovaraju profilu vaše firme i operativnim regijama.
+              Tenderi koji najbolje odgovaraju vašoj firmi.
             </p>
           </div>
         </div>

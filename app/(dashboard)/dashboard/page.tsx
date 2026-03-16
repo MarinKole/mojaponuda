@@ -31,6 +31,19 @@ function daysUntil(dateStr: string): number {
   );
 }
 
+function formatDaysLabel(days: number): string {
+  if (days <= 0) return "danas";
+  if (days === 1) return "1 dan";
+  return `${days} dana`;
+}
+
+function formatDeadlineMeta(days: number | null): string {
+  if (days === null) return "Rok uskoro";
+  if (days <= 0) return "Rok je danas";
+  if (days === 1) return "1 dan do roka";
+  return `${days} dana do roka`;
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -432,43 +445,43 @@ export default async function DashboardPage() {
   const warningCount = expiring.length + missingChecklistCount;
   const nextAction = urgentBidDeadlines[0]
     ? {
-        title: "Zatvorite najbliži rok",
-        description: `Ponuda \"${urgentBidDeadlines[0].tenders.title}\" ima najbliži rok i traži vašu pažnju odmah.`,
+        title: "Prvo riješite najbliži rok",
+        description: `Ponuda \"${urgentBidDeadlines[0].tenders.title}\" traži pažnju odmah.`,
         href: `/dashboard/bids/${urgentBidDeadlines[0].id}`,
-        cta: "Otvori prioritetnu ponudu",
-        meta: nextDeadlineInDays !== null ? `${nextDeadlineInDays} dana do roka` : "Rok uskoro",
+        cta: "Otvori ponudu",
+        meta: formatDeadlineMeta(nextDeadlineInDays),
         tone: "critical" as const,
       }
     : missingChecklistCount > 0
       ? {
-          title: "Dovršite checklist stavke",
-          description: `Imate ${missingChecklistCount} checklist stavki koje još traže dokument ili potvrdu u aktivnim ponudama.`,
+          title: "Dovršite otvorene stavke",
+          description: `Imate ${missingChecklistCount} stavki koje još traže dokument ili potvrdu.`,
           href: "/dashboard/bids",
-          cta: "Pregledaj otvorene stavke",
+          cta: "Otvori ponude",
           meta: `${missingChecklistCount} otvorenih stavki`,
           tone: "attention" as const,
         }
       : expiring.length > 0
         ? {
-            title: "Obnovite dokumente na vrijeme",
-            description: `U Document Vaultu ${expiring.length} dokumenata uskoro ističe i mogu blokirati predaju ponuda.`,
+            title: "Provjerite dokumente",
+            description: `${expiring.length} dokumenata uskoro ističe i mogu usporiti prijavu.`,
             href: "/dashboard/vault",
-            cta: "Otvori Document Vault",
+            cta: "Otvori dokumente",
             meta: `${expiring.length} dokumenata pred istekom`,
             tone: "attention" as const,
           }
         : relevantTenders[0]
           ? {
-              title: "Pregledajte novi relevantan tender",
-              description: `Na osnovu vašeg profila izdvojili smo tender \"${relevantTenders[0].title}\" kao dobar kandidat za pregled.`,
+              title: "Pogledajte novi tender",
+              description: `Tender \"${relevantTenders[0].title}\" dobro odgovara vašem profilu.`,
               href: `/dashboard/tenders/${relevantTenders[0].id}`,
               cta: "Otvori tender",
               meta: `${relevantTenderCount} relevantnih tendera`,
               tone: "opportunity" as const,
             }
           : {
-              title: "Proširite pipeline novih prilika",
-              description: "Otvorite preporučene tendere i započnite pripremu novih ponuda iz svog profila interesa.",
+              title: "Otvorite nove prilike",
+              description: "Pogledajte tendere koji se uklapaju u vaš profil.",
               href: "/dashboard/tenders?tab=recommended",
               cta: "Idi na preporuke",
               meta: "Nema hitnih blokera",
@@ -484,9 +497,9 @@ export default async function DashboardPage() {
       icon: "briefcase" as const,
     },
     {
-      title: "Tenderi za pregled",
+      title: "Novi tenderi",
       value: String(relevantTenderCount),
-      meta: relevantTenderCount > 0 ? `${formatCompactCurrency(relevantTenderValue)} potencijala` : "Dopunite profil za više preporuka",
+      meta: relevantTenderCount > 0 ? `${formatCompactCurrency(relevantTenderValue)} ukupno` : "Dopunite profil za više prijedloga",
       href: "/dashboard/tenders?tab=recommended",
       icon: "search" as const,
     },
@@ -500,7 +513,7 @@ export default async function DashboardPage() {
     {
       title: "Rezultati",
       value: winRate !== null ? `${winRate}%` : String(displayWonBids),
-      meta: winRate !== null ? `${displayWonBids} dobijeno · ${displayLostBids} izgubljeno` : `${displayWonBids} dobijenih ponuda`,
+      meta: winRate !== null ? `${displayWonBids} dobijeno · ${displayLostBids} izgubljeno` : `${displayWonBids} dobijene ponude`,
       href: "/dashboard/bids",
       icon: "trend" as const,
     },
@@ -510,17 +523,17 @@ export default async function DashboardPage() {
     ...urgentBidDeadlines.slice(0, 3).map((bid) => ({
       id: `deadline-${bid.id}`,
       title: bid.tenders.title,
-      description: `Ponuda je aktivna i rok za predaju je ${bid.tenders.deadline ? `${daysUntil(bid.tenders.deadline)} dana` : "uskoro"}.`,
+      description: `Ponuda je aktivna i rok za predaju je ${bid.tenders.deadline ? formatDaysLabel(daysUntil(bid.tenders.deadline)) : "uskoro"}.`,
       href: `/dashboard/bids/${bid.id}`,
-      badge: bid.tenders.deadline ? `${daysUntil(bid.tenders.deadline)} dana` : "Rok",
+      badge: bid.tenders.deadline ? formatDaysLabel(daysUntil(bid.tenders.deadline)) : "Rok",
       tone: "critical" as const,
     })),
     ...(missingChecklistCount > 0
       ? [
           {
             id: "checklist-warning",
-            title: "Checklist stavke čekaju dopunu",
-            description: "Otvorite aktivne ponude i zatvorite stavke koje još nemaju dokument ili potvrdu.",
+            title: "Nedostaju dokumenti",
+            description: "Otvorite ponude i zatvorite stavke koje još nisu riješene.",
             href: "/dashboard/bids",
             badge: `${missingChecklistCount} stavki`,
             tone: "attention" as const,
@@ -532,7 +545,7 @@ export default async function DashboardPage() {
           {
             id: "documents-warning",
             title: "Provjerite dokumente pred istekom",
-            description: `U trezoru trenutno ${expiring.length} dokumenata ulazi u period isteka i treba obnovu.`,
+            description: `${expiring.length} dokumenata uskoro treba obnovu.`,
             href: "/dashboard/vault",
             badge: `${expiring.length} dokumenta`,
             tone: "attention" as const,
@@ -543,7 +556,7 @@ export default async function DashboardPage() {
       ? [
           {
             id: `relevant-${relevantTenders[0].id}`,
-            title: "Otvorite sljedeći relevantan tender",
+            title: "Pogledajte sljedeći tender",
             description: relevantTenders[0].title,
             href: `/dashboard/tenders/${relevantTenders[0].id}`,
             badge: "Nova prilika",

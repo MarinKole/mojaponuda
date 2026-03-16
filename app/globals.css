@@ -117,6 +117,15 @@
 
 /* Custom utilities for serious theme */
 @layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .glass-panel {
     @apply bg-white border border-slate-200 shadow-sm;
   }
