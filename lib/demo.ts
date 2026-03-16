@@ -22,8 +22,13 @@ export function isDemoUser(email?: string | null): boolean {
     : false;
 }
 
-export function isCompanyProfileComplete(company?: Pick<Company, "jib"> | null): boolean {
-  return Boolean(company?.jib?.trim());
+export function isCompanyProfileComplete(
+  company?: Pick<Company, "jib" | "industry" | "keywords"> | null
+): boolean {
+  return Boolean(
+    company?.jib?.trim() &&
+      (company?.industry?.trim() || (company?.keywords?.length ?? 0) > 0)
+  );
 }
 
 export function getDemoCompanyDefaults(companyName?: string) {

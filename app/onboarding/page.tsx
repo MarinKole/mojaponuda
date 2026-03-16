@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Company } from "@/types/database";
 import { getDemoCompanyDefaults, isCompanyProfileComplete, isDemoUser } from "@/lib/demo";
-import { OnboardingForm } from "@/components/onboarding-form";
+import { OnboardingGuidedForm } from "@/components/onboarding-guided-form";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -40,10 +40,10 @@ export default async function OnboardingPage() {
           <span className="font-heading text-3xl font-bold text-primary">.ba</span>
         </div>
         <h1 className="font-heading text-3xl font-bold text-slate-900">
-          Završite podešavanje profila
+          Recite nam šta tačno tražite
         </h1>
-        <p className="mt-3 text-base text-slate-500 max-w-md mx-auto">
-          Popunite podatke o vašoj firmi kako biste otključali sve funkcionalnosti platforme i započeli s radom.
+        <p className="mt-3 text-base text-slate-500 max-w-2xl mx-auto leading-7">
+          Kroz nekoliko kratkih koraka definišite čime se bavite, kakve tendere želite pratiti i gdje se prijavljujete. Što precizniji profil unesete sada, to će preporuke tendera biti korisnije već na prvom ulasku u dashboard.
         </p>
         <div className="mt-5 flex items-center justify-center gap-3">
           <Link
@@ -55,8 +55,8 @@ export default async function OnboardingPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-xl shadow-blue-500/5">
-        <OnboardingForm
+      <div className="w-full max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-xl shadow-blue-500/5">
+        <OnboardingGuidedForm
           companyId={company?.id ?? ""}
           companyName={company?.name ?? user.user_metadata?.company_name ?? demoDefaults?.name ?? ""}
           initialJib={company?.jib ?? demoDefaults?.jib ?? ""}
@@ -64,6 +64,7 @@ export default async function OnboardingPage() {
           initialAddress={company?.address ?? demoDefaults?.address ?? ""}
           initialContactEmail={company?.contact_email ?? demoDefaults?.contactEmail ?? user.email ?? ""}
           initialContactPhone={company?.contact_phone ?? demoDefaults?.contactPhone ?? ""}
+          initialIndustry={company?.industry ?? ""}
           initialCpvCodes={company?.cpv_codes ?? []}
           initialKeywords={company?.keywords ?? []}
           initialRegions={company?.operating_regions ?? []}

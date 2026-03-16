@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import {
+  buildProfileKeywordSeeds,
+  getPreferredContractTypes,
+  parseCompanyProfile,
+} from "@/lib/company-profile";
 import { Sparkles, ArrowRight, Briefcase } from "lucide-react";
 import type { Tender } from "@/types/database";
 
@@ -14,11 +19,22 @@ export async function RecommendedTenders() {
   // Get company keywords and regions
   const { data: company } = await supabase
     .from("companies")
-    .select("keywords, operating_regions")
+    .select("industry, keywords, operating_regions")
     .eq("user_id", user.id)
     .single();
 
-  if (!company || !company.keywords || company.keywords.length === 0) {
+  const profile = parseCompanyProfile(company?.industry);
+  const preferredContractTypes = getPreferredContractTypes(
+    profile.preferredTenderTypes
+  );
+  const searchTerms = [
+    ...new Set([
+      ...(company?.keywords || []),
+      ...buildProfileKeywordSeeds(profile),
+    ]),
+  ];
+
+  if (!company || searchTerms.length === 0) {
     return (
       <section className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.18)]">
         <div className="flex items-start justify-between gap-6">
@@ -57,8 +73,12 @@ export async function RecommendedTenders() {
     .select("id, title, deadline, estimated_value, contracting_authority")
     .gt("deadline", new Date().toISOString());
 
+  if (preferredContractTypes.length > 0 && preferredContractTypes.length < 3) {
+    query = query.in("contract_type", preferredContractTypes);
+  }
+
   // Construct OR filter for keywords
-  const keywordConditions = company.keywords
+  const keywordConditions = searchTerms
     .map((kw) => `title.ilike.%${kw}%,raw_description.ilike.%${kw}%`)
     .join(",");
 

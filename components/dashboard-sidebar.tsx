@@ -30,10 +30,10 @@ interface NavItem {
 }
 
 const coreItems: NavItem[] = [
-  { href: "/dashboard", label: "Pregled", icon: LayoutDashboard, exact: true },
+  { href: "/dashboard", label: "Početna", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
-  { href: "/dashboard/vault", label: "Moja dokumenta", icon: FileText },
-  { href: "/dashboard/bids", label: "Ponude", icon: Briefcase },
+  { href: "/dashboard/bids", label: "Moje ponude", icon: Briefcase },
+  { href: "/dashboard/vault", label: "Document Vault", icon: FileText },
 ];
 
 const intelligenceItems: NavItem[] = [
@@ -43,8 +43,8 @@ const intelligenceItems: NavItem[] = [
 ];
 
 const accountItems: NavItem[] = [
-  { href: "/dashboard/subscription", label: "Pretplata", icon: CreditCard },
   { href: "/dashboard/settings", label: "Postavke", icon: Settings },
+  { href: "/dashboard/subscription", label: "Pretplata", icon: CreditCard },
 ];
 
 interface DashboardSidebarProps {
@@ -100,14 +100,14 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
           </div>
           <div>
             <p className="font-heading text-lg font-bold tracking-tight text-white">MojaPonuda.ba</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Kontrolna tabla</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Operativni centar</p>
           </div>
         </Link>
       </div>
 
       <nav className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
         <div className="mb-6 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Radni prostor</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Dnevni rad</p>
         </div>
         <div className="space-y-1">
           {coreItems.map((item) => (
@@ -116,7 +116,7 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
         </div>
 
         <div className="mb-6 mt-7 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Analitika</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Tržišni uvid</p>
         </div>
         <div className="space-y-1">
           {intelligenceItems.map((item) => (
@@ -125,7 +125,7 @@ export function DashboardSidebar({ userEmail, companyName }: DashboardSidebarPro
         </div>
 
         <div className="mb-6 mt-7 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Račun</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Profil i račun</p>
         </div>
         <div className="space-y-1">
           {accountItems.map((item) => (
