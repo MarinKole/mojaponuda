@@ -3,10 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import {
   buildProfileKeywordSeeds,
   getPreferredContractTypes,
+  getProfileOptionLabel,
   parseCompanyProfile,
   sanitizeSearchKeywords,
 } from "@/lib/company-profile";
-import { buildRegionSearchTerms } from "@/lib/constants/regions";
+import { buildRegionSearchTerms, getRegionSelectionLabels } from "@/lib/constants/regions";
 import { Sparkles, ArrowRight, Briefcase } from "lucide-react";
 import type { Tender } from "@/types/database";
 
@@ -35,6 +36,9 @@ export async function RecommendedTenders() {
       ...buildProfileKeywordSeeds(profile),
     ]),
   ];
+  const focusLabel = profile.primaryIndustry ? getProfileOptionLabel(profile.primaryIndustry) : null;
+  const preferredLabels = profile.preferredTenderTypes.map((item) => getProfileOptionLabel(item));
+  const regionLabels = getRegionSelectionLabels(company?.operating_regions || []);
 
   if (!company || searchTerms.length === 0) {
     return (
@@ -46,11 +50,10 @@ export async function RecommendedTenders() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">Pametne preporuke</span>
             </div>
             <h3 className="text-2xl font-heading font-bold text-slate-950">
-              Otključajte personalizirane preporuke tendera
+              Postavite profil i dobijte tendera koji imaju smisla za vašu firmu
             </h3>
             <p className="max-w-xl text-sm leading-6 text-slate-600">
-              Naš AI može automatski pronalaziti tendere koji odgovaraju vašoj djelatnosti. 
-              Popunite profil da biste vidjeli preporuke.
+              Kada znamo šta nudite i gdje radite, izdvajamo tendera koji liče na vaš posao i smanjujemo buku od nerelevantnih objava.
             </p>
             <div className="pt-2">
               <Link
@@ -122,8 +125,25 @@ export async function RecommendedTenders() {
           <div>
             <h2 className="font-heading text-2xl font-bold text-slate-950">Preporučeno za vas</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Tenderi koji najbolje odgovaraju vašoj firmi.
+              Tenderi koji najviše liče na ono što radite i gdje realno možete izvršiti ugovor.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {focusLabel ? (
+                <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                  Fokus: {focusLabel}
+                </span>
+              ) : null}
+              {preferredLabels.slice(0, 2).map((label) => (
+                <span key={label} className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                  Tip: {label}
+                </span>
+              ))}
+              {(regionLabels.length > 0 ? regionLabels : ["Cijela BiH"]).slice(0, 2).map((label) => (
+                <span key={label} className="rounded-full border border-violet-100 bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
+                  Regija: {label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
         <Link
@@ -164,6 +184,9 @@ export async function RecommendedTenders() {
               </h3>
               <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">
                 {tender.contracting_authority}
+              </p>
+              <p className="mt-3 text-xs leading-5 text-slate-500">
+                Zašto odgovara: poklapanje s vašim profilom djelatnosti, tipom tendera i područjem rada.
               </p>
 
               <div className="mt-auto flex items-center gap-2 border-t border-slate-100 pt-4 text-xs font-medium text-slate-500">

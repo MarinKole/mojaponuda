@@ -50,24 +50,24 @@ export function PaywallModal({
 
         <div className="my-4 rounded-xl bg-slate-50 p-4 border border-slate-100">
           <h4 className="mb-3 font-semibold text-sm text-slate-900">
-            Nadogradnjom na Pro paket dobijate:
+            Uz Puni paket dobijate:
           </h4>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center gap-2">
               <CheckCircle className="size-4 text-emerald-500" />
-              <span>Neograničen broj tendera</span>
+              <span>Pokretanje pripreme ponude kada odlučite aplicirati</span>
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle className="size-4 text-emerald-500" />
-              <span>10GB prostora za dokumente</span>
+              <span>Početnu listu dokumenata i koraka za rad</span>
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle className="size-4 text-emerald-500" />
-              <span>Napredna AI analiza</span>
+              <span>Pregled šta još nedostaje prije slanja</span>
             </li>
             <li className="flex items-center gap-2">
               <CheckCircle className="size-4 text-emerald-500" />
-              <span>Automatska priprema ponude</span>
+              <span>Ko vam uzima poslove i šta dolazi prije konkurencije</span>
             </li>
           </ul>
         </div>
@@ -78,7 +78,7 @@ export function PaywallModal({
             className="w-full font-bold bg-primary hover:bg-blue-700"
             onClick={handleUpgrade}
           >
-            Nadogradi na Pro
+            Pogledaj Puni paket
           </Button>
           <Button variant="ghost" onClick={onClose} className="w-full text-slate-500">
             Možda kasnije

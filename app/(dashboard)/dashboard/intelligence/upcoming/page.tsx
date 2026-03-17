@@ -66,7 +66,7 @@ export default async function UpcomingPage() {
       <div>
         <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Planirani tenderi</h1>
         <p className="mt-2 text-base text-slate-500">
-          Budite korak ispred konkurencije. Pregled nabavki prije zvanične objave.
+          Vidite šta dolazi prije zvanične objave kako biste ranije planirali dokumente, tim i kapacitete.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export default async function UpcomingPage() {
             </div>
           </div>
           <p className="text-4xl font-heading font-extrabold text-slate-900">{displayUpcoming.length}</p>
-          <p className="mt-1 text-sm text-slate-500 font-medium">Planirani za budućnost</p>
+          <p className="mt-1 text-sm text-slate-500 font-medium">Prilike koje dolaze uskoro</p>
         </div>
 
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm relative overflow-hidden group">
@@ -97,7 +97,7 @@ export default async function UpcomingPage() {
             </div>
           </div>
           <p className="text-4xl font-heading font-extrabold text-slate-900">{formatKM(totalUpcomingValue)}</p>
-          <p className="mt-1 text-sm text-slate-500 font-medium">Potencijalni prihodi</p>
+          <p className="mt-1 text-sm text-slate-500 font-medium">Vrijednost za ranije planiranje</p>
         </div>
       </div>
 
@@ -108,7 +108,7 @@ export default async function UpcomingPage() {
             <div className="size-2 rounded-full bg-blue-500 animate-pulse" />
             <h2 className="font-heading text-lg font-bold text-slate-900">Nadolazeći</h2>
           </div>
-          <p className="mt-1 text-xs font-medium text-slate-500 pl-4">Planirani tenderi koji još nisu raspisani</p>
+          <p className="mt-1 text-xs font-medium text-slate-500 pl-4">Tenderi koje možete vidjeti prije nego što budu otvoreni</p>
         </div>
         {displayUpcoming.length === 0 ? (
           <div className="py-12 text-center">
@@ -116,7 +116,7 @@ export default async function UpcomingPage() {
               <Calendar className="size-6" />
             </div>
             <p className="text-sm font-medium text-slate-900">Nema planiranih tendera</p>
-            <p className="text-xs text-slate-500 mt-1">Trenutno nema podataka o budućim nabavkama.</p>
+            <p className="text-xs text-slate-500 mt-1">Trenutno nema dovoljno podataka o budućim nabavkama.</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">
@@ -173,7 +173,7 @@ export default async function UpcomingPage() {
           <div className="border-b border-slate-100 px-6 py-5 bg-slate-50/50">
             <h2 className="font-heading text-lg font-bold text-slate-700">Nedavno planirani</h2>
             <p className="mt-1 text-xs font-medium text-slate-500">
-              Tenderi planirani u zadnjih 30 dana — velika vjerovatnoća da su već raspisani
+              Tenderi planirani u zadnjih 30 dana — velika vjerovatnoća da su već otvoreni za prijavu
             </p>
           </div>
           <div className="divide-y divide-slate-50">

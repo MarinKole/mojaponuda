@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Company } from "@/types/database";
 import { getDemoCompanyDefaults, isCompanyProfileComplete, isDemoUser } from "@/lib/demo";
-import { OnboardingGuidedForm } from "@/components/onboarding-guided-form";
+import { OnboardingValueFirstForm } from "@/components/onboarding-value-first-form";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -40,10 +40,10 @@ export default async function OnboardingPage() {
           <span className="font-heading text-3xl font-bold text-primary">.ba</span>
         </div>
         <h1 className="font-heading text-3xl font-bold text-slate-900">
-          Recite nam čime se vaša firma stvarno bavi
+          Prvo pogledajte tendere koji vam imaju smisla
         </h1>
         <p className="mt-3 text-base text-slate-500 max-w-2xl mx-auto leading-7">
-          Kroz nekoliko kratkih koraka unesite šta nudite, koje tendere želite pratiti i gdje realno možete izvršiti ugovor. Cilj je da profil bude jasan, potpun i bez zbunjujućih izbora, tako da preporuke tendera budu korisne već od prvog ulaska u dashboard.
+          Ne tražimo od vas odmah sve podatke firme. Prvo odaberite čime se bavite i gdje radite, pogledajte prve relevantne tendere, a zatim dopunite profil da preporuke budu još preciznije.
         </p>
         <div className="mt-5 flex items-center justify-center gap-3">
           <Link
@@ -56,7 +56,7 @@ export default async function OnboardingPage() {
       </div>
 
       <div className="w-full max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-xl shadow-blue-500/5">
-        <OnboardingGuidedForm
+        <OnboardingValueFirstForm
           companyId={company?.id ?? ""}
           companyName={company?.name ?? user.user_metadata?.company_name ?? demoDefaults?.name ?? ""}
           initialJib={company?.jib ?? demoDefaults?.jib ?? ""}

@@ -49,7 +49,7 @@ export function PricingTable({
             {isPopular && (
               <div className="absolute -top-4 inset-x-0 flex justify-center">
                 <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
-                  Najpopularnije
+                  Najbolji odnos kontrole i cijene
                 </span>
               </div>
             )}
@@ -115,24 +115,24 @@ export function PricingTable({
               {plan.limits.features.advancedAnalysis ? (
                 <li className="flex items-center gap-3 text-sm">
                   <Check className="size-5 shrink-0 text-emerald-500" />
-                  <span className="text-slate-700">Napredna AI analiza</span>
+                  <span className="text-slate-700">Precizniji pregled tendera i zahtjeva</span>
                 </li>
               ) : (
                 <li className="flex items-center gap-3 text-sm text-slate-400">
                   <Check className="size-5 shrink-0 text-slate-300" />
-                  <span className="line-through decoration-slate-300">Napredna AI analiza</span>
+                  <span className="line-through decoration-slate-300">Precizniji pregled tendera i zahtjeva</span>
                 </li>
               )}
               
                <li className="flex items-center gap-3 text-sm">
                   <Check className="size-5 shrink-0 text-emerald-500" />
-                  <span className="text-slate-700">Trezor dokumenata</span>
+                  <span className="text-slate-700">Kontrola važnih dokumenata na jednom mjestu</span>
                 </li>
 
               {plan.limits.features.submissionPackage && (
                 <li className="flex items-center gap-3 text-sm">
                   <Check className="size-5 shrink-0 text-emerald-500" />
-                  <span className="text-slate-700">ZIP Paket Ponude</span>
+                  <span className="text-slate-700">Završna priprema i paket za predaju</span>
                 </li>
               )}
             </ul>
@@ -152,13 +152,15 @@ export function PricingTable({
               {isCurrent
                 ? "Trenutni paket"
                 : plan.id === "agency"
-                ? "Kontaktirajte nas" // Or upgrade
-                : "Odaberi paket"}
+                ? "Kontaktirajte nas"
+                : plan.id === "pro"
+                  ? "Preuzmi više kontrole"
+                  : "Odaberi paket"}
             </Button>
             
             {plan.id === "agency" && !isCurrent && (
                  <p className="mt-3 text-center text-xs text-slate-500">
-                   Za agencije i konzultante
+                   Za agencije i konsultante
                  </p>
             )}
           </div>

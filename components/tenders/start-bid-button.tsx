@@ -47,7 +47,7 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
 
     setError(null);
     setLoading(true);
-    setLoadingText("Pripremam ponudu i početnu listu potrebnih dokumenata...");
+    setLoadingText("Otvaram pripremu i slažem početnu listu onoga što treba pregledati...");
     try {
       const res = await fetch("/api/bids", {
         method: "POST",
@@ -100,13 +100,13 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
           ) : (
             <>
               {isSubscribed ? <Sparkles className="mr-2 size-4" /> : <Lock className="mr-2 size-4" />}
-              {isSubscribed ? "Započni pripremu" : "Otključaj pripremu ponude"}
+              {isSubscribed ? "Pokreni sigurniju pripremu" : "Otključaj sigurniju pripremu"}
             </>
           )}
         </Button>
         {!isSubscribed ? (
           <p className="text-sm text-slate-500">
-            Priprema ponude, početna lista potrebnih dokumenata i rad na ponudi dostupni su uz pretplatu.
+            Uz puni paket dobijate početnu listu dokumenata i koraka, pa prije slanja lakše vidite šta još nedostaje.
           </p>
         ) : null}
         {error && <p className="text-sm font-medium text-red-600">{error}</p>}
@@ -115,10 +115,10 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
       <PaywallModal
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
-        title={limitInfo ? "Dostigli ste limit paketa" : "Priprema ponude je dostupna uz pretplatu"}
+        title={limitInfo ? "Dostigli ste limit paketa" : "Sigurnija priprema ponude je dostupna uz pretplatu"}
         description={limitInfo
-          ? `Vaš trenutni paket omogućava maksimalno ${limitInfo?.limit} aktivnih tendera. Trenutno imate ${limitInfo?.current}. Nadogradite paket za više prostora.`
-          : "Uz pretplatu otključavate pripremu ponude, početnu listu potrebnih dokumenata i sve alate za organizaciju ponude na jednom mjestu."}
+          ? `Vaš trenutni paket omogućava maksimalno ${limitInfo?.limit} aktivnih tendera. Trenutno imate ${limitInfo?.current}. Nadogradite paket ako želite nastaviti rad bez blokade.`
+          : "Uz pretplatu dobijate pripremu ponude, početnu listu onoga što treba prikupiti i bolju kontrolu prije slanja."}
         limitType="tenders"
       />
     </>

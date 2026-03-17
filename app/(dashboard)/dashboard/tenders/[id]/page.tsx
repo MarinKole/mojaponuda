@@ -191,8 +191,8 @@ export default async function TenderDetailPage({
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
               {isSubscribed
-                ? "Otvorite pripremu ponude jednim klikom i odmah dobijte početnu listu dokumenata i koraka za rad."
-                : "Pregledajte detalje tendera, a pripremu ponude otključajte kroz pretplatu kada budete spremni za rad."}
+                ? "Otvorite pripremu jednim klikom i odmah dobijte početnu listu onoga što treba pregledati prije slanja."
+                : "Pregledajte tender, procijenite priliku, a sigurniju pripremu otključajte kada odlučite da vrijedi aplicirati."}
             </p>
           </div>
           <div className="rounded-[1.5rem] border border-blue-100 bg-blue-50/70 p-5 lg:max-w-sm">
@@ -200,11 +200,11 @@ export default async function TenderDetailPage({
             <p className="mt-2 text-sm leading-6 text-slate-700">
               {isSubscribed ? (
                 <>
-                  Klik na <span className="font-bold text-slate-900">Započni pripremu</span> odmah otvara pripremu ponude i slaže početnu listu onoga što najčešće treba prikupiti.
+                  Klik na <span className="font-bold text-slate-900">Pokreni sigurniju pripremu</span> odmah otvara pripremu i slaže početnu listu onoga što najčešće treba prikupiti i provjeriti.
                 </>
               ) : (
                 <>
-                  Priprema ponude je dostupna uz pretplatu. Otključajte ovu opciju da odmah dobijete početnu listu dokumenata i koraka za rad.
+                  Priprema ponude je dostupna uz pretplatu. Otključajte ovu opciju kada želite manje nagađanja i jasniji pregled šta još nedostaje.
                 </>
               )}
             </p>
@@ -259,11 +259,11 @@ export default async function TenderDetailPage({
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 {isSubscribed ? (
                   <>
-                    Za ovaj tender nema detaljnog opisa u javnim podacima. Kada kliknete <span className="font-bold text-slate-900">Započni pripremu</span>, otvorit će se priprema ponude sa početnom listom dokumenata i koraka složenom iz dostupnih podataka i tipičnih zahtjeva naručioca.
+                    Za ovaj tender nema detaljnog opisa u javnim podacima. Kada kliknete <span className="font-bold text-slate-900">Pokreni sigurniju pripremu</span>, otvorit će se priprema sa početnom listom dokumenata i koraka složenom iz dostupnih podataka i tipičnih zahtjeva naručioca.
                   </>
                 ) : (
                   <>
-                    Za ovaj tender nema detaljnog opisa u javnim podacima. Uz pretplatu možete otvoriti pripremu ponude i dobiti početnu listu dokumenata i koraka složenu iz dostupnih podataka i tipičnih zahtjeva naručioca.
+                    Za ovaj tender nema detaljnog opisa u javnim podacima. Uz pretplatu možete otvoriti pripremu i dobiti početnu listu dokumenata i koraka složenu iz dostupnih podataka i tipičnih zahtjeva naručioca.
                   </>
                 )}
               </p>
@@ -307,13 +307,13 @@ export default async function TenderDetailPage({
             <h3 className="text-base font-bold text-slate-900">Šta dobijate odmah</h3>
             <div className="mt-4 space-y-3 text-sm text-slate-600">
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Početnu checklistu dokumentacije bez dodatnog klika na analizu.
+                Početnu listu dokumentacije bez dodatnog ručnog sastavljanja.
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Automatsko povezivanje dokumenata iz trezora kada postoji odgovarajući dokument.
+                Povezivanje postojećih dokumenata kada već imate nešto spremno.
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Radni prostor spreman za dopunu i finalnu provjeru prije predaje ponude.
+                Prostor za rad i završnu provjeru prije predaje ponude.
               </div>
             </div>
           </div>

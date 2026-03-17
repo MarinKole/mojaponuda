@@ -125,9 +125,9 @@ export default async function CompetitorsPage() {
               </span>
             ) : null}
           </div>
-          <h1 className="mt-3 text-3xl font-heading font-bold text-slate-900 tracking-tight">Analiza konkurencije</h1>
+          <h1 className="mt-3 text-3xl font-heading font-bold text-slate-900 tracking-tight">Ko vam uzima poslove</h1>
           <p className="mt-2 max-w-3xl text-base text-slate-500">
-            Pratimo firme koje osvajaju poslove u istim kategorijama i kod istih naručilaca koji odgovaraju vašem profilu.
+            Pratimo firme koje pobjeđuju u istim kategorijama i kod istih naručilaca gdje se i vi realno pojavljujete.
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm lg:max-w-sm">
@@ -146,11 +146,11 @@ export default async function CompetitorsPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-slate-500">Praćene firme</p>
+            <p className="text-sm font-semibold text-slate-500">Direktni rivali</p>
             <Swords className="size-5 text-rose-600" />
           </div>
           <p className="mt-4 font-heading text-3xl font-bold text-slate-950">{displayCompetitors.length}</p>
-          <p className="mt-2 text-sm text-slate-500">Firmi koje se sudaraju s vašim tržištem.</p>
+          <p className="mt-2 text-sm text-slate-500">Firmi koje vam izlaze na istom tržištu.</p>
         </div>
         <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
@@ -199,7 +199,7 @@ export default async function CompetitorsPage() {
               <div className="flex items-center justify-between border-b border-slate-100 pb-5">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Sažetak</p>
-                  <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Ko trenutno vuče tržište</h2>
+                  <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Ko trenutno vuče poslove ispred vas</h2>
                 </div>
                 <Swords className="size-5 text-rose-600" />
               </div>
@@ -232,7 +232,7 @@ export default async function CompetitorsPage() {
               <div className="flex items-center justify-between border-b border-slate-100 pb-5">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Naručioci</p>
-                  <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Gdje se sudarate</h2>
+                  <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Gdje se najviše sudarate</h2>
                 </div>
                 <Building2 className="size-5 text-blue-600" />
               </div>

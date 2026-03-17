@@ -82,6 +82,15 @@ export function SubscriptionCard({
         </div>
       </div>
 
+      <div className="mt-6 rounded-xl bg-slate-50 p-4 border border-slate-100">
+        <p className="text-sm font-medium text-slate-500">Šta to znači za vaš rad</p>
+        <p className="mt-1 text-sm leading-6 text-slate-700">
+          {isActive
+            ? `Trenutno imate pristup paketu ${displayPlanName}, što znači više kontrole prije slanja ponude i pristup premium tržišnim uvidima.`
+            : "Trenutno ste na besplatnom nivou: možete pregledati tendera i postaviti profil, a pripremu ponude i premium uvide otključavate kada vam zatrebaju."}
+        </p>
+      </div>
+
       {isActive && currentPeriodEnd && (
         <div className="mt-6 rounded-xl bg-slate-50 p-4 border border-slate-100">
           <p className="text-sm font-medium text-slate-500">Sljedeća obnova</p>

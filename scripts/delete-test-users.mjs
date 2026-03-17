@@ -4,7 +4,11 @@ import process from "node:process";
 import { createClient } from "@supabase/supabase-js";
 
 const projectRoot = process.cwd();
-const targetEmails = ["marin.kolenda@outlook.com", "admin@mojaponuda.ba"];
+const targetEmails = [
+  "marin.kolenda@outlook.com",
+  "admin@mojaponuda.ba",
+  "elektronski.pretinac@gmail.com",
+];
 
 function loadEnvFile(fileName) {
   const envPath = path.join(projectRoot, fileName);

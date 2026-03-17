@@ -62,7 +62,7 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
             Kako radi
           </a>
           <a href="#rjesenje" className="text-sm font-semibold text-slate-600 transition-colors hover:text-primary">
-            Platforma
+            Rješenje
           </a>
           <a href="#cijene" className="text-sm font-semibold text-slate-600 transition-colors hover:text-primary">
             Cijene
@@ -115,14 +115,14 @@ function HeroSection() {
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-4 py-1.5 mb-8 animate-fade-in-up">
             <span className="flex size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
             <span className="text-xs font-bold uppercase tracking-wide text-blue-700">
-              Nova era javnih nabavki u BiH
+              Sigurnosni sloj za javne nabavke u BiH
             </span>
           </div>
 
           <h1 className="font-heading text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-6xl lg:text-7xl mb-8">
-            Pobjeđujte na tenderima, <br className="hidden sm:block" />
+            Ne gubite tendere <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400 relative">
-              bez administrativnog stresa.
+              zbog nedostajućih dokumenata.
               <svg className="absolute w-full h-3 -bottom-1 left-0 text-blue-200 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" />
               </svg>
@@ -130,7 +130,7 @@ function HeroSection() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-600 sm:text-xl mb-10">
-            Sveobuhvatna platforma za upravljanje dokumentacijom, AI analizu tenderskih uslova i praćenje tržišta javnih nabavki.
+            MojaPonuda vam pomaže da brzo pronađete relevantne tendere, izdvojite šta se stvarno traži i prije slanja provjerite da li nešto nedostaje.
           </p>
 
           <div className="flex flex-col justify-center gap-4 sm:flex-row sm:items-center">
@@ -138,7 +138,7 @@ function HeroSection() {
               href="/signup"
               className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-primary px-8 text-base font-bold text-white shadow-xl shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1"
             >
-              Započnite besplatno
+              Pronađite relevantne tendere
               <ArrowRight className="size-4" />
             </Link>
             <a
@@ -146,13 +146,13 @@ function HeroSection() {
               className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-8 text-base font-bold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
             >
               <PlayCircle className="size-5 text-slate-400" />
-              Pogledajte demo
+              Pogledajte kako radi
             </a>
           </div>
           <div className="mt-6 flex items-center justify-center gap-6 text-sm text-slate-500">
             <div className="flex items-center gap-2">
               <CheckCircle className="size-4 text-blue-500" />
-              <span>14 dana besplatno</span>
+              <span>Prvi pregled tendera bez komplikacija</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="size-4 text-blue-500" />
@@ -229,20 +229,20 @@ function ProblemSection() {
 const HOW_IT_WORKS = [
   {
     step: "01",
-    title: "Centralizujte dokumentaciju",
-    description: "Spremite sve dokumente firme u siguran trezor. Sistem automatski prepoznaje rokove važenja i šalje vam obavijesti 60, 30 i 7 dana prije isteka.",
+    title: "Recite čime se bavite i gdje radite",
+    description: "Dovoljna su dva osnovna koraka da sistem odmah izdvoji tendere koji imaju smisla za vašu firmu.",
     icon: Upload,
   },
   {
     step: "02",
-    title: "AI analizira tender za vas",
-    description: "Uploadujte tendersku dokumentaciju. Naš AI u sekundi čita tekst, pronalazi tražene uslove i slaže jasnu listu onoga što trebate pripremiti.",
+    title: "Odmah vidite zašto vam tender odgovara",
+    description: "Uz svaki tender dobijate jasno objašnjenje: djelatnost, lokacija i tip nabavke koji se poklapaju s vašim profilom.",
     icon: LayoutDashboard,
   },
   {
     step: "03",
-    title: "Sklapanje ponude i analiza",
-    description: "Sistem uparuje zahtjeve sa vašim dokumentima u trezoru. Pomoću podataka sa tržišta, optimizujte cijenu i izvezite savršenu ponudu.",
+    title: "Pokrenite pripremu bez propusta",
+    description: "Kada odlučite aplicirati, sistem izdvoji dokumente i korake za rad, a vi pregledate i potvrdite prije slanja.",
     icon: TrendingUp,
   },
 ] as const;
@@ -257,14 +257,14 @@ function HowItWorksSection() {
         <div className="text-center max-w-3xl mx-auto mb-20">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 mb-6">
              <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Jednostavan proces
+              Vrijednost prije truda
              </span>
           </div>
           <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Kako MojaPonuda <span className="text-primary">ubrzava proces</span>
+            Kako MojaPonuda <span className="text-primary">smanjuje rizik</span>
           </h2>
           <p className="mt-4 text-lg text-slate-600">
-            Od pronalaska tendera do slanja gotove ponude u 3 jednostavna koraka.
+            Od prvog relevantnog tendera do završne provjere prije slanja u tri jasna koraka.
           </p>
         </div>
 
@@ -296,37 +296,37 @@ function HowItWorksSection() {
 const FEATURES = [
   {
     icon: Shield,
-    title: "Trezor Dokumenata",
+    title: "Dokumenti bez haosa",
     description:
-      "Vaša arhiva na autopilotu. Svi certifikati, bilansi i uvjerenja na jednom mjestu sa pametnim podsjetnicima za obnovu.",
+      "Svi važni dokumenti firme na jednom mjestu, sa pregledom roka važenja i jasnim signalom šta uskoro ističe.",
     details: [
-      "Upload jednom, koristite svugdje",
-      "Automatski podsjetnici za istek",
-      "Kategorizacija i pretraga",
+      "Jedno mjesto za sve što stalno traže",
+      "Upozorenje prije isteka",
+      "Brza pretraga kada rok pritisne",
     ],
     imagePrompt: "UI MOCKUP: Document Vault interface. Clean white table with document list. Status badges (Valid/Expired). Filter sidebar. Blue primary color accents. High fidelity.",
   },
   {
     icon: LayoutDashboard,
-    title: "AI priprema ponude",
+    title: "Priprema ponude bez propusta",
     description:
-      "Nema više ručnog podvlačenja uslova markerom. Naš AI čita dokumentaciju i slaže tačnu listu svega što vam treba.",
+      "Sistem izdvaja šta se traži iz tendera i slaže početnu listu onoga što trebate pregledati, prikupiti i potvrditi.",
     details: [
-      "Automatska ekstrakcija uslova",
-      "Jasna lista potrebnih dokumenata",
-      "Generisanje finalnog paketa",
+      "Izdvojeni uslovi za pregled",
+      "Početna lista potrebnih dokumenata",
+      "Završna provjera prije slanja",
     ],
     imagePrompt: "UI MOCKUP: Bid Workspace. Split screen. Left side: PDF viewer with highlighted text. Right side: Checklist with 'Requirement Met' checkmarks. Modern, clean.",
   },
   {
     icon: TrendingUp,
-    title: "Tržišna Inteligencija",
+    title: "Prednost prije konkurencije",
     description:
-      "Podaci pobjeđuju. Analizirajte historiju pobjeda, prosječne cijene i budžetirane nabavke prije nego što budu objavljene.",
+      "Vidite ko vam uzima poslove, gdje ima najviše prilika i šta dolazi prije nego što tender bude raspisan.",
     details: [
-      "Baza dodijeljenih ugovora",
-      "Profili naručilaca i konkurencije",
-      "Predikcija pobjedničke cijene",
+      "Ko vam uzima poslove",
+      "Gdje ima najviše posla",
+      "Šta dolazi prije konkurencije",
     ],
     imagePrompt: "UI MOCKUP: Analytics Dashboard. Bar charts showing monthly revenue. Pie chart for category distribution. Competitor list with win rates. Professional data viz.",
   },
@@ -395,10 +395,10 @@ function SolutionSection() {
 
 function StatsSection() {
   const stats = [
-    { value: "70%", label: "Manje vremena po ponudi" },
-    { value: "0", label: "Administrativnih grešaka" },
-    { value: "100%", label: "Dokumenata na sigurnom" },
-    { value: "24/7", label: "Monitoring tržišta" },
+    { value: "1", label: "Mjesto za važne dokumente" },
+    { value: "1", label: "Kontrolna tačka prije slanja" },
+    { value: "24/7", label: "Praćenje tendera i tržišta" },
+    { value: "+", label: "Veća sigurnost u pripremi" },
   ];
 
   return (
@@ -426,10 +426,10 @@ function PricingSection() {
       <div className="mx-auto max-w-7xl">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Jednostavne i <span className="text-primary">transparentne cijene</span>
+            Cijena je mala <span className="text-primary">naspram izgubljenog tendera</span>
           </h2>
           <p className="mt-4 text-lg text-slate-600">
-            Odaberite plan koji odgovara veličini vašeg poslovanja.
+            Ne plaćate pregled tendera. Plaćate trenutak kada želite pripremu ponude bez propusta i bolju kontrolu rizika.
           </p>
         </div>
 
@@ -437,7 +437,7 @@ function PricingSection() {
           {/* Osnovni */}
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="font-heading text-xl font-bold text-slate-900">Osnovni</h3>
-            <p className="mt-2 text-sm text-slate-500 h-10">Za male firme koje povremeno sudjeluju na tenderima.</p>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje žele pratiti prilike i imati osnovnu kontrolu dokumentacije.</p>
             <div className="mt-6 flex items-baseline gap-1">
               <span className="font-heading text-4xl font-bold text-slate-900">50</span>
               <span className="text-sm font-medium text-slate-500">KM / mj.</span>
@@ -447,8 +447,8 @@ function PricingSection() {
                 "Do 3 aktivna tendera",
                 "1 korisnik",
                 "1 GB prostora",
-                "Osnovna analiza",
-                "Automatska lista dokumenata",
+                "Osnovni pregled tendera",
+                "Praćenje važnih dokumenata",
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-slate-400" />
@@ -468,24 +468,27 @@ function PricingSection() {
           <div className="relative rounded-3xl border-2 border-primary bg-white p-8 shadow-2xl shadow-blue-500/10 transform scale-105 z-10">
             <div className="absolute -top-4 inset-x-0 flex justify-center">
               <span className="rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wider text-white">
-                Najčešći izbor
+                Razumna odluka za ozbiljan rad
               </span>
             </div>
             <h3 className="font-heading text-xl font-bold text-slate-900">Puni Paket</h3>
-            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje redovno pripremaju ponude.</p>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje redovno apliciraju i ne žele izgubiti tender zbog propusta.</p>
             <div className="mt-6 flex items-baseline gap-1">
               <span className="font-heading text-5xl font-bold text-slate-900">100</span>
               <span className="text-sm font-medium text-slate-500">KM / mj.</span>
             </div>
+            <p className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm font-semibold text-blue-900">
+              Jedan tender često vrijedi 10.000+ KM. Ovdje plaćate sigurniju pripremu i veću kontrolu prije slanja.
+            </p>
             <div className="mt-8 space-y-4">
               {[
                 "50 aktivnih tendera",
                 "5 članova tima",
                 "10 GB prostora",
-                "Napredna AI analiza",
-                "Timski rad na ponudi",
-                "Trezor dokumenata",
-                "Prioritetna podrška"
+                "Pokretanje pripreme ponude",
+                "Početna lista dokumenata i koraka",
+                "Završna provjera prije slanja",
+                "Ko vam uzima poslove"
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-primary" />
@@ -504,19 +507,19 @@ function PricingSection() {
           {/* Agencijski */}
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="font-heading text-xl font-bold text-slate-900">Agencijski</h3>
-            <p className="mt-2 text-sm text-slate-500 h-10">Za konzultante i agencije koje vode više firmi.</p>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za konsultante i agencije koje vode više firmi i trebaju odvojenu kontrolu po klijentu.</p>
             <div className="mt-6 flex items-baseline gap-1">
               <span className="font-heading text-4xl font-bold text-slate-900">250</span>
               <span className="text-sm font-medium text-slate-500">KM / mj.</span>
             </div>
             <div className="mt-8 space-y-4">
               {[
-                "Neograničen broj tendera",
+                "Velik broj aktivnih tendera",
                 "20 članova tima",
                 "Do 10 firmi (klijenata)",
                 "100 GB prostora",
                 "Sve funkcionalnosti Punog paketa",
-                "Odvojeni prostori za klijente",
+                "Odvojeni rad po klijentima",
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-slate-400" />
@@ -552,7 +555,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Kako AI pronalazi uslove u tenderu?",
-    a: "Naš algoritam je istreniran specifično na bh. zakonodavstvu o javnim nabavkama (ZJN). Prepoznaje ključne riječi, tražene certifikate i obrasce iz standardnih šablona Agencije.",
+    a: "Sistem izdvaja najvažnije zahtjeve iz tendera i prikazuje ih za pregled. Vi zadržavate završnu kontrolu i potvrđujete šta je zaista spremno za slanje.",
   },
 ] as const;
 
@@ -597,17 +600,17 @@ function FinalCTA() {
       
       <div className="relative z-10 mx-auto max-w-3xl text-center">
         <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Spremni za pobjeđivanje na tenderima?
+          Ne šaljite ponudu naslijepo.
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-lg text-slate-300">
-          Pridružite se modernim kompanijama koje automatizuju proces javnih nabavki.
+          Pronađite relevantan tender, izdvojite šta nedostaje i uđite u pripremu sa mnogo manje rizika.
         </p>
         <div className="mt-10 flex justify-center">
           <Link
             href="/signup"
             className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-white px-8 text-base font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105"
           >
-            Isprobajte 14 dana besplatno
+            Otvorite prvi pregled tendera
             <ArrowRight className="size-5" />
           </Link>
         </div>

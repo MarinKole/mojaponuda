@@ -47,7 +47,7 @@ export function PaywallOverlay({ usedBids, maxFreeBids }: PaywallOverlayProps) {
 
           <p className="mt-3 text-sm text-slate-600 leading-relaxed">
             Iskoristili ste <span className="font-bold text-slate-900">{usedBids}</span> od <span className="font-bold text-slate-900">{maxFreeBids}</span> besplatnih ponuda.
-            Pređite na Pro paket za neograničen pristup i napredne alate.
+            Pređite na Puni paket kada želite više kontrole, pripremu ponude i jasniji pregled šta nedostaje prije slanja.
           </p>
 
           <div className="mt-6 flex items-baseline justify-center gap-1">
@@ -60,7 +60,7 @@ export function PaywallOverlay({ usedBids, maxFreeBids }: PaywallOverlayProps) {
             onClick={() => router.push("/dashboard/subscription")}
           >
             <Star className="mr-2 size-4 fill-current" />
-            Pogledaj pakete
+            Pogledaj Puni paket
           </Button>
 
           <p className="mt-4 text-xs text-slate-400">

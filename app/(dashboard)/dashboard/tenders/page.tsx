@@ -88,8 +88,7 @@ async function TendersContent({ searchParams }: TendersPageProps) {
             Podesite svoj profil
           </h3>
           <p className="mb-6 max-w-md text-slate-500">
-            Da bismo vam mogli preporučiti tendere, trebamo znati šta tačno nudite
-            i gdje radite. Dopunite profil firme.
+            Da bismo izdvojili tendera koji stvarno imaju smisla za vašu firmu, trebamo znati šta nudite i gdje radite. Dopunite profil firme.
           </p>
           <Button asChild>
             <Link href="/dashboard/settings">Uredi Profil</Link>
@@ -205,7 +204,7 @@ async function TendersContent({ searchParams }: TendersPageProps) {
           </h3>
           <p className="text-sm text-slate-500 text-center max-w-sm">
             {activeTab === "recommended"
-              ? "Trenutno nema aktivnih tendera koji odgovaraju vašim ključnim riječima i regijama."
+              ? "Trenutno nema aktivnih tendera koji se dovoljno jasno poklapaju s vašim profilom, tipom tendera i regijama rada."
               : hasFilters
               ? "Pokušajte sa drugačijim filterima ili resetujte pretragu."
               : "Podaci se automatski sinhronizuju sa e-Nabavke portala."}
@@ -244,10 +243,10 @@ export default async function TendersPage(props: TendersPageProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-            Tender Skener
+            Tenderi i preporuke
           </h1>
           <p className="mt-1.5 text-base text-slate-500">
-            Pretražite aktivne tendere iz BiH e-Procurement portala.
+            Pregledajte sve aktivne tendere ili otvorite samo one koji se najviše uklapaju u vaš profil.
           </p>
         </div>
       </div>

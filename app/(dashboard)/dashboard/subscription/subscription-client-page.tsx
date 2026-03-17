@@ -58,9 +58,9 @@ export function SubscriptionClientPage({ initialStatus }: { initialStatus: Subsc
   return (
     <div className="mx-auto max-w-6xl space-y-12 pb-12">
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Upravljanje Pretplatom</h1>
+        <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Paketi i kontrola rizika</h1>
         <p className="mt-2 text-base text-slate-500">
-          Pregled statusa vaše licence i dostupnih funkcionalnosti.
+          Ovdje birate koliko kontrole želite prije slanja ponude i koliko tržišnih informacija želite imati prije odluke da aplicirate.
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export function SubscriptionClientPage({ initialStatus }: { initialStatus: Subsc
       />
 
       <div>
-        <h2 className="text-2xl font-heading font-bold text-slate-900 mb-6">Dostupni paketi</h2>
+        <h2 className="text-2xl font-heading font-bold text-slate-900 mb-6">Odaberite nivo kontrole koji vam treba</h2>
         <PricingTable 
           currentPlanId={initialStatus.plan.id}
           onSelectPlan={handleSelectPlan}

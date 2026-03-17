@@ -23,6 +23,18 @@ function translateError(message: string): string {
   return errorMessages[message] || "Greška pri registraciji. Pokušajte ponovo.";
 }
 
+function isExistingAccountSignupResponse(data: {
+  session: unknown;
+  user: { identities?: Array<unknown> | null } | null;
+}): boolean {
+  return Boolean(
+    !data.session &&
+      data.user &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0
+  );
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const [companyName, setCompanyName] = useState("");
@@ -77,6 +89,14 @@ export default function SignupPage() {
       return;
     }
 
+    if (isExistingAccountSignupResponse(data)) {
+      setError(
+        "Račun sa ovom email adresom već postoji. Prijavite se ili resetujte lozinku ako je ne znate."
+      );
+      setLoading(false);
+      return;
+    }
+
     if (data.session && data.user) {
       router.push("/onboarding");
       router.refresh();
@@ -101,7 +121,7 @@ export default function SignupPage() {
         <p className="mb-8 text-sm text-slate-500 leading-relaxed">
           Link za verifikaciju je uspješno poslan na:<br/>
           <span className="font-semibold text-slate-900 mt-2 block">{email}</span><br/>
-          Molimo potvrdite vašu email adresu kako biste nastavili sa registracijom.
+          Molimo potvrdite vašu email adresu kako biste nastavili sa registracijom. Ako poruka ne stigne u narednih 1-2 minute, provjerite spam folder i pokušajte ponovo.
         </p>
         <Link href="/login" className="block">
           <Button variant="outline" className="w-full h-12 rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 transition-all">
