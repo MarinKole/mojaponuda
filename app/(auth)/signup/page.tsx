@@ -67,7 +67,7 @@ export default function SignupPage() {
         data: {
           company_name: companyName.trim(),
         },
-        emailRedirectTo: `${baseUrl}/auth/callback?next=/onboarding`,
+        emailRedirectTo: `${baseUrl}/auth/confirm?next=/onboarding`,
       },
     });
 
