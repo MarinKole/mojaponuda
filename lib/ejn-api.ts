@@ -5,7 +5,7 @@
 
 const BASE_URL = process.env.EJN_API_BASE_URL || "https://open.ejn.gov.ba";
 const PAGE_SIZE = 50;
-const MAX_PAGES = 20;
+const MAX_PAGES = 100;
 
 // --- Normalized types (what our sync module expects) ---
 
@@ -25,6 +25,7 @@ export interface EjnProcurementNotice {
 
 export interface EjnAwardNotice {
   AwardId: string;
+  ProcedureId: string | null;
   NoticeId: string | null;
   ContractingAuthorityJib: string | null;
   WinnerName: string | null;
@@ -35,6 +36,17 @@ export interface EjnAwardNotice {
   ProcedureType: string | null;
   ContractType: string | null;
   AwardDate: string | null;
+}
+
+export interface EjnAwardedSupplierGroup {
+  SupplierGroupId: string;
+  LotId: string | null;
+}
+
+export interface EjnSupplierGroupSupplierLink {
+  SupplierGroupId: string;
+  SupplierId: string;
+  IsLead: boolean;
 }
 
 export interface EjnContractingAuthority {
@@ -148,15 +160,25 @@ const PROCEDURE_TYPE_MAP: Record<string, string> = {
   CompetitiveDialogue: "Konkurentski dijalog",
 };
 
+function buildLastUpdatedFilter(lastSyncAt?: string | null): string | undefined {
+  return lastSyncAt?.trim() ? `LastUpdated ge ${lastSyncAt}` : undefined;
+}
+
+function joinNonEmpty(parts: Array<string | null | undefined>): string | null {
+  const normalized = parts.map((part) => part?.trim()).filter(Boolean);
+  return normalized.length > 0 ? normalized.join("\n\n") : null;
+}
+
 // --- Public API functions ---
 
 export async function fetchProcurementNotices(
-  _lastSyncAt?: string | null
+  lastSyncAt?: string | null
 ): Promise<EjnProcurementNotice[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/ProcurementNotices",
-    "Id desc"
+    "Id desc",
+    buildLastUpdatedFilter(lastSyncAt)
   );
 
   return raw.map((r) => ({
@@ -170,41 +192,109 @@ export async function fetchProcurementNotices(
     ProcedureType: PROCEDURE_TYPE_MAP[r.ProcedureType] || r.ProcedureType || null,
     Status: null,
     NoticeUrl: r.Id ? `https://next.ejn.gov.ba/procedures/${r.Id}/overview` : null,
-    Description: r.AdditionalInformation || null,
+    Description: joinNonEmpty([
+      r.AdditionalInformation,
+      r.ParticipationRestrictions,
+      r.ProfessionalActivity,
+      r.EconomicAbility,
+      r.TechnicalAbility,
+      r.PaymentRequirements,
+    ]),
   }));
 }
 
 export async function fetchAwardNotices(
-  _lastSyncAt?: string | null
+  lastSyncAt?: string | null
 ): Promise<EjnAwardNotice[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
-    "/AwardNotices",
-    "Id desc"
+    "/Awards",
+    "Id desc",
+    buildLastUpdatedFilter(lastSyncAt)
   );
 
   return raw.map((r) => ({
     AwardId: String(r.Id ?? ""),
-    NoticeId: r.ProcedureId ? String(r.ProcedureId) : null,
+    ProcedureId: r.ProcedureId ? String(r.ProcedureId) : null,
+    NoticeId: r.NoticeId ? String(r.NoticeId) : r.ProcedureId ? String(r.ProcedureId) : null,
     ContractingAuthorityJib: r.ContractingAuthorityTaxNumber || null,
     WinnerName: null,
     WinnerJib: null,
-    WinningPrice: null,
-    EstimatedValue: r.EstimatedValueTotal ?? null,
-    TotalBiddersCount: null,
+    WinningPrice: r.Value ?? null,
+    EstimatedValue:
+      r.EstimatedValueTotal ??
+      r.HighestAcceptableOfferValue ??
+      r.LowestAcceptableOfferValue ??
+      null,
+    TotalBiddersCount: r.NumberOfReceivedOffers ?? r.NumberOfAcceptableOffers ?? null,
     ProcedureType: PROCEDURE_TYPE_MAP[r.ProcedureType] || r.ProcedureType || null,
     ContractType: CONTRACT_TYPE_MAP[r.ContractType] || r.ContractType || null,
-    AwardDate: r.AwardDate || null,
+    AwardDate: r.ContractDate || r.AwardDate || null,
   }));
 }
 
+export async function fetchAwardedSupplierGroups(
+  lastSyncAt?: string | null
+): Promise<EjnAwardedSupplierGroup[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = await fetchODataPages<any>(
+    "/SupplierGroups",
+    "Id desc",
+    ["IsAwarded eq true", buildLastUpdatedFilter(lastSyncAt)].filter(Boolean).join(" and ")
+  );
+
+  return raw.map((r) => ({
+    SupplierGroupId: String(r.Id ?? ""),
+    LotId: r.LotId ? String(r.LotId) : null,
+  }));
+}
+
+export async function fetchSupplierGroupSupplierLinks(
+  supplierGroupIds: string[]
+): Promise<EjnSupplierGroupSupplierLink[]> {
+  if (supplierGroupIds.length === 0) {
+    return [];
+  }
+
+  const batches: string[][] = [];
+  for (let index = 0; index < supplierGroupIds.length; index += 25) {
+    batches.push(supplierGroupIds.slice(index, index + 25));
+  }
+
+  const allLinks: EjnSupplierGroupSupplierLink[] = [];
+
+  for (const batch of batches) {
+    const filter = batch
+      .map((groupId) => `SupplierGroupId eq ${groupId}`)
+      .join(" or ");
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = await fetchODataPages<any>(
+      "/SupplierGroupSupplierLinks",
+      "Id desc",
+      filter
+    );
+
+    allLinks.push(
+      ...raw.map((r) => ({
+        SupplierGroupId: String(r.SupplierGroupId ?? ""),
+        SupplierId: String(r.SupplierId ?? ""),
+        IsLead: Boolean(r.IsLead),
+      }))
+    );
+  }
+
+  return allLinks;
+}
+
 export async function fetchContractingAuthorities(
-  _lastSyncAt?: string | null
+  lastSyncAt?: string | null
 ): Promise<EjnContractingAuthority[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/ContractingAuthorities",
-    "Id desc"
+    "Id desc",
+    buildLastUpdatedFilter(lastSyncAt)
   );
 
   return raw.map((r) => ({
@@ -221,12 +311,13 @@ export async function fetchContractingAuthorities(
 }
 
 export async function fetchSuppliers(
-  _lastSyncAt?: string | null
+  lastSyncAt?: string | null
 ): Promise<EjnSupplier[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/Suppliers",
-    "Id desc"
+    "Id desc",
+    buildLastUpdatedFilter(lastSyncAt)
   );
 
   return raw.map((r) => ({
@@ -239,21 +330,22 @@ export async function fetchSuppliers(
 }
 
 export async function fetchPlannedProcurements(
-  _lastSyncAt?: string | null
+  lastSyncAt?: string | null
 ): Promise<EjnPlannedProcurement[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const raw = await fetchODataPages<any>(
     "/PlannedProcurements",
-    "Id desc"
+    "Id desc",
+    buildLastUpdatedFilter(lastSyncAt)
   );
 
   return raw.map((r) => ({
     PlanId: String(r.Id ?? ""),
     ContractingAuthorityId: r.ContractingAuthorityId ? String(r.ContractingAuthorityId) : null,
-    Description: r.Description || r.ProcurementSubject || null,
+    Description: r.Name || r.Description || r.ProcurementSubject || null,
     EstimatedValue: r.EstimatedValueTotal ?? r.EstimatedValue ?? null,
-    PlannedDate: r.InitiationDate || null,
+    PlannedDate: r.EstimatedProcedureStartDate || r.InitiationDate || null,
     ContractType: CONTRACT_TYPE_MAP[r.ContractType] || r.ContractType || null,
-    CpvCode: r.CpvCode || null,
+    CpvCode: r.MainCpvCodeName?.split(" - ")?.[0] || r.CpvCode || null,
   }));
 }

@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { demoRecentProcurements, demoUpcomingProcurements, isDemoUser } from "@/lib/demo";
+import { getMarketOverview } from "@/lib/market-intelligence";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { ProGate } from "@/components/subscription/pro-gate";
+import type { Company } from "@/types/database";
 import { Calendar, TrendingUp, CalendarDays, ArrowUpRight } from "lucide-react";
 
 function formatKM(value: number): string {
@@ -21,6 +23,15 @@ export default async function UpcomingPage() {
   const isDemoAccount = isDemoUser(user.email);
   const { isSubscribed } = await getSubscriptionStatus(user.id, user.email);
   if (!isSubscribed) return <ProGate />;
+
+  const { data: companyData } = await supabase
+    .from("companies")
+    .select("jib, industry, keywords, operating_regions")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const company = companyData as Pick<Company, "jib" | "industry" | "keywords" | "operating_regions"> | null;
+  const marketOverview = await getMarketOverview(supabase, company ?? undefined);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -51,8 +62,23 @@ export default async function UpcomingPage() {
 
   const items = (planned ?? []) as unknown as PlannedRow[];
 
-  const upcoming = items.filter((p) => p.planned_date && p.planned_date >= today);
-  const recent = items.filter((p) => p.planned_date && p.planned_date < today);
+  const upcoming = marketOverview.upcomingPlans.length > 0
+    ? marketOverview.upcomingPlans.map((plan) => ({
+        id: plan.id,
+        portal_id: plan.id,
+        description: plan.description,
+        estimated_value: plan.estimated_value,
+        planned_date: plan.planned_date,
+        contract_type: plan.contract_type,
+        cpv_code: null,
+        contracting_authority_id: null,
+        contracting_authorities: plan.contracting_authorities,
+      }))
+    : items.filter((p) => p.planned_date && p.planned_date >= today);
+  const recentPool = items.filter((p) => p.planned_date && p.planned_date < today);
+  const recent = marketOverview.matchedCategories.length > 0
+    ? recentPool.filter((p) => p.contract_type && marketOverview.matchedCategories.includes(p.contract_type))
+    : recentPool;
   const displayUpcoming = upcoming.length > 0 ? upcoming : isDemoAccount ? demoUpcomingProcurements : [];
   const displayRecent = recent.length > 0 ? recent : isDemoAccount ? demoRecentProcurements : [];
 
@@ -67,6 +93,11 @@ export default async function UpcomingPage() {
         <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Planirani tenderi</h1>
         <p className="mt-2 text-base text-slate-500">
           Vidite šta dolazi prije zvanične objave kako biste ranije planirali dokumente, tim i kapacitete.
+        </p>
+        <p className="mt-2 text-xs text-slate-500">
+          {marketOverview.profileScoped
+            ? `Pregled je prilagođen na ${marketOverview.matchedCategories.length} kategorija i ${marketOverview.matchedAuthorityCount} naručilaca iz vašeg tržišnog profila.`
+            : "Kad profil sakupi više signala, ova lista će se dodatno suziti na vaš segment tržišta."}
         </p>
       </div>
 

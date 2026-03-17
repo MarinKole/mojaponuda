@@ -11,6 +11,9 @@ import { getMarketOverview } from "@/lib/market-intelligence";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { ProGate } from "@/components/subscription/pro-gate";
 import { CategoryChart } from "@/components/intelligence/category-chart";
+import { MonthlyAwardsChart } from "@/components/intelligence/monthly-awards-chart";
+import { ProcedurePieChart } from "@/components/intelligence/procedure-pie-chart";
+import type { Company } from "@/types/database";
 import {
   ArrowUpRight,
   BarChart3,
@@ -40,7 +43,14 @@ export default async function IntelligencePage() {
   if (!isSubscribed) return <ProGate />;
 
   const now = new Date();
-  const marketOverview = await getMarketOverview(supabase);
+  const { data: companyData } = await supabase
+    .from("companies")
+    .select("jib, industry, keywords, operating_regions")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const company = companyData as Pick<Company, "jib" | "industry" | "keywords" | "operating_regions"> | null;
+  const marketOverview = await getMarketOverview(supabase, company ?? undefined);
   const displayCategoryData = marketOverview.categoryData.length > 0
     ? marketOverview.categoryData
     : isDemoAccount
@@ -76,6 +86,27 @@ export default async function IntelligencePage() {
     : isDemoAccount
       ? demoUpcomingProcurements.slice(0, 4)
       : [];
+  const displayProcedureData = marketOverview.procedureData.length > 0
+    ? marketOverview.procedureData
+    : isDemoAccount
+      ? [
+          { procedure_type: "Otvoreni postupak", count: 12, total_value: 880000, avg_bidders: 4.2, avg_discount: 7.5 },
+          { procedure_type: "Konkurentski zahtjev", count: 6, total_value: 310000, avg_bidders: 3.1, avg_discount: 4.1 },
+          { procedure_type: "Direktni sporazum", count: 4, total_value: 90000, avg_bidders: null, avg_discount: null },
+        ]
+      : [];
+  const displayMonthlyAwards = marketOverview.monthlyAwards.length > 0
+    ? marketOverview.monthlyAwards
+    : isDemoAccount
+      ? [
+          { month_key: "2026-01", label: "jan 2026", count: 5, total_value: 180000 },
+          { month_key: "2026-02", label: "feb 2026", count: 6, total_value: 245000 },
+          { month_key: "2026-03", label: "mar 2026", count: 4, total_value: 210000 },
+          { month_key: "2026-04", label: "apr 2026", count: 8, total_value: 390000 },
+          { month_key: "2026-05", label: "maj 2026", count: 7, total_value: 320000 },
+          { month_key: "2026-06", label: "jun 2026", count: 9, total_value: 470000 },
+        ]
+      : [];
   const usingAnyDemoFallback =
     (displayCategoryData.length === 0 && isDemoAccount) ||
     (marketOverview.topAuthorities.length === 0 && displayTopAuthorities.length > 0) ||
@@ -103,6 +134,11 @@ export default async function IntelligencePage() {
           <p className={`inline-block rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${usingAnyDemoFallback ? "border-amber-100 bg-amber-50 text-amber-700" : "border-emerald-100 bg-emerald-50 text-emerald-600"}`}>
             {usingAnyDemoFallback ? "Demo primjer" : "Podaci uživo"}
           </p>
+          <p className="mt-2 text-xs text-slate-500">
+            {marketOverview.profileScoped
+              ? `${marketOverview.matchedCategories.length} kategorija · ${marketOverview.matchedAuthorityCount} naručilaca iz vašeg profila`
+              : "Širi tržišni pregled dok se profil ne suzi na uži segment"}
+          </p>
         </div>
       </div>
 
@@ -122,6 +158,11 @@ export default async function IntelligencePage() {
               {sentence}
             </div>
           ))}
+        </div>
+        <div className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">
+          {marketOverview.profileScoped
+            ? `Pregled je sužen na ${marketOverview.matchedCategories.length} relevantnih kategorija i ${marketOverview.matchedAuthorityCount} naručilaca koji izlaze iz vašeg profila i tržišnih pogodaka.`
+            : "Pregled trenutno koristi širi tržišni okvir dok profil ne sakupi uži skup relevantnih prilika."}
         </div>
       </div>
 
@@ -207,26 +248,10 @@ export default async function IntelligencePage() {
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="border-b border-slate-100 pb-5">
             <h2 className="font-heading text-lg font-bold text-slate-900">Kako se nabavke vode</h2>
-            <p className="mt-1 text-xs text-slate-500">Najveći tipovi postupka po vrijednosti i tržišnom pritisku.</p>
+            <p className="mt-1 text-xs text-slate-500">Raspodjela vrijednosti po tipu postupka u prostoru koji pratimo.</p>
           </div>
-          <div className="mt-5 space-y-3">
-            {marketOverview.procedureData.length > 0 ? (
-              marketOverview.procedureData.map((procedure) => (
-                <div key={procedure.procedure_type} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{procedure.procedure_type}</p>
-                      <p className="mt-1 text-xs text-slate-500">{procedure.count} ugovora · {procedure.avg_bidders ?? "—"} ponuđača · {procedure.avg_discount !== null ? `${procedure.avg_discount}% popust` : "bez popusta"}</p>
-                    </div>
-                    <span className="text-sm font-bold text-blue-700">{formatKM(procedure.total_value)}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-500">
-                Nema dovoljno stvarnih podataka za pregled postupaka.
-              </div>
-            )}
+          <div className="mt-5 h-[320px] w-full">
+            <ProcedurePieChart data={displayProcedureData} />
           </div>
         </div>
 
@@ -235,22 +260,8 @@ export default async function IntelligencePage() {
             <h2 className="font-heading text-lg font-bold text-slate-900">Trend zadnjih mjeseci</h2>
             <p className="mt-1 text-xs text-slate-500">Broj i vrijednost dodijeljenih ugovora po mjesecu.</p>
           </div>
-          <div className="mt-5 space-y-3">
-            {marketOverview.monthlyAwards.length > 0 ? (
-              marketOverview.monthlyAwards.map((month) => (
-                <div key={month.month_key} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{month.label}</p>
-                    <p className="mt-1 text-xs text-slate-500">{month.count} ugovora</p>
-                  </div>
-                  <span className="text-sm font-bold text-emerald-700">{formatKM(month.total_value)}</span>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-500">
-                Nema dovoljno podataka za trend po mjesecima.
-              </div>
-            )}
+          <div className="mt-5 h-[320px] w-full">
+            <MonthlyAwardsChart data={displayMonthlyAwards} />
           </div>
         </div>
       </div>

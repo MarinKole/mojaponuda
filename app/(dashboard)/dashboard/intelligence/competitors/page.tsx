@@ -5,6 +5,7 @@ import { demoCompetitors, isCompanyProfileComplete, isDemoUser } from "@/lib/dem
 import { getCompetitorAnalysis } from "@/lib/market-intelligence";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { ProGate } from "@/components/subscription/pro-gate";
+import { CompetitorSignalChart } from "@/components/intelligence/competitor-signal-chart";
 import type { Company } from "@/types/database";
 import {
   ArrowUpRight,
@@ -133,11 +134,11 @@ export default async function CompetitorsPage() {
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm lg:max-w-sm">
           <p className="font-semibold text-slate-900">Osnova analize</p>
           <p className="mt-1">
-            {competitorAnalysis.matchedCategories.length} kategorija · {competitorAnalysis.matchedAuthorityCount} naručilaca
+            {competitorAnalysis.matchedCategories.length} kategorija · {competitorAnalysis.matchedAuthorityCount} naručilaca · {competitorAnalysis.matchedTenderCount} tendera
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            {competitorAnalysis.sourceTerms.length > 0
-              ? `Profil: ${competitorAnalysis.sourceTerms.slice(0, 4).join(", ")}`
+            {competitorAnalysis.matchedTenderCount > 0
+              ? "Kombinujemo vaš profil sa otvorenim tenderima i javnim odlukama o dodjeli." 
               : "Koristimo historiju vaših pobjeda i javne tržišne odluke."}
           </p>
         </div>
@@ -194,6 +195,26 @@ export default async function CompetitorsPage() {
         </div>
       ) : (
         <div className="space-y-6">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Signal konkurencije</p>
+                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Ko trenutno najjače pritiska vaš prostor</h2>
+              </div>
+              <Radar className="size-5 text-violet-600" />
+            </div>
+            <div className="mt-5 h-[320px] w-full">
+              <CompetitorSignalChart
+                data={displayCompetitors.slice(0, 8).map((competitor) => ({
+                  name: competitor.name,
+                  signal_score: competitor.signal_score,
+                  wins: competitor.wins,
+                  recent_wins_90d: competitor.recent_wins_90d,
+                }))}
+              />
+            </div>
+          </div>
+
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
             <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-100 pb-5">

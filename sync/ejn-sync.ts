@@ -8,13 +8,17 @@ import { createClient } from "@supabase/supabase-js";
 import {
   fetchProcurementNotices,
   fetchAwardNotices,
+  fetchAwardedSupplierGroups,
   fetchContractingAuthorities,
   fetchSuppliers,
+  fetchSupplierGroupSupplierLinks,
   fetchPlannedProcurements,
   type EjnProcurementNotice,
   type EjnAwardNotice,
+  type EjnAwardedSupplierGroup,
   type EjnContractingAuthority,
   type EjnSupplier,
+  type EjnSupplierGroupSupplierLink,
   type EjnPlannedProcurement,
 } from "@/lib/ejn-api";
 
@@ -48,6 +52,22 @@ async function getLastSyncAt(
   return data?.last_sync_at ?? null;
 }
 
+function chunkArray<T>(items: T[], size: number): T[][] {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
+}
+
+function uniqueNonEmpty(values: Array<string | null | undefined>): string[] {
+  return [...new Set(values.map((value) => value?.trim()).filter(Boolean) as string[])];
+}
+
 async function writeSyncLog(
   supabase: ReturnType<typeof createServiceClient>,
   endpoint: string,
@@ -61,6 +81,126 @@ async function writeSyncLog(
     records_added: added,
     records_updated: updated,
   });
+}
+
+async function buildTenderIdMap(
+  supabase: ReturnType<typeof createServiceClient>,
+  portalIds: string[]
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+
+  for (const batch of chunkArray(uniqueNonEmpty(portalIds), 250)) {
+    const { data } = await supabase
+      .from("tenders")
+      .select("id, portal_id")
+      .in("portal_id", batch);
+
+    for (const row of data ?? []) {
+      if (row.portal_id) {
+        map.set(row.portal_id, row.id);
+      }
+    }
+  }
+
+  return map;
+}
+
+async function buildSupplierPortalMap(
+  supabase: ReturnType<typeof createServiceClient>,
+  supplierPortalIds: string[]
+): Promise<Map<string, { jib: string; name: string }>> {
+  const map = new Map<string, { jib: string; name: string }>();
+
+  for (const batch of chunkArray(uniqueNonEmpty(supplierPortalIds), 250)) {
+    const { data } = await supabase
+      .from("market_companies")
+      .select("portal_id, jib, name")
+      .in("portal_id", batch);
+
+    for (const row of data ?? []) {
+      if (row.portal_id && row.jib) {
+        map.set(row.portal_id, { jib: row.jib, name: row.name });
+      }
+    }
+  }
+
+  return map;
+}
+
+function buildWinningSupplierPortalMap(
+  groups: EjnAwardedSupplierGroup[],
+  links: EjnSupplierGroupSupplierLink[]
+): Map<string, string> {
+  const linksByGroupId = new Map<string, EjnSupplierGroupSupplierLink[]>();
+
+  for (const link of links) {
+    const existing = linksByGroupId.get(link.SupplierGroupId);
+    if (existing) {
+      existing.push(link);
+    } else {
+      linksByGroupId.set(link.SupplierGroupId, [link]);
+    }
+  }
+
+  const winnerPortalMap = new Map<string, string>();
+
+  for (const group of groups) {
+    if (!group.LotId) {
+      continue;
+    }
+
+    const groupLinks = linksByGroupId.get(group.SupplierGroupId) ?? [];
+    const leadSupplier = groupLinks.find((link) => link.IsLead) ?? groupLinks[0];
+
+    if (leadSupplier?.SupplierId) {
+      winnerPortalMap.set(group.LotId, leadSupplier.SupplierId);
+    }
+  }
+
+  return winnerPortalMap;
+}
+
+async function refreshMarketCompanyAwardStats(
+  supabase: ReturnType<typeof createServiceClient>,
+  winnerJibs: string[]
+): Promise<void> {
+  const impactedJibs = uniqueNonEmpty(winnerJibs);
+
+  if (impactedJibs.length === 0) {
+    return;
+  }
+
+  const aggregates = new Map<string, { totalWins: number; totalWonValue: number }>();
+
+  for (const batch of chunkArray(impactedJibs, 150)) {
+    const { data: awards } = await supabase
+      .from("award_decisions")
+      .select("winner_jib, winning_price")
+      .in("winner_jib", batch);
+
+    for (const award of awards ?? []) {
+      if (!award.winner_jib) {
+        continue;
+      }
+
+      const current = aggregates.get(award.winner_jib) ?? { totalWins: 0, totalWonValue: 0 };
+      current.totalWins += 1;
+      current.totalWonValue += Number(award.winning_price) || 0;
+      aggregates.set(award.winner_jib, current);
+    }
+  }
+
+  for (const jib of impactedJibs) {
+    const aggregate = aggregates.get(jib) ?? { totalWins: 0, totalWonValue: 0 };
+
+    await supabase
+      .from("market_companies")
+      .update({
+        total_wins_count: aggregate.totalWins,
+        total_won_value: aggregate.totalWonValue,
+      })
+      .eq("jib", jib);
+  }
 }
 
 // --- Sync: Tenders (ProcurementNotices) ---
@@ -121,32 +261,45 @@ async function syncTenders(
 async function syncAwardDecisions(
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<SyncResult> {
-  const endpoint = "AwardNotices";
+  const endpoint = "Awards";
   try {
     const lastSync = await getLastSyncAt(supabase, endpoint);
-    const awards = await fetchAwardNotices(lastSync);
+    const [awards, awardedGroups] = await Promise.all([
+      fetchAwardNotices(lastSync),
+      fetchAwardedSupplierGroups(lastSync),
+    ]);
+
+    const supplierGroupIds = uniqueNonEmpty(awardedGroups.map((group) => group.SupplierGroupId));
+    const groupLinks = await fetchSupplierGroupSupplierLinks(supplierGroupIds);
+    const winningSupplierPortalMap = buildWinningSupplierPortalMap(awardedGroups, groupLinks);
+    const supplierPortalMap = await buildSupplierPortalMap(
+      supabase,
+      [...winningSupplierPortalMap.values()]
+    );
+    const tenderIdMap = await buildTenderIdMap(
+      supabase,
+      uniqueNonEmpty(awards.flatMap((award) => [award.NoticeId, award.ProcedureId]))
+    );
 
     let added = 0;
     let updated = 0;
+    const impactedWinnerJibs = new Set<string>();
 
     for (const a of awards) {
-      // Pokušaj naći tender po NoticeId
-      let tenderId: string | null = null;
-      if (a.NoticeId) {
-        const { data: tender } = await supabase
-          .from("tenders")
-          .select("id")
-          .eq("portal_id", a.NoticeId)
-          .single();
-        tenderId = tender?.id ?? null;
-      }
+      const tenderId = (a.NoticeId ? tenderIdMap.get(a.NoticeId) : null)
+        ?? (a.ProcedureId ? tenderIdMap.get(a.ProcedureId) : null)
+        ?? null;
+      const winningSupplierPortalId = winningSupplierPortalMap.get(a.AwardId);
+      const winningSupplier = winningSupplierPortalId
+        ? supplierPortalMap.get(winningSupplierPortalId)
+        : null;
 
       const row = {
         portal_award_id: a.AwardId,
         tender_id: tenderId,
         contracting_authority_jib: a.ContractingAuthorityJib || null,
-        winner_name: a.WinnerName || null,
-        winner_jib: a.WinnerJib || null,
+        winner_name: winningSupplier?.name ?? a.WinnerName ?? null,
+        winner_jib: winningSupplier?.jib ?? a.WinnerJib ?? null,
         winning_price: a.WinningPrice || null,
         estimated_value: a.EstimatedValue || null,
         total_bidders_count: a.TotalBiddersCount || null,
@@ -154,6 +307,10 @@ async function syncAwardDecisions(
         contract_type: a.ContractType || null,
         award_date: a.AwardDate || null,
       };
+
+      if (row.winner_jib) {
+        impactedWinnerJibs.add(row.winner_jib);
+      }
 
       const { data: existing } = await supabase
         .from("award_decisions")
@@ -172,6 +329,8 @@ async function syncAwardDecisions(
         added++;
       }
     }
+
+    await refreshMarketCompanyAwardStats(supabase, [...impactedWinnerJibs]);
 
     const syncAt = new Date().toISOString();
     await writeSyncLog(supabase, endpoint, syncAt, added, updated);
