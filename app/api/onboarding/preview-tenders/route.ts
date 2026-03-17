@@ -34,7 +34,6 @@ interface PreviewTenderCandidate {
   contracting_authority: string | null;
   contract_type: string | null;
   raw_description: string | null;
-  cpv_code: string | null;
 }
 
 interface PreviewSignalResponse {
@@ -218,7 +217,7 @@ export async function POST(request: Request) {
     const createBaseQuery = () =>
       supabase
         .from("tenders")
-        .select("id, title, deadline, estimated_value, contracting_authority, contract_type, raw_description, cpv_code")
+        .select("id, title, deadline, estimated_value, contracting_authority, contract_type, raw_description")
         .gt("deadline", new Date().toISOString());
 
     let query = createBaseQuery();

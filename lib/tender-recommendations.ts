@@ -214,9 +214,7 @@ export function buildRecommendationSearchCondition(context: RecommendationContex
     return [`title.ilike.%${safeTerm}%`, `raw_description.ilike.%${safeTerm}%`];
   });
 
-  const cpvConditions = context.cpvPrefixes.map((prefix) => `cpv_code.ilike.${prefix}%`);
-
-  return [...keywordConditions, ...cpvConditions].join(",");
+  return keywordConditions.join(",");
 }
 
 export function scoreTenderRecommendation<TTender extends RecommendationTenderInput>(

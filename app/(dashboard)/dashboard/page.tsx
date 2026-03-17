@@ -233,7 +233,6 @@ export default async function DashboardPage() {
     contracting_authority: string | null;
     contracting_authority_jib: string | null;
     contract_type: string | null;
-    cpv_code: string | null;
     raw_description: string | null;
   }[] = [];
 
@@ -241,7 +240,7 @@ export default async function DashboardPage() {
     let relevantQuery = supabase
       .from("tenders")
       .select(
-        "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, cpv_code, raw_description"
+        "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description"
       )
       .gt("deadline", nowIso);
 
@@ -270,7 +269,6 @@ export default async function DashboardPage() {
         contracting_authority: string | null;
         contracting_authority_jib: string | null;
         contract_type: string | null;
-        cpv_code: string | null;
         raw_description: string | null;
       }[],
       recommendationContext
