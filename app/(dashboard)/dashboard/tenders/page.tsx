@@ -220,7 +220,7 @@ async function TendersContent({ searchParams }: TendersPageProps) {
               : "Podaci se automatski sinhronizuju sa e-Nabavke portala."}
           </p>
           {activeTab === "recommended" && (
-            <Button variant="outline" className="mt-6 rounded-sm" asChild>
+            <Button className="mt-6 rounded-xl bg-slate-950 px-5 text-white shadow-[0_16px_35px_-20px_rgba(15,23,42,0.6)] transition-all hover:bg-slate-800" asChild>
                <Link href="/dashboard/settings">Ažuriraj Profil</Link>
             </Button>
           )}

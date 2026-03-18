@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  buildProfileCpvSeeds,
   buildProfileKeywordSeeds,
   derivePrimaryIndustry,
   getProfileOptionLabel,
@@ -11,7 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
 import {
   buildRecommendationContext,
-  buildRecommendationSearchCondition,
+  fetchRecommendedTenderCandidates,
+  hasRecommendationSignals,
   rankTenderRecommendations,
 } from "@/lib/tender-recommendations";
 
@@ -31,8 +33,14 @@ interface PreviewTenderCandidate {
   deadline: string | null;
   estimated_value: number | null;
   contracting_authority: string | null;
+  contracting_authority_jib: string | null;
   contract_type: string | null;
   raw_description: string | null;
+  cpv_code: string | null;
+  authority_city?: string | null;
+  authority_municipality?: string | null;
+  authority_canton?: string | null;
+  authority_entity?: string | null;
 }
 
 interface PreviewSignalResponse {
@@ -79,11 +87,12 @@ async function mediatePreviewSignals(
   regions: string[]
 ): Promise<{ keywords: string[]; cpvCodes: string[] }> {
   const keywordSeeds = buildProfileKeywordSeeds(profile);
+  const cpvSeeds = buildProfileCpvSeeds(profile);
 
   if (!process.env.OPENAI_API_KEY) {
     return {
       keywords: keywordSeeds,
-      cpvCodes: [],
+      cpvCodes: cpvSeeds,
     };
   }
 
@@ -112,7 +121,7 @@ async function mediatePreviewSignals(
     if (!content) {
       return {
         keywords: keywordSeeds,
-        cpvCodes: [],
+        cpvCodes: cpvSeeds,
       };
     }
 
@@ -126,13 +135,13 @@ async function mediatePreviewSignals(
 
     return {
       keywords: sanitizeSearchKeywords([...keywordSeeds, ...aiKeywords]).slice(0, 18),
-      cpvCodes: [...new Set(aiCpvCodes.map((code) => code.trim()).filter((code) => code.length >= 5))].slice(0, 12),
+      cpvCodes: [...new Set([...cpvSeeds, ...aiCpvCodes.map((code) => code.trim())].filter((code) => code.length >= 5))].slice(0, 18),
     };
   } catch (error) {
     console.error("Preview signal mediation error:", error);
     return {
       keywords: keywordSeeds,
-      cpvCodes: [],
+      cpvCodes: cpvSeeds,
     };
   }
 }
@@ -203,89 +212,32 @@ export async function POST(request: Request) {
       cpv_codes: mediatedSignals.cpvCodes,
       operating_regions: regions,
     });
-    const searchCondition = buildRecommendationSearchCondition(recommendationContext);
 
-    if (!searchCondition) {
+    if (!hasRecommendationSignals(recommendationContext)) {
       return NextResponse.json({
         tenders: [],
         summary: "Odaberite barem jednu djelatnost da pokažemo prve tendere.",
       });
     }
 
-    const createBaseQuery = () =>
-      supabase
-        .from("tenders")
-        .select("id, title, deadline, estimated_value, contracting_authority, contract_type, raw_description")
-        .gt("deadline", new Date().toISOString());
+    const candidateTenders = await fetchRecommendedTenderCandidates<PreviewTenderCandidate>(
+      supabase,
+      recommendationContext,
+      {
+        select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code",
+        limit: 240,
+      }
+    );
 
-    let query = createBaseQuery();
-
-    if (
-      recommendationContext.preferredContractTypes.length > 0 &&
-      recommendationContext.preferredContractTypes.length < 3
-    ) {
-      query = query.in("contract_type", recommendationContext.preferredContractTypes);
-    }
-
-    query = query.or(searchCondition);
-
-    const { data, error } = await query.order("deadline", { ascending: true }).limit(72);
-
-    if (!error) {
-      const candidateTenders = (data ?? []) as PreviewTenderCandidate[];
-      const preciseResult = await toPreviewTenders(
+    return NextResponse.json(
+      await toPreviewTenders(
         candidateTenders,
         candidateTenders.length > 0
           ? `Na osnovu osnovnih podataka izdvojili smo ${Math.min(candidateTenders.length, 6)} tendera koji najviše liče na ono što radite.`
           : "Za ovaj osnovni unos još nema dovoljno jasnih poklapanja. U sljedećem koraku dopunite profil i dobit ćete preciznije preporuke.",
         recommendationContext
-      );
-
-      if (preciseResult.tenders.length > 0) {
-        return NextResponse.json(preciseResult);
-      }
-    }
-
-    if (error) {
-      console.error("Preview tenders precise query error:", error);
-    }
-
-    let fallbackQuery = createBaseQuery();
-
-    if (
-      recommendationContext.preferredContractTypes.length > 0 &&
-      recommendationContext.preferredContractTypes.length < 3
-    ) {
-      fallbackQuery = fallbackQuery.in(
-        "contract_type",
-        recommendationContext.preferredContractTypes
-      );
-    }
-
-    const { data: fallbackData, error: fallbackError } = await fallbackQuery
-      .order("deadline", { ascending: true })
-      .limit(240);
-
-    if (fallbackError) {
-      console.error("Preview tenders fallback query error:", fallbackError);
-
-      return NextResponse.json({
-        tenders: [],
-        summary:
-          "Početni pregled je trenutno ograničen za ovaj osnovni unos. Nastavite dalje i u sljedećem koraku ćemo izoštriti preporuke.",
-      });
-    }
-
-    const fallbackCandidates = (fallbackData ?? []) as PreviewTenderCandidate[];
-    const fallbackResult = await toPreviewTenders(
-      fallbackCandidates,
-      fallbackCandidates.length > 0
-        ? "Prikazujemo širi početni pregled tendera dok izoštravamo preporuke za vaš profil."
-        : "Za ovaj osnovni unos još nema dovoljno jasnih poklapanja. U sljedećem koraku dopunite profil i dobit ćete preciznije preporuke.",
-      recommendationContext
+      )
     );
-
-    return NextResponse.json(fallbackResult);
   } catch (error) {
     console.error("Preview tenders error:", error);
     return NextResponse.json({

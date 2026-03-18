@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOpenAIClient } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 import {
+  buildProfileCpvSeeds,
   buildProfileContextText,
   buildProfileKeywordSeeds,
   sanitizeSearchKeywords,
@@ -14,7 +15,7 @@ Tvoj zadatak je da na osnovu kompletnog profila firme pripremiš profil za pretr
 
 Izlaz mora biti JSON objekat sa sljedećim poljima:
 - cpv_codes: niz stringova (samo glavni kodovi, npr. "45000000-7")
-- keywords: niz stringova za pretragu tendera, na bosanskom jeziku, max 20 pojmova. Koristi kratke i precizne izraze koji se stvarno pojavljuju u tenderima. Prednost daj konkretnim frazama i nazivima robe/usluge, npr. "mrežna oprema", "server", "antivirus licence", "video nadzor", "rekonstrukcija krova".
+- keywords: niz stringova za pretragu tendera, na bosanskom jeziku, idealno 12-24 pojma ako profil to podržava. Koristi kratke i precizne izraze koji se stvarno pojavljuju u tenderima. Prednost daj konkretnim frazama i nazivima robe/usluge, npr. "mrežna oprema", "server", "antivirus licence", "video nadzor", "rekonstrukcija krova".
 - suggested_regions: niz stringova sa regijama koje imaju smisla za ovaj profil; ako korisnik već pošalje regije, vrati iste te regije
 - summary: kratki sažetak profila firme za internu upotrebu, do 2 rečenice
 
@@ -23,9 +24,14 @@ Pravila za keywords:
 - Nemoj vraćati preširoke riječi koje vode do puno nebitnih rezultata.
 - Vraćaj samo pojmove koji su direktno primjenjivi na ono što firma zaista prodaje, isporučuje ili izvodi.
 - Uključi sinonime i usko povezane pojmove samo kada su zaista relevantni.
+- Pokrij više relevantnih podvarijanti iste ponude ako se realno mogu pojaviti pod različitim nazivima u tenderima.
 - Nemoj vraćati sirove korijene riječi ili nedovršene stemove kao što su "mrež", "oprem", "nabavk", "radov", "uslug".
 - Nemoj vraćati jednu široku riječ ako bez dodatnog konteksta može značiti više različitih industrija.
 
+Pravila za cpv_codes:
+- Vrati što širi skup relevantnih CPV kodova koje profil realno pokriva, ali nemoj uključivati kodove za susjedne industrije koje firma vjerovatno ne radi.
+- Ako je firma višesegmentna, uključi više komplementarnih CPV kodova.
+- Prednost daj kodovima koji direktno pomažu da se ne propuste relevantni tenderi.
 Budi precizan i fokusiraj se na ono što je najrelevantnije za javne nabavke.`;
 
 export async function POST(request: NextRequest) {
@@ -66,6 +72,13 @@ export async function POST(request: NextRequest) {
       companyDescription: description,
       legacyIndustryText: null,
     });
+    const cpvSeeds = buildProfileCpvSeeds({
+      primaryIndustry: primaryIndustry ?? null,
+      offeringCategories,
+      preferredTenderTypes,
+      companyDescription: description,
+      legacyIndustryText: null,
+    });
 
     const openai = getOpenAIClient();
     const completion = await openai.chat.completions.create({
@@ -92,8 +105,8 @@ export async function POST(request: NextRequest) {
     };
 
     return NextResponse.json({
-      cpv_codes: [...new Set((profile.cpv_codes ?? []).filter(Boolean))].slice(0, 12),
-      keywords: sanitizeSearchKeywords([...(profile.keywords ?? []), ...keywordSeeds]),
+      cpv_codes: [...new Set([...(profile.cpv_codes ?? []), ...cpvSeeds].filter(Boolean))].slice(0, 18),
+      keywords: sanitizeSearchKeywords([...(profile.keywords ?? []), ...keywordSeeds]).slice(0, 24),
       suggested_regions: regions.length > 0 ? regions : [...new Set(profile.suggested_regions ?? [])],
       summary: profile.summary ?? null,
     });

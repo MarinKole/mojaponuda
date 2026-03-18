@@ -276,6 +276,44 @@ const TENDER_TYPE_KEYWORDS: Record<string, string[]> = {
   works: [],
 };
 
+const PRIMARY_INDUSTRY_CPV_CODES: Record<string, string[]> = {
+  construction: ["45000000", "45200000", "45400000"],
+  it: ["30200000", "32400000", "48000000"],
+  equipment: ["39000000", "42000000", "42600000"],
+  medical: ["33100000", "33140000", "38430000"],
+  maintenance: ["50000000", "50300000", "72253000"],
+  consulting: ["71200000", "71520000", "79400000"],
+  logistics: ["34100000", "60100000", "90500000"],
+  security_energy: ["09100000", "09300000", "35120000"],
+  facilities_hospitality: ["15000000", "39800000", "90910000"],
+  communications_media: ["79340000", "79800000", "79952000"],
+};
+
+const OFFERING_CATEGORY_CPV_CODES: Record<string, string[]> = {
+  software_licenses: ["48000000", "48218000", "48761000"],
+  it_hardware: ["30200000", "32420000", "48820000"],
+  telecom_av: ["32000000", "32260000", "32321200"],
+  cloud_cyber_data: ["48730000", "72250000", "72317000"],
+  construction_works: ["45000000", "45200000", "45400000"],
+  electro_mechanical: ["45310000", "45330000", "50700000"],
+  design_supervision: ["71200000", "71247000", "71520000"],
+  maintenance_support: ["50000000", "50300000", "72253000"],
+  office_school_equipment: ["30190000", "39100000", "39160000"],
+  industrial_tools_machinery: ["42000000", "42600000", "43800000"],
+  furniture_interior: ["39100000", "39130000", "39160000"],
+  medical_supplies: ["33100000", "33140000", "33600000"],
+  laboratory_diagnostics: ["33124100", "33696500", "38430000"],
+  vehicles_transport: ["34100000", "34300000", "60100000"],
+  utility_waste_winter: ["90511000", "90600000", "90620000"],
+  cleaning_hygiene: ["33700000", "39800000", "90910000"],
+  food_catering: ["15000000", "55500000", "55520000"],
+  security_video: ["32323500", "35120000", "79710000"],
+  fuel_energy: ["09100000", "09300000", "31100000"],
+  legal_finance_consulting: ["79100000", "79200000", "79400000"],
+  training_research: ["73000000", "79300000", "80500000"],
+  printing_marketing_events: ["79340000", "79800000", "79952000"],
+};
+
 const SEARCH_KEYWORD_STOP_WORDS = new Set([
   "firma",
   "firme",
@@ -547,6 +585,28 @@ export function getPreferredContractTypes(preferredTenderTypes: string[]): strin
   return preferredTenderTypes
     .map((item) => mapping[item])
     .filter((item): item is string => Boolean(item));
+}
+
+function uniqueCpvCodes(values: Array<string | null | undefined>): string[] {
+  return [
+    ...new Set(
+      values
+        .map((value) => value?.replace(/[^0-9]/g, "") ?? "")
+        .filter((value) => value.length >= 5)
+    ),
+  ];
+}
+
+export function buildProfileCpvSeeds(profile: ParsedCompanyProfile): string[] {
+  const derivedPrimaryIndustry = derivePrimaryIndustry(
+    profile.offeringCategories,
+    profile.primaryIndustry
+  );
+
+  return uniqueCpvCodes([
+    ...(derivedPrimaryIndustry ? PRIMARY_INDUSTRY_CPV_CODES[derivedPrimaryIndustry] ?? [] : []),
+    ...profile.offeringCategories.flatMap((item) => OFFERING_CATEGORY_CPV_CODES[item] ?? []),
+  ]).slice(0, 18);
 }
 
 export function buildProfileKeywordSeeds(profile: ParsedCompanyProfile): string[] {

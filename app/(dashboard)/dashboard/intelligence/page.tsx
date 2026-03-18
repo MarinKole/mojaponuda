@@ -193,6 +193,8 @@ export default async function IntelligencePage() {
       description: openTenderCardDescription,
       icon: FileText,
       tone: "bg-blue-50 text-blue-600",
+      href: "/dashboard/tenders?tab=recommended",
+      ctaLabel: "Otvori preporuke",
     },
     ...(marketOverview.activeTenderValueKnownCount > 0
       ? [{
@@ -201,6 +203,8 @@ export default async function IntelligencePage() {
           description: `Objavljena vrijednost postoji za ${marketOverview.activeTenderValueKnownCount} od ${marketOverview.activeTenderCount} otvorenih tendera.`,
           icon: ArrowUpRight,
           tone: "bg-cyan-50 text-cyan-600",
+          href: null,
+          ctaLabel: null,
         }]
       : []),
     ...(marketOverview.yearAwardValue > 0
@@ -210,6 +214,8 @@ export default async function IntelligencePage() {
           description: `Ukupna vrijednost ugovora u ${now.getFullYear()}. godini.`,
           icon: TrendingUp,
           tone: "bg-emerald-50 text-emerald-600",
+          href: null,
+          ctaLabel: null,
         }]
       : []),
     ...(marketOverview.plannedCount90d > 0
@@ -221,6 +227,8 @@ export default async function IntelligencePage() {
             : "Vrijednost još nije objavljena za nadolazeće tendere.",
           icon: CalendarDays,
           tone: "bg-violet-50 text-violet-600",
+          href: "/dashboard/intelligence/upcoming",
+          ctaLabel: "Otvori planirane",
         }]
       : []),
   ];
@@ -298,16 +306,37 @@ export default async function IntelligencePage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
           {primaryCards.map((card) => (
-            <div key={card.title} className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-bold uppercase tracking-wider text-slate-500">{card.title}</p>
-                <div className={`flex size-10 items-center justify-center rounded-xl ${card.tone}`}>
-                  <card.icon className="size-5" />
+            card.href ? (
+              <Link
+                key={card.title}
+                href={card.href}
+                className="group rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.22)]"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-sm font-bold uppercase tracking-wider text-slate-500 transition-colors group-hover:text-slate-700">{card.title}</p>
+                  <div className={`flex size-10 items-center justify-center rounded-xl ${card.tone}`}>
+                    <card.icon className="size-5" />
+                  </div>
                 </div>
+                <p className="font-heading text-4xl font-extrabold text-slate-900">{card.value}</p>
+                <p className="mt-3 text-xs text-slate-500">{card.description}</p>
+                <div className="mt-4 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 transition-colors group-hover:text-primary">
+                  {card.ctaLabel}
+                  <ArrowUpRight className="size-3.5" />
+                </div>
+              </Link>
+            ) : (
+              <div key={card.title} className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-sm font-bold uppercase tracking-wider text-slate-500">{card.title}</p>
+                  <div className={`flex size-10 items-center justify-center rounded-xl ${card.tone}`}>
+                    <card.icon className="size-5" />
+                  </div>
+                </div>
+                <p className="font-heading text-4xl font-extrabold text-slate-900">{card.value}</p>
+                <p className="mt-3 text-xs text-slate-500">{card.description}</p>
               </div>
-              <p className="font-heading text-4xl font-extrabold text-slate-900">{card.value}</p>
-              <p className="mt-3 text-xs text-slate-500">{card.description}</p>
-            </div>
+            )
           ))}
         </div>
 

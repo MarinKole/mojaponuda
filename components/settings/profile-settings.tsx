@@ -302,18 +302,23 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
             <button
               type="button"
               onClick={() => setExpandedSection((value) => value === "offering" ? null : "offering")}
-              className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-left transition-colors hover:border-slate-300 hover:bg-white"
+              className="rounded-2xl border border-slate-300 bg-slate-100/90 p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:bg-white hover:shadow-md"
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Šta tačno radite</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-600">
                     {offeringCategories.length > 0
                       ? `${offeringCategories.length} odabranih oblasti`
                       : "Odaberite oblasti koje firma stvarno nudi"}
                   </p>
                 </div>
-                <ChevronDown className={cn("size-4 text-slate-400 transition-transform", expandedSection === "offering" ? "rotate-180" : "rotate-0")} />
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                    Klikni za uređivanje
+                  </span>
+                  <ChevronDown className={cn("size-4 text-slate-600 transition-transform", expandedSection === "offering" ? "rotate-180" : "rotate-0")} />
+                </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {derivedPrimaryIndustry ? (
@@ -337,18 +342,23 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
             <button
               type="button"
               onClick={() => setExpandedSection((value) => value === "tender-types" ? null : "tender-types")}
-              className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-left transition-colors hover:border-slate-300 hover:bg-white"
+              className="rounded-2xl border border-slate-300 bg-slate-100/90 p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:bg-white hover:shadow-md"
             >
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Koje tendere pratite</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-slate-600">
                     {preferredTenderTypes.length > 0
                       ? `${preferredTenderTypes.length} odabrane vrste tendera`
                       : "Odaberite robe, usluge i/ili radove"}
                   </p>
                 </div>
-                <ChevronDown className={cn("size-4 text-slate-400 transition-transform", expandedSection === "tender-types" ? "rotate-180" : "rotate-0")} />
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                    Klikni za uređivanje
+                  </span>
+                  <ChevronDown className={cn("size-4 text-slate-600 transition-transform", expandedSection === "tender-types" ? "rotate-180" : "rotate-0")} />
+                </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {preferredTenderTypes.length > 0 ? preferredTenderTypes.map((item) => (
