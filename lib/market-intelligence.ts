@@ -12,6 +12,7 @@ import {
   fetchRecommendedTenderCandidates,
   hasRecommendationSignals,
   matchesCpvPrefixes,
+  matchesPreferredContractTypes,
   rankTenderRecommendations,
 } from "@/lib/tender-recommendations";
 
@@ -280,11 +281,7 @@ function matchesPreferredContractType(
   contractType: string | null | undefined,
   preferredContractTypes: string[]
 ): boolean {
-  if (preferredContractTypes.length === 0) {
-    return true;
-  }
-
-  return Boolean(contractType && preferredContractTypes.includes(contractType));
+  return matchesPreferredContractTypes(contractType, preferredContractTypes);
 }
 
 function matchesProfileScope(
@@ -408,7 +405,7 @@ function isPlanRelevant(
   }
 
   return authorityMatch || profileMatch || cpvProfileMatch || Boolean(
-    plan.contract_type && matchedCategories.includes(plan.contract_type)
+    plan.contract_type && matchesPreferredContractTypes(plan.contract_type, matchedCategories)
   );
 }
 

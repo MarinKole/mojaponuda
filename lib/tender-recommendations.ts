@@ -126,6 +126,53 @@ function normalizeText(value: string | null | undefined): string {
   return value?.toLowerCase() ?? "";
 }
 
+function normalizeContractType(value: string | null | undefined): string | null {
+  const normalized = normalizeText(value).trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.includes("rob") || normalized.includes("good")) {
+    return "Robe";
+  }
+
+  if (normalized.includes("uslug") || normalized.includes("service")) {
+    return "Usluge";
+  }
+
+  if (normalized.includes("radov") || normalized.includes("work")) {
+    return "Radovi";
+  }
+
+  return value?.trim() ?? null;
+}
+
+function buildContractTypeSearchConditions(preferredContractTypes: string[]): string[] {
+  const canonicalTypes = [...new Set(
+    preferredContractTypes
+      .map((item) => normalizeContractType(item))
+      .filter(Boolean) as string[]
+  )];
+
+  return canonicalTypes.flatMap((contractType) => {
+    if (contractType === "Robe") {
+      return ["contract_type.ilike.%rob%", "contract_type.ilike.%good%"];
+    }
+
+    if (contractType === "Usluge") {
+      return ["contract_type.ilike.%uslug%", "contract_type.ilike.%service%"];
+    }
+
+    if (contractType === "Radovi") {
+      return ["contract_type.ilike.%radov%", "contract_type.ilike.%work%"];
+    }
+
+    const safeValue = escapePostgrestLikeValue(contractType);
+    return safeValue ? [`contract_type.ilike.%${safeValue}%`] : [];
+  });
+}
+
 function normalizeCpvCode(value: string | null | undefined): string | null {
   if (!value) {
     return null;
@@ -145,6 +192,25 @@ export function matchesCpvPrefixes(
 
   const normalizedCpvCode = normalizeCpvCode(value);
   return cpvPrefixes.some((prefix) => normalizedCpvCode?.startsWith(prefix) ?? false);
+}
+
+export function matchesPreferredContractTypes(
+  contractType: string | null | undefined,
+  preferredContractTypes: string[]
+): boolean {
+  if (preferredContractTypes.length === 0) {
+    return true;
+  }
+
+  const normalizedContractType = normalizeContractType(contractType);
+
+  if (!normalizedContractType) {
+    return false;
+  }
+
+  return preferredContractTypes.some(
+    (preferredType) => normalizeContractType(preferredType) === normalizedContractType
+  );
 }
 
 function uniqueStrings(values: Array<string | null | undefined>): string[] {
@@ -277,7 +343,14 @@ export async function fetchRecommendedTenderCandidates<
     return [];
   }
 
-  const recommendationSearchCondition = buildRecommendationSearchCondition(context);
+  const queryConditions = [
+    ...buildRecommendationSearchCondition(context)
+      .split(",")
+      .filter(Boolean),
+    ...(context.preferredContractTypes.length > 0 && context.preferredContractTypes.length < 3
+      ? buildContractTypeSearchConditions(context.preferredContractTypes)
+      : []),
+  ];
   const nowIso = options.nowIso ?? new Date().toISOString();
   const limit = options.limit ?? 240;
 
@@ -286,15 +359,8 @@ export async function fetchRecommendedTenderCandidates<
     .select(options.select ?? "*")
     .gt("deadline", nowIso);
 
-  if (
-    context.preferredContractTypes.length > 0 &&
-    context.preferredContractTypes.length < 3
-  ) {
-    query = query.in("contract_type", context.preferredContractTypes);
-  }
-
-  if (recommendationSearchCondition) {
-    query = query.or(recommendationSearchCondition);
+  if (queryConditions.length > 0) {
+    query = query.or(queryConditions.join(","));
   }
 
   const { data } = await query
@@ -371,9 +437,10 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
   const cpvMatch = context.cpvPrefixes.some(
     (prefix) => normalizedCpvCode?.startsWith(prefix) ?? false
   );
-  const contractMatch =
-    context.preferredContractTypes.length === 0 ||
-    (tender.contract_type ? context.preferredContractTypes.includes(tender.contract_type) : false);
+  const contractMatch = matchesPreferredContractTypes(
+    tender.contract_type,
+    context.preferredContractTypes
+  );
   const regionMatch = matchesRegionTerms(
     [
       title,
@@ -410,14 +477,19 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
 
   score -= negativePenalty;
 
+  const hasBusinessSignalInProfile = context.keywords.length > 0 || context.cpvPrefixes.length > 0;
   const hasPositiveSignal = cpvMatch || titleMatches.length > 0 || matchedKeywords.length >= 2;
+  const fallbackTypeScopedMatch =
+    !hasBusinessSignalInProfile &&
+    context.preferredContractTypes.length > 0 &&
+    contractMatch &&
+    regionMatch;
   const blockedByNegativeTitle = negativeTitleMatches.length > 0 && !cpvMatch && titleMatches.length === 0;
   const qualifies =
-    hasPositiveSignal &&
+    ((hasPositiveSignal && score >= (cpvMatch ? 2 : 4)) || fallbackTypeScopedMatch) &&
     contractMatch &&
     regionMatch &&
-    !blockedByNegativeTitle &&
-    score >= (cpvMatch ? 2 : 4);
+    !blockedByNegativeTitle;
 
   const reasons = [
     ...(cpvMatch ? ["Poklapa se s vašim CPV fokusom"] : []),
