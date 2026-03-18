@@ -74,16 +74,30 @@ export default async function UpcomingPage() {
         contracting_authority_id: null,
         contracting_authorities: plan.contracting_authorities,
       }))
-    : items.filter((p) => p.planned_date && p.planned_date >= today);
+    : [];
   const recentPool = items.filter((p) => p.planned_date && p.planned_date < today);
-  const recent = marketOverview.matchedCategories.length > 0
-    ? recentPool.filter((p) => p.contract_type && marketOverview.matchedCategories.includes(p.contract_type))
-    : recentPool;
+  const recent = marketOverview.profileScoped
+    ? recentPool.filter(
+        (p) =>
+          Boolean(p.contract_type && marketOverview.matchedCategories.includes(p.contract_type)) ||
+          Boolean(
+            p.contracting_authorities?.jib &&
+              marketOverview.matchedAuthorityJibs.includes(p.contracting_authorities.jib)
+          )
+      )
+    : [];
   const displayUpcoming = upcoming.length > 0 ? upcoming : isDemoAccount ? demoUpcomingProcurements : [];
   const displayRecent = recent.length > 0 ? recent : isDemoAccount ? demoRecentProcurements : [];
 
+  const upcomingValueKnownCount = displayUpcoming.filter(
+    (p) => p.estimated_value !== null && p.estimated_value !== undefined
+  ).length;
   const totalUpcomingValue = displayUpcoming.reduce(
-    (sum, p) => sum + (Number(p.estimated_value) || 0),
+    (sum, p) =>
+      sum +
+      (p.estimated_value === null || p.estimated_value === undefined
+        ? 0
+        : Number(p.estimated_value) || 0),
     0
   );
 
@@ -92,12 +106,12 @@ export default async function UpcomingPage() {
       <div>
         <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Planirani tenderi</h1>
         <p className="mt-2 text-base text-slate-500">
-          Vidite šta dolazi prije zvanične objave kako biste ranije planirali dokumente, tim i kapacitete.
+          Vidite šta dolazi uskoro kako biste ranije planirali dokumente, tim i kapacitete.
         </p>
         <p className="mt-2 text-xs text-slate-500">
           {marketOverview.profileScoped
             ? `Pregled je prilagođen na ${marketOverview.matchedCategories.length} kategorija i ${marketOverview.matchedAuthorityCount} naručilaca iz vašeg tržišnog profila.`
-            : "Kad profil sakupi više signala, ova lista će se dodatno suziti na vaš segment tržišta."}
+            : "Dopunite profil da bi planirani tenderi bili prikazani samo za vaše tržište."}
         </p>
       </div>
 
@@ -127,8 +141,12 @@ export default async function UpcomingPage() {
               <ArrowUpRight className="size-5" />
             </div>
           </div>
-          <p className="text-4xl font-heading font-extrabold text-slate-900">{formatKM(totalUpcomingValue)}</p>
-          <p className="mt-1 text-sm text-slate-500 font-medium">Vrijednost za ranije planiranje</p>
+          <p className="text-4xl font-heading font-extrabold text-slate-900">{upcomingValueKnownCount > 0 ? formatKM(totalUpcomingValue) : "—"}</p>
+          <p className="mt-1 text-sm text-slate-500 font-medium">
+            {upcomingValueKnownCount > 0
+              ? `Vrijednost objavljena za ${upcomingValueKnownCount} tendera`
+              : "Vrijednost još nije objavljena"}
+          </p>
         </div>
       </div>
 
@@ -137,9 +155,9 @@ export default async function UpcomingPage() {
         <div className="border-b border-slate-100 px-6 py-5 bg-slate-50/50">
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-blue-500 animate-pulse" />
-            <h2 className="font-heading text-lg font-bold text-slate-900">Nadolazeći</h2>
+            <h2 className="font-heading text-lg font-bold text-slate-900">Nadolazeći tenderi</h2>
           </div>
-          <p className="mt-1 text-xs font-medium text-slate-500 pl-4">Tenderi koje možete vidjeti prije nego što budu otvoreni</p>
+          <p className="mt-1 text-xs font-medium text-slate-500 pl-4">Tenderi koji ulaze u prostor koji pratite</p>
         </div>
         {displayUpcoming.length === 0 ? (
           <div className="py-12 text-center">
@@ -147,7 +165,7 @@ export default async function UpcomingPage() {
               <Calendar className="size-6" />
             </div>
             <p className="text-sm font-medium text-slate-900">Nema planiranih tendera</p>
-            <p className="text-xs text-slate-500 mt-1">Trenutno nema dovoljno podataka o budućim nabavkama.</p>
+            <p className="text-xs text-slate-500 mt-1">Trenutno nema planiranih nabavki u vašem prostoru.</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Company, Database } from "@/types/database";
 import {
   buildProfileKeywordSeeds,
+  getPreferredContractTypes,
   parseCompanyProfile,
   sanitizeSearchKeywords,
 } from "@/lib/company-profile";
@@ -128,11 +129,15 @@ export interface MarketUpcomingInsight {
 export interface MarketOverviewResult {
   activeTenderCount: number;
   activeTenderValue: number;
+  activeTenderValueKnownCount: number;
   yearAwardValue: number;
   plannedCount90d: number;
   plannedValue90d: number;
+  plannedValueKnownCount: number;
   avgDiscount90d: number | null;
+  avgDiscountSampleCount: number;
   avgBidders90d: number | null;
+  avgBiddersSampleCount: number;
   avgAwardValue90d: number | null;
   categoryData: MarketCategoryInsight[];
   procedureData: MarketProcedureInsight[];
@@ -143,6 +148,7 @@ export interface MarketOverviewResult {
   sourceTerms: string[];
   matchedCategories: string[];
   matchedAuthorityCount: number;
+  matchedAuthorityJibs: string[];
   profileScoped: boolean;
 }
 
@@ -240,6 +246,56 @@ function countTermMatches(text: string | null | undefined, terms: string[]): num
   );
 }
 
+function hasRegionMatch(
+  fields: Array<string | null | undefined>,
+  operatingRegions: string[]
+): boolean {
+  if (operatingRegions.length === 0) {
+    return true;
+  }
+
+  return fields.some((field) => scoreRegionMatch(field, operatingRegions) > 0);
+}
+
+function matchesPreferredContractType(
+  contractType: string | null | undefined,
+  preferredContractTypes: string[]
+): boolean {
+  if (preferredContractTypes.length === 0) {
+    return true;
+  }
+
+  return Boolean(contractType && preferredContractTypes.includes(contractType));
+}
+
+function matchesProfileScope(
+  fields: Array<string | null | undefined>,
+  contractType: string | null | undefined,
+  searchTerms: string[],
+  operatingRegions: string[],
+  preferredContractTypes: string[]
+): boolean {
+  const hasScope =
+    searchTerms.length > 0 ||
+    operatingRegions.length > 0 ||
+    preferredContractTypes.length > 0;
+
+  if (!hasScope) {
+    return false;
+  }
+
+  const keywordMatch =
+    searchTerms.length === 0 ||
+    fields.some((field) => countTermMatches(field, searchTerms) > 0);
+  const regionMatch = hasRegionMatch(fields, operatingRegions);
+  const contractTypeMatch = matchesPreferredContractType(
+    contractType,
+    preferredContractTypes
+  );
+
+  return keywordMatch && regionMatch && contractTypeMatch;
+}
+
 function scoreMarketFit(
   fields: Array<string | null | undefined>,
   searchTerms: string[],
@@ -261,6 +317,7 @@ function isPlanRelevant(
   plan: PlannedScopeRow,
   searchTerms: string[],
   operatingRegions: string[],
+  preferredContractTypes: string[],
   matchedCategories: string[],
   matchedAuthorityJibs: string[]
 ): boolean {
@@ -280,16 +337,36 @@ function isPlanRelevant(
     searchTerms,
     operatingRegions
   );
+  const profileMatch = matchesProfileScope(
+    [
+      plan.description,
+      plan.contract_type,
+      plan.cpv_code,
+      plan.contracting_authorities?.name,
+    ],
+    plan.contract_type,
+    searchTerms,
+    operatingRegions,
+    preferredContractTypes
+  );
 
-  return categoryMatch || authorityMatch || score > 0;
+  return categoryMatch || authorityMatch || profileMatch || score > 0;
 }
 
 export async function getCompetitorAnalysis(
   supabase: SupabaseClient<Database>,
   company: Pick<Company, "jib" | "keywords" | "operating_regions" | "industry">
 ): Promise<CompetitorAnalysisResult> {
+  const profile = parseCompanyProfile(company.industry);
   const searchTerms = buildSearchTerms(company);
   const operatingRegions = buildRegionSearchTerms(company.operating_regions ?? []);
+  const preferredContractTypes = getPreferredContractTypes(
+    profile.preferredTenderTypes
+  );
+  const hasProfileScope =
+    searchTerms.length > 0 ||
+    operatingRegions.length > 0 ||
+    preferredContractTypes.length > 0;
   const nowIso = new Date().toISOString();
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -311,35 +388,45 @@ export async function getCompetitorAnalysis(
     raw_description: string | null;
   }[] = [];
 
-  if (searchTerms.length > 0) {
-    const keywordConditions = buildKeywordOrConditions(searchTerms);
+  if (hasProfileScope) {
+    const { data: tenderRows } = await supabase
+      .from("tenders")
+      .select("contracting_authority_jib, contracting_authority, contract_type, title, raw_description")
+      .gt("deadline", nowIso)
+      .limit(600);
 
-    if (keywordConditions) {
-      const { data: tenderRows } = await supabase
-        .from("tenders")
-        .select("contracting_authority_jib, contracting_authority, contract_type, title, raw_description")
-        .gt("deadline", nowIso)
-        .or(keywordConditions)
-        .limit(600);
+    profileAuthorityRows = ((tenderRows ?? []) as typeof profileAuthorityRows)
+      .filter((tender) =>
+        matchesProfileScope(
+          [
+            tender.title,
+            tender.raw_description,
+            tender.contracting_authority,
+            tender.contract_type,
+          ],
+          tender.contract_type,
+          searchTerms,
+          operatingRegions,
+          preferredContractTypes
+        )
+      )
+      .sort((a, b) => {
+        const scoreA =
+          scoreRegionMatch(a.contracting_authority, operatingRegions) +
+          scoreRegionMatch(a.title, operatingRegions) +
+          scoreRegionMatch(a.raw_description, operatingRegions);
+        const scoreB =
+          scoreRegionMatch(b.contracting_authority, operatingRegions) +
+          scoreRegionMatch(b.title, operatingRegions) +
+          scoreRegionMatch(b.raw_description, operatingRegions);
 
-      profileAuthorityRows = ((tenderRows ?? []) as typeof profileAuthorityRows)
-        .sort((a, b) => {
-          const scoreA =
-            scoreRegionMatch(a.contracting_authority, operatingRegions) +
-            scoreRegionMatch(a.title, operatingRegions) +
-            scoreRegionMatch(a.raw_description, operatingRegions);
-          const scoreB =
-            scoreRegionMatch(b.contracting_authority, operatingRegions) +
-            scoreRegionMatch(b.title, operatingRegions) +
-            scoreRegionMatch(b.raw_description, operatingRegions);
-
-          return scoreB - scoreA;
-        })
-        .slice(0, 250);
-    }
+        return scoreB - scoreA;
+      })
+      .slice(0, 250);
   }
 
   const matchedCategories = uniqueStrings([
+    ...preferredContractTypes,
     ...(ourAwards ?? []).map((award) => award.contract_type),
     ...profileAuthorityRows.map((row) => row.contract_type),
   ]);
@@ -394,19 +481,7 @@ export async function getCompetitorAnalysis(
         .limit(2000)
     : { data: [] };
 
-  let awardRows = [...(categoryAwards ?? []), ...(authorityAwards ?? [])] as AwardRow[];
-  if (awardRows.length === 0) {
-    const { data: fallbackAwards } = await supabase
-      .from("award_decisions")
-      .select(
-        "portal_award_id, winner_name, winner_jib, winning_price, contract_type, award_date, total_bidders_count, discount_pct, procedure_type, contracting_authority_jib"
-      )
-      .not("winner_jib", "is", null)
-      .order("award_date", { ascending: false })
-      .limit(2000);
-
-    awardRows = (fallbackAwards ?? []) as AwardRow[];
-  }
+  const awardRows = [...(categoryAwards ?? []), ...(authorityAwards ?? [])] as AwardRow[];
 
   const missingAuthorityJibs = uniqueStrings(
     awardRows.map((award) => award.contracting_authority_jib).filter((jib) => jib && !authorityMap.has(jib))
@@ -423,12 +498,42 @@ export async function getCompetitorAnalysis(
   }
 
   const awardMap = new Map<string, AwardRow>();
+  const matchedCategorySet = new Set(matchedCategories);
+  const matchedAuthoritySet = new Set(relevantAuthorityJibs);
   for (const award of awardRows) {
+    const authorityJib = award.contracting_authority_jib;
+    const authorityMeta = authorityJib ? authorityMap.get(authorityJib) : null;
+    const authorityName = authorityJib
+      ? authorityMeta?.name ?? authorityNameFallbackMap.get(authorityJib) ?? authorityJib
+      : "Nepoznat naručilac";
+    const isCategoryMatch = Boolean(award.contract_type && matchedCategorySet.has(award.contract_type));
+    const isAuthorityMatch = Boolean(authorityJib && matchedAuthoritySet.has(authorityJib));
+    const isProfileMatch = matchesProfileScope(
+      [award.contract_type, authorityName, authorityMeta?.city, authorityMeta?.authority_type],
+      award.contract_type,
+      searchTerms,
+      operatingRegions,
+      preferredContractTypes
+    );
+
+    if (!(isCategoryMatch || isAuthorityMatch || isProfileMatch)) {
+      continue;
+    }
+
+    if (
+      operatingRegions.length > 0 &&
+      !hasRegionMatch([authorityName, authorityMeta?.city, authorityMeta?.authority_type], operatingRegions)
+    ) {
+      continue;
+    }
+
+    if (!matchesPreferredContractType(award.contract_type, preferredContractTypes)) {
+      continue;
+    }
+
     awardMap.set(award.portal_award_id, award);
   }
 
-  const matchedCategorySet = new Set(matchedCategories);
-  const matchedAuthoritySet = new Set(relevantAuthorityJibs);
   const competitorMap = new Map<string, CompetitorAccumulator>();
   const authorityInsightMap = new Map<
     string,
@@ -454,8 +559,14 @@ export async function getCompetitorAnalysis(
       ? authorityMeta?.name ?? authorityNameFallbackMap.get(authorityJib) ?? authorityJib
       : "Nepoznat naručilac";
     const price = Number(award.winning_price) || 0;
-    const bidders = Number(award.total_bidders_count);
-    const discount = Number(award.discount_pct);
+    const bidders =
+      award.total_bidders_count === null || award.total_bidders_count === undefined
+        ? null
+        : Number(award.total_bidders_count);
+    const discount =
+      award.discount_pct === null || award.discount_pct === undefined
+        ? null
+        : Number(award.discount_pct);
     const existing = competitorMap.get(award.winner_jib);
     const isRecent = Boolean(award.award_date && award.award_date >= ninetyDaysAgo);
     const isCategoryMatch = Boolean(award.contract_type && matchedCategorySet.has(award.contract_type));
@@ -481,11 +592,11 @@ export async function getCompetitorAnalysis(
         existing.recentWins90d += 1;
         existing.recentValue90d += price;
       }
-      if (Number.isFinite(bidders)) {
+      if (typeof bidders === "number" && Number.isFinite(bidders) && bidders > 0) {
         existing.biddersSum += bidders;
         existing.biddersCount += 1;
       }
-      if (Number.isFinite(discount)) {
+      if (typeof discount === "number" && Number.isFinite(discount)) {
         existing.discountSum += discount;
         existing.discountCount += 1;
       }
@@ -513,10 +624,10 @@ export async function getCompetitorAnalysis(
         lastWinDate: award.award_date,
         recentWins90d: isRecent ? 1 : 0,
         recentValue90d: isRecent ? price : 0,
-        biddersSum: Number.isFinite(bidders) ? bidders : 0,
-        biddersCount: Number.isFinite(bidders) ? 1 : 0,
-        discountSum: Number.isFinite(discount) ? discount : 0,
-        discountCount: Number.isFinite(discount) ? 1 : 0,
+        biddersSum: typeof bidders === "number" && Number.isFinite(bidders) && bidders > 0 ? bidders : 0,
+        biddersCount: typeof bidders === "number" && Number.isFinite(bidders) && bidders > 0 ? 1 : 0,
+        discountSum: typeof discount === "number" && Number.isFinite(discount) ? discount : 0,
+        discountCount: typeof discount === "number" && Number.isFinite(discount) ? 1 : 0,
         categoryMatchWins: isCategoryMatch ? 1 : 0,
         authorityMatchWins: isAuthorityMatch ? 1 : 0,
       });
@@ -648,19 +759,25 @@ export async function getMarketOverview(
     .toISOString()
     .split("T")[0];
 
+  const profile = company ? parseCompanyProfile(company.industry) : null;
   const searchTerms = company ? buildSearchTerms(company) : [];
   const operatingRegions = company ? buildRegionSearchTerms(company.operating_regions ?? []) : [];
+  const preferredContractTypes = profile
+    ? getPreferredContractTypes(profile.preferredTenderTypes)
+    : [];
+  const hasProfileScope =
+    searchTerms.length > 0 ||
+    operatingRegions.length > 0 ||
+    preferredContractTypes.length > 0;
   const keywordConditions = buildKeywordOrConditions(searchTerms);
 
   const [
-    { count: allActiveTenderCount },
     { data: allActiveTenderRows },
     { data: profileTenderRows },
     { data: allYearAwards },
     { data: allUpcomingPlans },
     { data: ourAwards },
   ] = await Promise.all([
-    supabase.from("tenders").select("id", { count: "exact", head: true }).gte("deadline", nowIso),
     supabase
       .from("tenders")
       .select(
@@ -709,7 +826,7 @@ export async function getMarketOverview(
   const profileTenderCandidates = keywordConditions
     ? ((profileTenderRows ?? []) as TenderScopeRow[])
     : allActiveRows;
-  const matchedActiveTenders = company
+  const matchedActiveTenders = company && hasProfileScope
     ? profileTenderCandidates
         .map((tender) => ({
           ...tender,
@@ -724,22 +841,38 @@ export async function getMarketOverview(
             operatingRegions
           ),
         }))
-        .filter((tender) => tender.market_fit_score > 0)
+        .filter((tender) =>
+          matchesProfileScope(
+            [
+              tender.title,
+              tender.raw_description,
+              tender.contracting_authority,
+              tender.contract_type,
+            ],
+            tender.contract_type,
+            searchTerms,
+            operatingRegions,
+            preferredContractTypes
+          )
+        )
         .sort((a, b) => b.market_fit_score - a.market_fit_score)
         .slice(0, 250)
     : [];
 
   const matchedCategories = uniqueStrings([
+    ...preferredContractTypes,
     ...matchedActiveTenders.map((tender) => tender.contract_type),
     ...((ourAwards ?? []) as Array<{ contract_type: string | null }>).map((award) => award.contract_type),
   ]);
   const matchedAuthorityJibs = uniqueStrings([
     ...matchedActiveTenders.map((tender) => tender.contracting_authority_jib),
-    ...((ourAwards ?? []) as Array<{ contracting_authority_jib: string | null }>).map(
-      (award) => award.contracting_authority_jib
-    ),
+    ...(operatingRegions.length === 0
+      ? ((ourAwards ?? []) as Array<{ contracting_authority_jib: string | null }>).map(
+          (award) => award.contracting_authority_jib
+        )
+      : []),
   ]);
-  const profileScoped = matchedActiveTenders.length > 0 || matchedCategories.length > 0 || matchedAuthorityJibs.length > 0;
+  const profileScoped = hasProfileScope;
 
   const scopedYearAwards = profileScoped
     ? ((allYearAwards ?? []) as AwardRow[]).filter((award) => {
@@ -749,9 +882,12 @@ export async function getMarketOverview(
         const authorityMatch = Boolean(
           award.contracting_authority_jib && matchedAuthorityJibs.includes(award.contracting_authority_jib)
         );
+        if (operatingRegions.length > 0) {
+          return authorityMatch;
+        }
         return categoryMatch || authorityMatch;
       })
-    : ((allYearAwards ?? []) as AwardRow[]);
+    : [];
 
   const scopedUpcomingPlansData = profileScoped
     ? ((allUpcomingPlans ?? []) as PlannedScopeRow[])
@@ -760,33 +896,35 @@ export async function getMarketOverview(
             plan,
             searchTerms,
             operatingRegions,
+            preferredContractTypes,
             matchedCategories,
             matchedAuthorityJibs
           )
         )
         .slice(0, 8)
-    : ((allUpcomingPlans ?? []) as PlannedScopeRow[]).slice(0, 8);
+    : [];
 
-  const hasScopedMarketCoverage =
-    matchedActiveTenders.length >= 3 || scopedYearAwards.length > 0 || scopedUpcomingPlansData.length > 0;
-  const useProfileScope = profileScoped && hasScopedMarketCoverage;
+  const useProfileScope = profileScoped;
 
-  const yearAwards = useProfileScope
-    ? scopedYearAwards
-    : ((allYearAwards ?? []) as AwardRow[]);
+  const yearAwards = scopedYearAwards;
 
   const recentAwards = yearAwards.filter(
     (award) => Boolean(award.award_date && award.award_date >= ninetyDaysAgo)
   );
 
-  const upcomingPlansData = useProfileScope
-    ? scopedUpcomingPlansData
-    : ((allUpcomingPlans ?? []) as PlannedScopeRow[]).slice(0, 8);
+  const upcomingPlansData = scopedUpcomingPlansData;
 
-  const activeTenderSource = useProfileScope ? matchedActiveTenders : allActiveRows;
-  const activeTenderCount = useProfileScope ? matchedActiveTenders.length : allActiveTenderCount ?? 0;
+  const activeTenderSource = matchedActiveTenders;
+  const activeTenderCount = matchedActiveTenders.length;
+  const activeTenderValueKnownCount = activeTenderSource.filter(
+    (tender) => tender.estimated_value !== null && tender.estimated_value !== undefined
+  ).length;
   const activeTenderValue = activeTenderSource.reduce(
-    (sum, tender) => sum + (Number(tender.estimated_value) || 0),
+    (sum, tender) =>
+      sum +
+      (tender.estimated_value === null || tender.estimated_value === undefined
+        ? 0
+        : Number(tender.estimated_value) || 0),
     0
   );
 
@@ -796,18 +934,33 @@ export async function getMarketOverview(
   );
 
   const plannedCount90d = upcomingPlansData.length;
+  const plannedValueKnownCount = upcomingPlansData.filter(
+    (plan) => plan.estimated_value !== null && plan.estimated_value !== undefined
+  ).length;
   const plannedValue90d = upcomingPlansData.reduce(
-    (sum, plan) => sum + (Number(plan.estimated_value) || 0),
+    (sum, plan) =>
+      sum +
+      (plan.estimated_value === null || plan.estimated_value === undefined
+        ? 0
+        : Number(plan.estimated_value) || 0),
     0
   );
 
   const recentAwardValues = recentAwards.map((award) => Number(award.winning_price) || 0);
   const recentBidders = recentAwards
-    .map((award) => Number(award.total_bidders_count))
-    .filter((value) => Number.isFinite(value));
+    .map((award) =>
+      award.total_bidders_count === null || award.total_bidders_count === undefined
+        ? null
+        : Number(award.total_bidders_count)
+    )
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
   const recentDiscounts = recentAwards
-    .map((award) => Number(award.discount_pct))
-    .filter((value) => Number.isFinite(value));
+    .map((award) =>
+      award.discount_pct === null || award.discount_pct === undefined
+        ? null
+        : Number(award.discount_pct)
+    )
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
 
   const avgAwardValue90d = recentAwardValues.length > 0
     ? round(recentAwardValues.reduce((sum, value) => sum + value, 0) / recentAwardValues.length, 0)
@@ -836,8 +989,14 @@ export async function getMarketOverview(
     const monthLabel = awardDate
       ? awardDate.toLocaleDateString("bs-BA", { month: "short", year: "numeric" })
       : "Nepoznato";
-    const bidders = Number(award.total_bidders_count);
-    const discount = Number(award.discount_pct);
+    const bidders =
+      award.total_bidders_count === null || award.total_bidders_count === undefined
+        ? null
+        : Number(award.total_bidders_count);
+    const discount =
+      award.discount_pct === null || award.discount_pct === undefined
+        ? null
+        : Number(award.discount_pct);
 
     const categoryEntry = categoryMap.get(category);
     if (categoryEntry) {
@@ -851,11 +1010,11 @@ export async function getMarketOverview(
     if (procedureEntry) {
       procedureEntry.count += 1;
       procedureEntry.total_value += price;
-      if (Number.isFinite(bidders)) {
+      if (typeof bidders === "number" && Number.isFinite(bidders) && bidders > 0) {
         procedureEntry.bidders_sum += bidders;
         procedureEntry.bidders_count += 1;
       }
-      if (Number.isFinite(discount)) {
+      if (typeof discount === "number" && Number.isFinite(discount)) {
         procedureEntry.discount_sum += discount;
         procedureEntry.discount_count += 1;
       }
@@ -864,10 +1023,10 @@ export async function getMarketOverview(
         procedure_type: procedure,
         count: 1,
         total_value: price,
-        bidders_sum: Number.isFinite(bidders) ? bidders : 0,
-        bidders_count: Number.isFinite(bidders) ? 1 : 0,
-        discount_sum: Number.isFinite(discount) ? discount : 0,
-        discount_count: Number.isFinite(discount) ? 1 : 0,
+        bidders_sum: typeof bidders === "number" && Number.isFinite(bidders) && bidders > 0 ? bidders : 0,
+        bidders_count: typeof bidders === "number" && Number.isFinite(bidders) && bidders > 0 ? 1 : 0,
+        discount_sum: typeof discount === "number" && Number.isFinite(discount) ? discount : 0,
+        discount_count: typeof discount === "number" && Number.isFinite(discount) ? 1 : 0,
       });
     }
 
@@ -899,6 +1058,23 @@ export async function getMarketOverview(
       }
     }
   }
+
+  const monthlyAwards = Array.from({ length: now.getMonth() + 1 }, (_, index) => {
+    const monthDate = new Date(now.getFullYear(), index, 1);
+    const monthKey = monthDate.toISOString().slice(0, 7);
+    const label = monthDate.toLocaleDateString("bs-BA", {
+      month: "short",
+      year: "numeric",
+    });
+    const entry = monthlyMap.get(monthKey);
+
+    return {
+      month_key: monthKey,
+      label,
+      count: entry?.count ?? 0,
+      total_value: entry?.total_value ?? 0,
+    };
+  });
 
   const topAuthoritiesBase = new Map<string, { name: string; jib: string | null; count: number; total_value: number }>();
   const currentMonthAuthorityTenders = activeTenderSource.filter((tender) => tender.created_at >= startOfMonth);
@@ -968,13 +1144,17 @@ export async function getMarketOverview(
   >(((winnerMarketRows ?? []) as Pick<MarketCompanyRow, "jib" | "win_rate" | "total_bids_count" | "city" | "municipality">[]).map((row) => [row.jib, row]));
 
   return {
-    activeTenderCount: activeTenderCount ?? 0,
+    activeTenderCount,
     activeTenderValue,
+    activeTenderValueKnownCount,
     yearAwardValue,
     plannedCount90d,
     plannedValue90d,
+    plannedValueKnownCount,
     avgDiscount90d,
+    avgDiscountSampleCount: recentDiscounts.length,
     avgBidders90d,
+    avgBiddersSampleCount: recentBidders.length,
     avgAwardValue90d,
     categoryData: [...categoryMap.values()].sort((a, b) => b.count - a.count),
     procedureData: [...procedureMap.values()]
@@ -989,9 +1169,7 @@ export async function getMarketOverview(
       }))
       .sort((a, b) => b.total_value - a.total_value)
       .slice(0, 6),
-    monthlyAwards: [...monthlyMap.values()]
-      .sort((a, b) => a.month_key.localeCompare(b.month_key))
-      .slice(-6),
+    monthlyAwards,
     topAuthorities,
     topWinners: topWinnerCandidates.map<MarketWinnerInsight>((winner) => ({
       name: winner.name,
@@ -1007,6 +1185,7 @@ export async function getMarketOverview(
     sourceTerms: searchTerms,
     matchedCategories,
     matchedAuthorityCount: matchedAuthorityJibs.length,
+    matchedAuthorityJibs,
     profileScoped: useProfileScope,
   };
 }

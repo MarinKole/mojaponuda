@@ -59,9 +59,9 @@ export function MonthlyAwardsChart({ data }: MonthlyAwardsChartProps) {
             name === "count" ? "Broj ugovora" : "Vrijednost",
           ]}
         />
-        <Area yAxisId="right" type="monotone" dataKey="total_value" stroke="#2563eb" fill="#dbeafe" fillOpacity={0.85} />
-        <Bar yAxisId="left" dataKey="count" barSize={18} fill="#0f172a" radius={[6, 6, 0, 0]} />
-        <Line yAxisId="right" type="monotone" dataKey="total_value" stroke="#2563eb" strokeWidth={2} dot={{ r: 3, fill: "#2563eb" }} />
+        <Area yAxisId="right" type="monotone" dataKey="total_value" stroke="#2563eb" fill="#dbeafe" fillOpacity={0.8} />
+        <Bar yAxisId="left" dataKey="count" barSize={18} fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+        <Line yAxisId="right" type="monotone" dataKey="total_value" stroke="#7c3aed" strokeWidth={2.5} dot={{ r: 3, fill: "#7c3aed" }} />
       </ComposedChart>
     </ResponsiveContainer>
   );

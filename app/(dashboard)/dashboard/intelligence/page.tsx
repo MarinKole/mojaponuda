@@ -124,10 +124,10 @@ export default async function IntelligencePage() {
             </span>
           </div>
           <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-            Gdje je tržišna prednost
+            Pregled vašeg tržišta
           </h1>
           <p className="mt-1.5 max-w-3xl text-base text-slate-500">
-            Ovdje vidite gdje ima najviše posla, ko trenutno uzima ugovore i šta dolazi dovoljno rano da se možete pripremiti prije konkurencije.
+            Ovdje vidite šta je trenutno otvoreno, gdje se dodjeljuju poslovi i šta dolazi uskoro u prostoru koji pratite.
           </p>
         </div>
         <div className="hidden sm:block text-right">
@@ -137,7 +137,7 @@ export default async function IntelligencePage() {
           <p className="mt-2 text-xs text-slate-500">
             {marketOverview.profileScoped
               ? `${marketOverview.matchedCategories.length} kategorija · ${marketOverview.matchedAuthorityCount} naručilaca iz vašeg profila`
-              : "Širi tržišni pregled dok se profil ne suzi na uži segment"}
+              : "Dodajte djelatnost, vrste tendera ili regije da pregled bude sužen samo na vaše tržište"}
           </p>
         </div>
       </div>
@@ -161,15 +161,15 @@ export default async function IntelligencePage() {
         </div>
         <div className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">
           {marketOverview.profileScoped
-            ? `Pregled je sužen na ${marketOverview.matchedCategories.length} relevantnih kategorija i ${marketOverview.matchedAuthorityCount} naručilaca koji izlaze iz vašeg profila i tržišnih pogodaka.`
-            : "Pregled trenutno koristi širi tržišni okvir dok profil ne sakupi uži skup relevantnih prilika."}
+            ? `Pregled je sužen na ${marketOverview.matchedCategories.length} relevantnih kategorija i ${marketOverview.matchedAuthorityCount} naručilaca iz vašeg profila.`
+            : "Kad dopunite profil, ovdje ćete vidjeti samo svoje tržište."}
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Otvorene prilike</p>
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Otvoreni tenderi</p>
             <div className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <FileText className="size-5" />
             </div>
@@ -184,8 +184,12 @@ export default async function IntelligencePage() {
               <ArrowUpRight className="size-5" />
             </div>
           </div>
-          <p className="font-heading text-4xl font-extrabold text-slate-900">{formatKM(marketOverview.activeTenderValue)}</p>
-          <p className="mt-3 text-xs text-slate-500">Kolika je procijenjena vrijednost tendera koji su sada otvoreni.</p>
+          <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.activeTenderValueKnownCount > 0 ? formatKM(marketOverview.activeTenderValue) : "—"}</p>
+          <p className="mt-3 text-xs text-slate-500">
+            {marketOverview.activeTenderValueKnownCount > 0
+              ? `Objavljena vrijednost postoji za ${marketOverview.activeTenderValueKnownCount} od ${marketOverview.activeTenderCount} otvorenih tendera.`
+              : "Otvoreni tenderi trenutno nemaju objavljenu procijenjenu vrijednost."}
+          </p>
         </div>
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
@@ -199,13 +203,17 @@ export default async function IntelligencePage() {
         </div>
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Dolazi 90 dana</p>
+            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Nadolazeći tenderi</p>
             <div className="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
               <CalendarDays className="size-5" />
             </div>
           </div>
           <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.plannedCount90d}</p>
-          <p className="mt-3 text-xs text-slate-500">{formatKM(marketOverview.plannedValue90d)} potencijalne vrijednosti za ranije planiranje.</p>
+          <p className="mt-3 text-xs text-slate-500">
+            {marketOverview.plannedValueKnownCount > 0
+              ? `${formatKM(marketOverview.plannedValue90d)} poznate vrijednosti za ranije planiranje.`
+              : "Vrijednost još nije objavljena za nadolazeće tendere."}
+          </p>
         </div>
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
@@ -215,7 +223,11 @@ export default async function IntelligencePage() {
             </div>
           </div>
           <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.avgBidders90d ?? "—"}</p>
-          <p className="mt-3 text-xs text-slate-500">Prosječan broj ponuđača po ugovoru zadnjih 90 dana.</p>
+          <p className="mt-3 text-xs text-slate-500">
+            {marketOverview.avgBiddersSampleCount > 0
+              ? `Prosjek na osnovu ${marketOverview.avgBiddersSampleCount} odluka u zadnjih 90 dana.`
+              : "Nema dovoljno podataka za zadnjih 90 dana."}
+          </p>
         </div>
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
@@ -225,18 +237,22 @@ export default async function IntelligencePage() {
             </div>
           </div>
           <p className="font-heading text-4xl font-extrabold text-slate-900">{marketOverview.avgDiscount90d !== null ? `${marketOverview.avgDiscount90d}%` : "—"}</p>
-          <p className="mt-3 text-xs text-slate-500">Koliko tržište prosječno spušta cijenu zadnjih 90 dana.</p>
+          <p className="mt-3 text-xs text-slate-500">
+            {marketOverview.avgDiscountSampleCount > 0
+              ? `Prosjek na osnovu ${marketOverview.avgDiscountSampleCount} odluka u zadnjih 90 dana.`
+              : "Nema dovoljno podataka za zadnjih 90 dana."}
+          </p>
         </div>
       </div>
 
       <div className="rounded-[1.5rem] border border-slate-100 bg-white p-8 shadow-sm">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-heading text-xl font-bold text-slate-900">Raspodjela ugovora po kategorijama</h2>
-            <p className="mt-1 text-sm text-slate-500">Pregled vrijednosti i broja ugovora po tipu nabavke za {now.getFullYear()}. godinu.</p>
+            <h2 className="font-heading text-xl font-bold text-slate-900">Ugovori po kategorijama</h2>
+            <p className="mt-1 text-sm text-slate-500">Pregled broja i vrijednosti ugovora za {now.getFullYear()}. godinu.</p>
           </div>
           <div className="hidden sm:block rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
-            Vrijednost + broj ugovora
+            Broj + vrijednost
           </div>
         </div>
         <div className="h-[350px] w-full">
@@ -247,8 +263,8 @@ export default async function IntelligencePage() {
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="border-b border-slate-100 pb-5">
-            <h2 className="font-heading text-lg font-bold text-slate-900">Kako se nabavke vode</h2>
-            <p className="mt-1 text-xs text-slate-500">Raspodjela vrijednosti po tipu postupka u prostoru koji pratimo.</p>
+            <h2 className="font-heading text-lg font-bold text-slate-900">Vrste postupaka</h2>
+            <p className="mt-1 text-xs text-slate-500">Raspodjela po tipu postupka u vašem prostoru.</p>
           </div>
           <div className="mt-5 h-[320px] w-full">
             <ProcedurePieChart data={displayProcedureData} />
@@ -257,8 +273,8 @@ export default async function IntelligencePage() {
 
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="border-b border-slate-100 pb-5">
-            <h2 className="font-heading text-lg font-bold text-slate-900">Trend zadnjih mjeseci</h2>
-            <p className="mt-1 text-xs text-slate-500">Broj i vrijednost dodijeljenih ugovora po mjesecu.</p>
+            <h2 className="font-heading text-lg font-bold text-slate-900">Trend po mjesecima</h2>
+            <p className="mt-1 text-xs text-slate-500">Broj i vrijednost dodijeljenih ugovora za sve mjesece ove godine.</p>
           </div>
           <div className="mt-5 h-[320px] w-full">
             <MonthlyAwardsChart data={displayMonthlyAwards} />
@@ -274,15 +290,15 @@ export default async function IntelligencePage() {
                 <Building2 className="size-5" />
               </div>
               <div>
-                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji naručioci</h2>
-                <p className="text-xs font-medium text-slate-500">Po broju tendera i procijenjenoj vrijednosti u ovom mjesecu.</p>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji naručioci u vašem prostoru</h2>
+                <p className="text-xs font-medium text-slate-500">Po broju tendera i poznatoj vrijednosti.</p>
               </div>
             </div>
           </div>
           <div className="flex-1 p-2">
             {displayTopAuthorities.length === 0 ? (
               <div className="flex h-64 items-center justify-center">
-                <p className="text-sm font-medium text-slate-400">Nema dovoljno podataka za ovaj mjesec.</p>
+                <p className="text-sm font-medium text-slate-400">Nema dovoljno podataka u vašem prostoru.</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -321,15 +337,15 @@ export default async function IntelligencePage() {
                 <Trophy className="size-5" />
               </div>
               <div>
-                <h2 className="font-heading text-lg font-bold text-slate-900">Najuspješniji ponuđači</h2>
-                <p className="text-xs font-medium text-slate-500">Po ukupnoj vrijednosti ugovora ove godine.</p>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji ponuđači u vašem prostoru</h2>
+                <p className="text-xs font-medium text-slate-500">Po osvojenim poslovima u prostoru koji pratite.</p>
               </div>
             </div>
           </div>
           <div className="flex-1 p-2">
             {displayTopWinners.length === 0 ? (
               <div className="flex h-64 items-center justify-center">
-                <p className="text-sm font-medium text-slate-400">Nema dovoljno podataka za ovu godinu.</p>
+                <p className="text-sm font-medium text-slate-400">Nema dovoljno podataka u vašem prostoru.</p>
               </div>
             ) : (
               <div className="space-y-1">
@@ -359,8 +375,8 @@ export default async function IntelligencePage() {
       <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
           <div>
-            <h2 className="font-heading text-lg font-bold text-slate-900">Šta dolazi uskoro</h2>
-            <p className="mt-1 text-xs text-slate-500">Planirane nabavke u narednih 90 dana.</p>
+            <h2 className="font-heading text-lg font-bold text-slate-900">Nadolazeći tenderi</h2>
+            <p className="mt-1 text-xs text-slate-500">Planirane nabavke u vašem prostoru u narednih 90 dana.</p>
           </div>
           <CalendarDays className="size-5 text-violet-600" />
         </div>

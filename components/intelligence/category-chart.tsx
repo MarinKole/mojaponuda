@@ -1,14 +1,11 @@
 "use client";
 
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
+  Cell,
+  Pie,
+  PieChart,
   Tooltip,
   ResponsiveContainer,
-  Cell,
-  CartesianGrid,
 } from "recharts";
 
 interface CategoryChartProps {
@@ -16,6 +13,12 @@ interface CategoryChartProps {
 }
 
 const COLORS = ["#3b82f6", "#06b6d4", "#8b5cf6", "#f59e0b", "#10b981"];
+
+function formatKM(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M KM`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K KM`;
+  return `${value.toFixed(0)} KM`;
+}
 
 export function CategoryChart({ data }: CategoryChartProps) {
   if (data.length === 0) {
@@ -29,41 +32,52 @@ export function CategoryChart({ data }: CategoryChartProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-        <XAxis
-          dataKey="category"
-          tick={{ fill: "#64748b", fontSize: 12, fontWeight: 500 }}
-          axisLine={false}
-          tickLine={false}
-          dy={10}
-        />
-        <YAxis
-          tick={{ fill: "#94a3b8", fontSize: 11 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <Tooltip
-          cursor={{ fill: "#f8fafc" }}
-          contentStyle={{
-            backgroundColor: "#ffffff",
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            fontSize: "12px",
-            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-            padding: "12px",
-          }}
-          labelStyle={{ color: "#0f172a", fontWeight: "bold", marginBottom: "4px" }}
-          itemStyle={{ color: "#64748b" }}
-          formatter={(value) => [String(value), "Tendera"]}
-        />
-        <Bar dataKey="count" radius={[6, 6, 6, 6]} barSize={40}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="grid h-full gap-4 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-center">
+      <ResponsiveContainer width="100%" height="100%" minHeight={280}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="count"
+            nameKey="category"
+            innerRadius={72}
+            outerRadius={112}
+            paddingAngle={3}
+            stroke="none"
+          >
+            {data.map((entry, index) => (
+              <Cell key={entry.category} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value, _name, item) => {
+              const payload = item?.payload as { category: string; count: number; total_value: number } | undefined;
+
+              return [`${String(value ?? "0")} ugovora · ${formatKM(payload?.total_value ?? 0)}`, payload?.category ?? "Kategorija"];
+            }}
+            contentStyle={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              fontSize: "12px",
+              boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
+            }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="space-y-2">
+        {data.map((entry, index) => (
+          <div key={entry.category} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-flex size-2.5 rounded-full"
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+              />
+              <p className="text-sm font-semibold text-slate-900">{entry.category}</p>
+            </div>
+            <p className="mt-1 text-xs text-slate-500">{entry.count} ugovora · {formatKM(entry.total_value)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -128,7 +128,7 @@ export default async function CompetitorsPage() {
           </div>
           <h1 className="mt-3 text-3xl font-heading font-bold text-slate-900 tracking-tight">Ko vam uzima poslove</h1>
           <p className="mt-2 max-w-3xl text-base text-slate-500">
-            Pratimo firme koje pobjeđuju u istim kategorijama i kod istih naručilaca gdje se i vi realno pojavljujete.
+            Pratimo firme koje pobjeđuju u istim kategorijama i kod istih naručilaca u prostoru koji vi pratite.
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm lg:max-w-sm">
@@ -145,31 +145,31 @@ export default async function CompetitorsPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+        <Link href="#direct-rivals" className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50/30">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-500">Direktni rivali</p>
             <Swords className="size-5 text-rose-600" />
           </div>
           <p className="mt-4 font-heading text-3xl font-bold text-slate-950">{displayCompetitors.length}</p>
           <p className="mt-2 text-sm text-slate-500">Firmi koje vam izlaze na istom tržištu.</p>
-        </div>
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+        </Link>
+        <Link href="#rivals-table" className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-amber-200 hover:bg-amber-50/30">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-500">Ukupne pobjede</p>
             <Trophy className="size-5 text-amber-500" />
           </div>
           <p className="mt-4 font-heading text-3xl font-bold text-slate-950">{displayTotalWins}</p>
           <p className="mt-2 text-sm text-slate-500">Broj osvojenih ugovora u praćenom prostoru.</p>
-        </div>
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+        </Link>
+        <Link href="#rivals-table" className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50/30">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-500">Ugovorena vrijednost</p>
             <TrendingUp className="size-5 text-blue-600" />
           </div>
           <p className="mt-4 font-heading text-3xl font-bold text-slate-950">{formatKM(displayTotalValue)}</p>
           <p className="mt-2 text-sm text-slate-500">Vrijednost poslova koje uzima praćena konkurencija.</p>
-        </div>
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+        </Link>
+        <Link href="#direct-rivals" className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-violet-200 hover:bg-violet-50/30">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-500">Najjači rival</p>
             <Radar className="size-5 text-violet-600" />
@@ -178,7 +178,7 @@ export default async function CompetitorsPage() {
           <p className="mt-2 text-sm text-slate-500">
             {leadingCompetitor ? `${leadingCompetitor.wins} pobjeda · ${formatKM(leadingCompetitor.total_value)}` : "Nema dovoljno podataka."}
           </p>
-        </div>
+        </Link>
       </div>
 
       {displayCompetitors.length === 0 ? (
@@ -212,6 +212,50 @@ export default async function CompetitorsPage() {
                   recent_wins_90d: competitor.recent_wins_90d,
                 }))}
               />
+            </div>
+          </div>
+
+          <div id="direct-rivals" className="scroll-mt-24 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Direktni rivali</p>
+                <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Lista rivala koje trebate pratiti</h2>
+              </div>
+              <Swords className="size-5 text-rose-600" />
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {displayCompetitors.slice(0, 9).map((competitor) => (
+                <div key={`${competitor.jib}-card`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">{competitor.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {competitor.recent_wins_90d} pobjeda u 90 dana · {competitor.authority_count} naručilaca
+                      </p>
+                    </div>
+                    <span className="inline-flex rounded-md bg-violet-50 px-2 py-1 text-xs font-bold text-violet-700">
+                      {competitor.signal_score}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-500">
+                    <div className="rounded-xl bg-white px-3 py-2">
+                      <p className="font-semibold text-slate-900">{competitor.wins}</p>
+                      <p>Pobjede</p>
+                    </div>
+                    <div className="rounded-xl bg-white px-3 py-2">
+                      <p className="font-semibold text-slate-900">{formatKM(competitor.total_value)}</p>
+                      <p>Vrijednost</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {competitor.categories.slice(0, 3).map((category) => (
+                      <span key={`${competitor.jib}-${category}`} className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -249,7 +293,7 @@ export default async function CompetitorsPage() {
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div id="authority-collisions" className="scroll-mt-24 rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-100 pb-5">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Naručioci</p>
@@ -305,7 +349,7 @@ export default async function CompetitorsPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white shadow-sm">
+          <div id="rivals-table" className="scroll-mt-24 overflow-hidden rounded-[1.5rem] border border-slate-100 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1240px] text-sm">
                 <thead>

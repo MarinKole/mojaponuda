@@ -7,7 +7,7 @@ interface ProcedurePieChartProps {
   data: MarketProcedureInsight[];
 }
 
-const COLORS = ["#0f172a", "#2563eb", "#0f766e", "#7c3aed", "#d97706", "#475569"];
+const COLORS = ["#2563eb", "#0ea5e9", "#0f766e", "#7c3aed", "#d97706", "#14b8a6"];
 
 function formatKM(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M KM`;
