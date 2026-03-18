@@ -332,6 +332,8 @@ export async function POST(request: Request) {
         );
       });
 
+    const hasRegionFilter = recommendationContext.regionTerms.length > 0;
+
     const qualified = scored.filter((item) => item.qualifies);
     const withAnyPositive = scored.filter(
       (item) =>
@@ -340,11 +342,19 @@ export async function POST(request: Request) {
         item.titleMatches.length > 0 ||
         item.matchedKeywords.length > 0
     );
+    // regionMatch already checks title, description, authority name, city,
+    // municipality, canton, entity — so it catches both explicit geo data
+    // and implicit mentions like "OPĆINA TRAVNIK" in the authority name.
+    const positiveAndRegion = withAnyPositive.filter((item) => item.regionMatch);
+    const regionOnly = scored.filter((item) => item.regionMatch);
 
     console.log("[PREVIEW] Scoring results:", {
       totalScored: scored.length,
       qualified: qualified.length,
       withAnyPositive: withAnyPositive.length,
+      positiveAndRegion: positiveAndRegion.length,
+      regionOnly: regionOnly.length,
+      hasRegionFilter,
       topScores: scored.slice(0, 5).map((item) => ({
         title: item.tender.title.slice(0, 60),
         score: item.score,
@@ -359,25 +369,44 @@ export async function POST(request: Request) {
     });
 
     // ── Step 4: Pick the best available preview set (never empty) ──
+    // When the user selected regions, respect that filter strictly.
+    // regionMatch checks authority name text, title, and description
+    // for region terms — so "OPĆINA TRAVNIK" in authority name will match
+    // "Travnik" (a municipality in Srednjobosanski kanton).
     let previewTenders: PreviewTender[];
     let previewSummary: string;
+    let tier: string;
 
     if (qualified.length > 0) {
       previewTenders = qualified.slice(0, 6).map((item) => toPreviewTender(item.tender));
       previewSummary = `Na osnovu osnovnih podataka izdvojili smo ${previewTenders.length} tendera koji najviše liče na ono što radite.`;
+      tier = "qualified";
+    } else if (positiveAndRegion.length > 0) {
+      previewTenders = positiveAndRegion.slice(0, 6).map((item) => toPreviewTender(item.tender));
+      previewSummary =
+        "Prikazujemo početni pregled tendera na osnovu djelatnosti i odabrane regije. U sljedećem koraku dodajte kontekst za preciznije preporuke.";
+      tier = "positive+region";
+    } else if (hasRegionFilter && regionOnly.length > 0) {
+      previewTenders = regionOnly.slice(0, 6).map((item) => toPreviewTender(item.tender));
+      previewSummary =
+        "Prikazujemo tendere iz odabrane regije. U sljedećem koraku dodajte kontekst za preciznije preporuke.";
+      tier = "region-only";
     } else if (withAnyPositive.length > 0) {
       previewTenders = withAnyPositive.slice(0, 6).map((item) => toPreviewTender(item.tender));
-      previewSummary =
-        "Prikazujemo širi početni pregled tendera na osnovu djelatnosti i dostupnih signala. U sljedećem koraku dodajte kontekst za preciznije preporuke.";
+      previewSummary = hasRegionFilter
+        ? "Prikazujemo širi početni pregled tendera na osnovu djelatnosti. Nismo pronašli dovoljno tendera u odabranoj regiji."
+        : "Prikazujemo širi početni pregled tendera na osnovu djelatnosti i dostupnih signala. U sljedećem koraku dodajte kontekst za preciznije preporuke.";
+      tier = "positive-any-region";
     } else {
       previewTenders = scored.slice(0, 6).map((item) => toPreviewTender(item.tender));
       previewSummary =
         "Prikazujemo najnovije otvorene tendere. U sljedećem koraku dopunite profil za preciznije preporuke.";
+      tier = "broadest";
     }
 
     console.log("[PREVIEW] Final result:", {
       tendersReturned: previewTenders.length,
-      tier: qualified.length > 0 ? "qualified" : withAnyPositive.length > 0 ? "positive" : "broadest",
+      tier,
     });
 
     return NextResponse.json({
