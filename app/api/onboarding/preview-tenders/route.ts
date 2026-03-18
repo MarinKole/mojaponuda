@@ -8,7 +8,7 @@ import {
   type ParsedCompanyProfile,
 } from "@/lib/company-profile";
 import { getOpenAIClient } from "@/lib/openai";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   buildRecommendationContext,
   scoreTenderRecommendation,
@@ -154,7 +154,7 @@ function toPreviewTender(candidate: PreviewTenderCandidate): PreviewTender {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   try {
     const nowIso = new Date().toISOString();
@@ -210,37 +210,61 @@ export async function POST(request: Request) {
       negativeSignals: recommendationContext.negativeSignals.length,
     });
 
-    // ── Step 1: Always fetch a broad pool of ALL active tenders ──
-    const [{ data: datedRows, error: datedError }, { data: undatedRows, error: undatedError }] =
-      await Promise.all([
-        supabase
-          .from("tenders")
-          .select(
-            "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code"
-          )
-          .gt("deadline", nowIso)
-          .order("deadline", { ascending: true, nullsFirst: false })
-          .limit(600),
-        supabase
-          .from("tenders")
-          .select(
-            "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code"
-          )
-          .is("deadline", null)
-          .order("created_at", { ascending: false })
-          .limit(200),
-      ]);
+    // ── Step 1: Always fetch a broad pool of tenders ──
+    // Fetch future-deadline, null-deadline, AND recent past-deadline tenders
+    // so the preview is never empty even when no future tenders exist.
+    const ninetyDaysAgoIso = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [
+      { data: futureRows, error: futureError },
+      { data: undatedRows, error: undatedError },
+      { data: recentPastRows, error: recentPastError },
+    ] = await Promise.all([
+      supabase
+        .from("tenders")
+        .select(
+          "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description"
+        )
+        .gt("deadline", nowIso)
+        .order("deadline", { ascending: true, nullsFirst: false })
+        .limit(600),
+      supabase
+        .from("tenders")
+        .select(
+          "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description"
+        )
+        .is("deadline", null)
+        .order("created_at", { ascending: false })
+        .limit(200),
+      supabase
+        .from("tenders")
+        .select(
+          "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description"
+        )
+        .lte("deadline", nowIso)
+        .gte("deadline", ninetyDaysAgoIso)
+        .order("deadline", { ascending: false })
+        .limit(400),
+    ]);
 
     console.log("[PREVIEW] Broad pool fetch:", {
-      datedCount: datedRows?.length ?? 0,
-      datedError: datedError?.message ?? null,
+      futureCount: futureRows?.length ?? 0,
+      futureError: futureError?.message ?? null,
       undatedCount: undatedRows?.length ?? 0,
       undatedError: undatedError?.message ?? null,
+      recentPastCount: recentPastRows?.length ?? 0,
+      recentPastError: recentPastError?.message ?? null,
     });
 
+    // Deduplicate by id, preferring future > undated > recent past
     const allPoolRows = [
-      ...((datedRows ?? []) as PreviewTenderCandidate[]),
-      ...((undatedRows ?? []) as PreviewTenderCandidate[]),
+      ...new Map(
+        [
+          ...((futureRows ?? []) as PreviewTenderCandidate[]),
+          ...((undatedRows ?? []) as PreviewTenderCandidate[]),
+          ...((recentPastRows ?? []) as PreviewTenderCandidate[]),
+        ].map((row) => [row.id, row])
+      ).values(),
     ];
 
     if (allPoolRows.length === 0) {
@@ -261,16 +285,24 @@ export async function POST(request: Request) {
       ),
     ];
 
+    interface AuthorityGeo {
+      jib: string;
+      city: string | null;
+      municipality: string | null;
+      canton: string | null;
+      entity: string | null;
+    }
+
     const { data: authorityRows } =
       authorityJibs.length > 0
         ? await supabase
             .from("contracting_authorities")
             .select("jib, city, municipality, canton, entity")
             .in("jib", authorityJibs.slice(0, 500))
-        : { data: [] };
+        : { data: [] as AuthorityGeo[] };
 
     const authorityMap = new Map(
-      (authorityRows ?? []).map((authority) => [authority.jib, authority])
+      (authorityRows ?? ([] as AuthorityGeo[])).map((authority) => [authority.jib, authority])
     );
 
     const enrichedPool: PreviewTenderCandidate[] = allPoolRows.map((tender) => {
