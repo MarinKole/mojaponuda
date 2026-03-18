@@ -11,6 +11,11 @@ import {
 import { generateMarketSummary } from "@/lib/ai/market-summary";
 import { formatCurrencyKM } from "@/lib/currency";
 import { getCompetitorAnalysis, getMarketOverview } from "@/lib/market-intelligence";
+import {
+  buildRecommendationContext,
+  buildRecommendationSearchCondition,
+  rankTenderRecommendations,
+} from "@/lib/tender-recommendations";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { ProGate } from "@/components/subscription/pro-gate";
 import { CategoryChart } from "@/components/intelligence/category-chart";
@@ -30,9 +35,21 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-function formatPercent(value: number | null): string {
-  return value !== null ? `${value}%` : "—";
-}
+type IntelligenceRecommendationTender = {
+  id: string;
+  title: string;
+  deadline: string | null;
+  estimated_value: number | null;
+  contracting_authority: string | null;
+  contracting_authority_jib: string | null;
+  contract_type: string | null;
+  raw_description: string | null;
+  cpv_code: string | null;
+  authority_city: string | null;
+  authority_municipality: string | null;
+  authority_canton: string | null;
+  authority_entity: string | null;
+};
 
 export default async function IntelligencePage() {
   const supabase = await createClient();
@@ -48,16 +65,110 @@ export default async function IntelligencePage() {
   const now = new Date();
   const { data: companyData } = await supabase
     .from("companies")
-    .select("jib, industry, keywords, operating_regions")
+    .select("jib, industry, keywords, cpv_codes, operating_regions")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const company = companyData as Pick<Company, "jib" | "industry" | "keywords" | "operating_regions"> | null;
+  const company = companyData as Pick<Company, "jib" | "industry" | "keywords" | "cpv_codes" | "operating_regions"> | null;
   const hasCompleteProfile = isCompanyProfileComplete(company ?? undefined);
   const marketOverview = await getMarketOverview(supabase, company ?? undefined);
   const competitorAnalysis = hasCompleteProfile && company
     ? await getCompetitorAnalysis(supabase, company)
     : null;
+
+  let recommendedOpenCount: number | null = null;
+
+  if (company) {
+    const recommendationContext = buildRecommendationContext(company);
+    const recommendationSearchCondition = buildRecommendationSearchCondition(recommendationContext);
+    const hasRecommendationSignals =
+      recommendationContext.keywords.length > 0 ||
+      recommendationContext.cpvPrefixes.length > 0 ||
+      recommendationContext.preferredContractTypes.length > 0 ||
+      recommendationContext.regionTerms.length > 0;
+
+    if (hasRecommendationSignals) {
+      let recommendationQuery = supabase
+        .from("tenders")
+        .select(
+          "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code"
+        )
+        .gt("deadline", now.toISOString());
+
+      if (
+        recommendationContext.preferredContractTypes.length > 0 &&
+        recommendationContext.preferredContractTypes.length < 3
+      ) {
+        recommendationQuery = recommendationQuery.in(
+          "contract_type",
+          recommendationContext.preferredContractTypes
+        );
+      }
+
+      if (recommendationSearchCondition) {
+        recommendationQuery = recommendationQuery.or(recommendationSearchCondition);
+      }
+
+      const { data: recommendationRows } = await recommendationQuery
+        .order("deadline", { ascending: true, nullsFirst: false })
+        .limit(240);
+
+      const authorityJibs = [
+        ...new Set(
+          ((recommendationRows ?? []) as Array<{ contracting_authority_jib: string | null }>)
+            .map((tender) => tender.contracting_authority_jib)
+            .filter(Boolean) as string[]
+        ),
+      ];
+
+      const { data: authorityRows } = authorityJibs.length > 0
+        ? await supabase
+            .from("contracting_authorities")
+            .select("jib, city, municipality, canton, entity")
+            .in("jib", authorityJibs)
+        : { data: [] };
+
+      const authorityMap = new Map(
+        (authorityRows ?? []).map((authority) => [authority.jib, authority])
+      );
+
+      const scopedRecommendationRows = ((recommendationRows ?? []) as Array<{
+        id: string;
+        title: string;
+        deadline: string | null;
+        estimated_value: number | null;
+        contracting_authority: string | null;
+        contracting_authority_jib: string | null;
+        contract_type: string | null;
+        raw_description: string | null;
+        cpv_code: string | null;
+      }>).map((tender) => {
+        const authority = tender.contracting_authority_jib
+          ? authorityMap.get(tender.contracting_authority_jib)
+          : null;
+
+        return {
+          ...tender,
+          authority_city: authority?.city ?? null,
+          authority_municipality: authority?.municipality ?? null,
+          authority_canton: authority?.canton ?? null,
+          authority_entity: authority?.entity ?? null,
+        } satisfies IntelligenceRecommendationTender;
+      });
+
+      recommendedOpenCount = rankTenderRecommendations(
+        scopedRecommendationRows,
+        recommendationContext
+      ).length;
+    } else {
+      recommendedOpenCount = 0;
+    }
+  }
+
+  const recommendedScopedCount = recommendedOpenCount ?? marketOverview.activeTenderCount;
+  const openTenderCardDescription = recommendedOpenCount !== null
+    ? `U vašem prostoru je otvoreno ${marketOverview.activeTenderCount}, a ${recommendedScopedCount} trenutno jasno odgovara profilu.`
+    : "Tenderi koji trenutno najviše odgovaraju vašem profilu i području rada.";
   const displayCategoryData = marketOverview.categoryData.length > 0
     ? marketOverview.categoryData
     : isDemoAccount
@@ -161,9 +272,9 @@ export default async function IntelligencePage() {
 
   const primaryCards = [
     {
-      title: "Otvoreni tenderi",
-      value: String(marketOverview.activeTenderCount),
-      description: "Tenderi na koje se trenutno još možete prijaviti.",
+      title: "Tenderi za vas",
+      value: String(recommendedScopedCount),
+      description: openTenderCardDescription,
       icon: FileText,
       tone: "bg-blue-50 text-blue-600",
     },
@@ -226,7 +337,7 @@ export default async function IntelligencePage() {
             </span>
           </div>
           <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-            Tržište i konkurencija
+            Analiza tržišta
           </h1>
           <p className="mt-1.5 max-w-3xl text-base text-slate-500">
             Ovdje vidite šta je trenutno otvoreno, gdje se dodjeljuju poslovi, šta dolazi uskoro i ko vam uzima poslove u prostoru koji pratite.
@@ -268,19 +379,66 @@ export default async function IntelligencePage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {primaryCards.map((card) => (
-          <div key={card.title} className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-bold uppercase tracking-wider text-slate-500">{card.title}</p>
-              <div className={`flex size-10 items-center justify-center rounded-xl ${card.tone}`}>
-                <card.icon className="size-5" />
+      <div className="grid gap-6 xl:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          {primaryCards.map((card) => (
+            <div key={card.title} className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm font-bold uppercase tracking-wider text-slate-500">{card.title}</p>
+                <div className={`flex size-10 items-center justify-center rounded-xl ${card.tone}`}>
+                  <card.icon className="size-5" />
+                </div>
+              </div>
+              <p className="font-heading text-4xl font-extrabold text-slate-900">{card.value}</p>
+              <p className="mt-3 text-xs text-slate-500">{card.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {showAuthoritiesSection ? (
+          <div className="rounded-[1.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
+            <div className="border-b border-slate-100 bg-slate-50/30 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                  <Building2 className="size-5" />
+                </div>
+                <div>
+                  <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji naručioci u vašem prostoru</h2>
+                  <p className="text-xs font-medium text-slate-500">Po broju tendera i dostupnoj vrijednosti.</p>
+                </div>
               </div>
             </div>
-            <p className="font-heading text-4xl font-extrabold text-slate-900">{card.value}</p>
-            <p className="mt-3 text-xs text-slate-500">{card.description}</p>
+            <div className="flex-1 p-2">
+              <div className="space-y-1">
+                {displayTopAuthorities.map((authority, index) => (
+                  <div key={`${authority.name}-${index}`} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0">
+                        {authority.jib ? (
+                          <Link href={`/dashboard/intelligence/authority/${authority.jib}`} className="truncate text-sm font-bold text-slate-700 transition-colors group-hover:text-primary">
+                            {authority.name}
+                          </Link>
+                        ) : (
+                          <span className="truncate text-sm font-bold text-slate-700">{authority.name}</span>
+                        )}
+                        <p className="text-xs text-slate-500">{[authority.city, authority.authority_type].filter(Boolean).join(" · ") || "Javni naručilac"}</p>
+                      </div>
+                    </div>
+                    <div className="ml-4 shrink-0 text-right">
+                      <p className="text-sm font-bold text-slate-900">{authority.count}</p>
+                      {authority.total_value > 0 ? (
+                        <p className="text-xs text-slate-400">{formatCurrencyKM(authority.total_value)}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        ))}
+        ) : null}
       </div>
 
       {showCategorySection ? (
@@ -328,91 +486,42 @@ export default async function IntelligencePage() {
         </div>
       ) : null}
 
-      {(showAuthoritiesSection || showWinnersSection) ? (
-        <div className="grid gap-8 lg:grid-cols-2">
-          {showAuthoritiesSection ? (
-            <div className="rounded-[1.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-slate-100 bg-slate-50/30 p-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                    <Building2 className="size-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji naručioci u vašem prostoru</h2>
-                    <p className="text-xs font-medium text-slate-500">Po broju tendera i dostupnoj vrijednosti.</p>
-                  </div>
-                </div>
+      {showWinnersSection ? (
+        <div className="rounded-[1.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-slate-100 bg-slate-50/30 p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <Trophy className="size-5" />
               </div>
-              <div className="flex-1 p-2">
-                <div className="space-y-1">
-                  {displayTopAuthorities.map((authority, index) => (
-                    <div key={`${authority.name}-${index}`} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors group-hover:bg-blue-100 group-hover:text-blue-600">
-                          {index + 1}
-                        </div>
-                        <div className="min-w-0">
-                          {authority.jib ? (
-                            <Link href={`/dashboard/intelligence/authority/${authority.jib}`} className="truncate text-sm font-bold text-slate-700 transition-colors group-hover:text-primary">
-                              {authority.name}
-                            </Link>
-                          ) : (
-                            <span className="truncate text-sm font-bold text-slate-700">{authority.name}</span>
-                          )}
-                          <p className="text-xs text-slate-500">{[authority.city, authority.authority_type].filter(Boolean).join(" · ") || "Javni naručilac"}</p>
-                        </div>
-                      </div>
-                      <div className="ml-4 shrink-0 text-right">
-                        <p className="text-sm font-bold text-slate-900">{authority.count}</p>
-                        {authority.total_value > 0 ? (
-                          <p className="text-xs text-slate-400">{formatCurrencyKM(authority.total_value)}</p>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji ponuđači u vašem prostoru</h2>
+                <p className="text-xs font-medium text-slate-500">Po osvojenim poslovima u prostoru koji pratite.</p>
               </div>
             </div>
-          ) : null}
-
-          {showWinnersSection ? (
-            <div className="rounded-[1.5rem] border border-slate-100 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-slate-100 bg-slate-50/30 p-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                    <Trophy className="size-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji ponuđači u vašem prostoru</h2>
-                    <p className="text-xs font-medium text-slate-500">Po osvojenim poslovima u prostoru koji pratite.</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 p-2">
-                <div className="space-y-1">
-                  {displayTopWinners.map((winner, index) => (
-                    <div key={winner.jib} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600">
-                          {index + 1}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-slate-700 transition-colors group-hover:text-primary">{winner.name}</p>
-                          <p className="text-xs text-slate-500">{winner.wins} ugovora{winner.win_rate !== null ? ` · ${winner.win_rate}% uspješnost` : ""}</p>
-                        </div>
-                      </div>
-                      <div className="ml-4 shrink-0 text-right">
-                        {winner.total_value > 0 ? (
-                          <p className="text-sm font-bold text-emerald-600">{formatCurrencyKM(winner.total_value)}</p>
-                        ) : null}
-                        <p className="text-xs text-slate-400">{winner.total_bids !== null ? `${winner.total_bids} ponuda` : winner.city || winner.municipality || "—"}</p>
-                      </div>
+          </div>
+          <div className="flex-1 p-2">
+            <div className="space-y-1">
+              {displayTopWinners.map((winner, index) => (
+                <div key={winner.jib} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600">
+                      {index + 1}
                     </div>
-                  ))}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-slate-700 transition-colors group-hover:text-primary">{winner.name}</p>
+                      <p className="text-xs text-slate-500">{winner.wins} ugovora{winner.win_rate !== null ? ` · ${winner.win_rate}% uspješnost` : ""}</p>
+                    </div>
+                  </div>
+                  <div className="ml-4 shrink-0 text-right">
+                    {winner.total_value > 0 ? (
+                      <p className="text-sm font-bold text-emerald-600">{formatCurrencyKM(winner.total_value)}</p>
+                    ) : null}
+                    <p className="text-xs text-slate-400">{winner.total_bids !== null ? `${winner.total_bids} ponuda` : winner.city || winner.municipality || "—"}</p>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -595,7 +704,7 @@ export default async function IntelligencePage() {
                 <div className="flex items-center justify-between border-b border-slate-100 pb-5">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Naručioci</p>
-                    <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Gdje se najviše sudarate</h2>
+                    <h2 className="mt-2 font-heading text-2xl font-bold text-slate-950">Naručioci gdje konkurencija najčešće pobjeđuje</h2>
                   </div>
                   <Building2 className="size-5 text-blue-600" />
                 </div>

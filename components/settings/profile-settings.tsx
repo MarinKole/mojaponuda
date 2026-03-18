@@ -4,20 +4,26 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
+  derivePrimaryIndustry,
+  getProfileOptionLabel,
+  OFFERING_CATEGORY_GROUPS,
+  OFFERING_CATEGORY_OPTIONS,
   parseCompanyProfile,
+  TENDER_TYPE_OPTIONS,
   sanitizeSearchKeywords,
   serializeCompanyProfile,
 } from "@/lib/company-profile";
 import {
   BIH_REGION_GROUPS,
   getRegionSelectionLabels } from "@/lib/constants/regions";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { RegionMultiSelect } from "@/components/ui/region-multi-select";
-import { Loader2, Brain, X, Plus, Sparkles, Save, Building2, MapPin, Mail, Phone } from "lucide-react";
+import { Loader2, Brain, X, Plus, Sparkles, Save, Building2, MapPin, Mail, Phone, ChevronDown, Check } from "lucide-react";
 
 interface ProfileSettingsProps {
   company: {
@@ -53,6 +59,12 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
   const [description, setDescription] = useState(
     parsedProfile.companyDescription ?? parsedProfile.legacyIndustryText ?? ""
   );
+  const [offeringCategories, setOfferingCategories] = useState<string[]>(
+    parsedProfile.offeringCategories ?? []
+  );
+  const [preferredTenderTypes, setPreferredTenderTypes] = useState<string[]>(
+    parsedProfile.preferredTenderTypes ?? []
+  );
   const [cpvCodes, setCpvCodes] = useState<string[]>(company.cpv_codes || []);
   const [manualKeywords, setManualKeywords] = useState<string[]>(
     sanitizeSearchKeywords(parsedProfile.manualKeywords ?? [])
@@ -69,6 +81,11 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
   const [generating, setGenerating] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
   const [newCpvCode, setNewCpvCode] = useState("");
+  const [expandedSection, setExpandedSection] = useState<"offering" | "tender-types" | null>(null);
+  const derivedPrimaryIndustry = useMemo(
+    () => derivePrimaryIndustry(offeringCategories, parsedProfile.primaryIndustry),
+    [offeringCategories, parsedProfile.primaryIndustry]
+  );
   const regionSelectionLabels = useMemo(() => getRegionSelectionLabels(regions), [regions]);
 
   async function generateProfile() {
@@ -81,9 +98,9 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description,
-          primaryIndustry: parsedProfile.primaryIndustry,
-          offeringCategories: parsedProfile.offeringCategories,
-          preferredTenderTypes: parsedProfile.preferredTenderTypes,
+          primaryIndustry: derivedPrimaryIndustry,
+          offeringCategories,
+          preferredTenderTypes,
           regions: regionSelectionLabels,
         }),
       });
@@ -152,6 +169,19 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
     setRegions(regions.filter((region) => region !== label));
   }
 
+  function toggleSelection(
+    value: string,
+    current: string[],
+    setState: (value: string[]) => void
+  ) {
+    if (current.includes(value)) {
+      setState(current.filter((item) => item !== value));
+      return;
+    }
+
+    setState([...current, value]);
+  }
+
   async function handleSave() {
     setLoading(true);
     setError(null);
@@ -174,6 +204,9 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
         contact_phone: contactPhone || null,
         industry: serializeCompanyProfile({
           ...parsedProfile,
+          primaryIndustry: derivedPrimaryIndustry,
+          offeringCategories,
+          preferredTenderTypes,
           companyDescription: description,
           manualKeywords,
         }),
@@ -265,6 +298,164 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
         </div>
 
         <div className="space-y-6">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setExpandedSection((value) => value === "offering" ? null : "offering")}
+              className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-left transition-colors hover:border-slate-300 hover:bg-white"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Šta tačno radite</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {offeringCategories.length > 0
+                      ? `${offeringCategories.length} odabranih oblasti`
+                      : "Odaberite oblasti koje firma stvarno nudi"}
+                  </p>
+                </div>
+                <ChevronDown className={cn("size-4 text-slate-400 transition-transform", expandedSection === "offering" ? "rotate-180" : "rotate-0")} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {derivedPrimaryIndustry ? (
+                  <Badge variant="outline" className="border-blue-100 bg-blue-50 text-blue-700">
+                    Fokus: {getProfileOptionLabel(derivedPrimaryIndustry)}
+                  </Badge>
+                ) : null}
+                {offeringCategories.slice(0, 3).map((item) => (
+                  <Badge key={item} variant="outline" className="bg-white text-slate-700">
+                    {getProfileOptionLabel(item)}
+                  </Badge>
+                ))}
+                {offeringCategories.length > 3 ? (
+                  <Badge variant="outline" className="bg-white text-slate-500">
+                    +{offeringCategories.length - 3}
+                  </Badge>
+                ) : null}
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setExpandedSection((value) => value === "tender-types" ? null : "tender-types")}
+              className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-left transition-colors hover:border-slate-300 hover:bg-white"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Koje tendere pratite</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {preferredTenderTypes.length > 0
+                      ? `${preferredTenderTypes.length} odabrane vrste tendera`
+                      : "Odaberite robe, usluge i/ili radove"}
+                  </p>
+                </div>
+                <ChevronDown className={cn("size-4 text-slate-400 transition-transform", expandedSection === "tender-types" ? "rotate-180" : "rotate-0")} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {preferredTenderTypes.length > 0 ? preferredTenderTypes.map((item) => (
+                  <Badge key={item} variant="outline" className="border-emerald-100 bg-emerald-50 text-emerald-700">
+                    {getProfileOptionLabel(item)}
+                  </Badge>
+                )) : (
+                  <Badge variant="outline" className="bg-white text-slate-500">
+                    Nije odabrano
+                  </Badge>
+                )}
+              </div>
+            </button>
+          </div>
+
+          {expandedSection === "offering" ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+              <div className="mb-4">
+                <Label className="text-base font-bold text-slate-900">Odaberite sve što firma stvarno radi</Label>
+                <p className="mt-1 text-sm text-slate-500">
+                  Ovo je isti izbor koji koristimo u onboardingu za preporuke i analizu tržišta.
+                </p>
+              </div>
+              <div className="space-y-5">
+                {OFFERING_CATEGORY_GROUPS.map((group) => {
+                  const groupOptions = OFFERING_CATEGORY_OPTIONS.filter((option) =>
+                    group.optionIds.includes(option.id)
+                  );
+
+                  return (
+                    <div key={group.id} className="rounded-2xl border border-slate-200 bg-white p-5">
+                      <div className="mb-4">
+                        <p className="text-sm font-semibold text-slate-900">{group.label}</p>
+                        <p className="mt-1 text-sm text-slate-500">{group.description}</p>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {groupOptions.map((option) => {
+                          const selected = offeringCategories.includes(option.id);
+
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => toggleSelection(option.id, offeringCategories, setOfferingCategories)}
+                              className={cn(
+                                "rounded-2xl border p-4 text-left transition-all",
+                                selected
+                                  ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                                  : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
+                              )}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className={cn("text-sm font-semibold", selected ? "text-white" : "text-slate-900")}>{option.label}</p>
+                                  <p className={cn("mt-2 text-sm leading-6", selected ? "text-slate-300" : "text-slate-500")}>{option.description}</p>
+                                </div>
+                                {selected ? <Check className="mt-0.5 size-4 text-blue-200" /> : null}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {expandedSection === "tender-types" ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
+              <div className="mb-4">
+                <Label className="text-base font-bold text-slate-900">Koje vrste tendera želite pratiti</Label>
+                <p className="mt-1 text-sm text-slate-500">
+                  Ovo određuje da li vam prvo prikazujemo robe, usluge, radove ili kombinaciju.
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {TENDER_TYPE_OPTIONS.map((option) => {
+                  const selected = preferredTenderTypes.includes(option.id);
+
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => toggleSelection(option.id, preferredTenderTypes, setPreferredTenderTypes)}
+                      className={cn(
+                        "rounded-2xl border p-4 text-left transition-all",
+                        selected
+                          ? "border-blue-200 bg-blue-50/80 shadow-sm"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{option.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-slate-500">{option.description}</p>
+                        </div>
+                        {selected ? <Check className="mt-0.5 size-4 text-blue-700" /> : null}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
           <div className="bg-purple-50/50 rounded-xl p-4 border border-purple-100">
             <div className="space-y-2">
               <Label className="text-purple-900 font-bold">Automatska priprema profila</Label>

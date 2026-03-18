@@ -36,7 +36,7 @@ const coreItems: NavItem[] = [
 ];
 
 const intelligenceItems: NavItem[] = [
-  { href: "/dashboard/intelligence", label: "Tržište i konkurencija", icon: BarChart3, pro: true, exact: true },
+  { href: "/dashboard/intelligence", label: "Analiza tržišta", icon: BarChart3, pro: true, exact: true },
   { href: "/dashboard/intelligence/upcoming", label: "Planirano", icon: Calendar, pro: true },
 ];
 
