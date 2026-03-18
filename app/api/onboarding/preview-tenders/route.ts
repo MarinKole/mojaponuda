@@ -157,6 +157,16 @@ function toPreviewTenders(
     recommendationContext.preferredContractTypes.length === 0 ||
     candidate.contractMatch ||
     !candidate.tender.contract_type;
+  const sortPreviewCandidates = (
+    a: ReturnType<typeof scoreTenderRecommendation>,
+    b: ReturnType<typeof scoreTenderRecommendation>
+  ) => {
+    if (a.score !== b.score) {
+      return b.score - a.score;
+    }
+
+    return new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime();
+  };
 
   if (rankedTenders.length === 0 && candidates.length > 0) {
     const scoredCandidates = candidates
@@ -172,15 +182,7 @@ function toPreviewTenders(
             candidate.matchedKeywords.length > 0 ||
             candidate.regionMatch)
       )
-      .sort((a, b) => {
-        if (a.score !== b.score) {
-          return b.score - a.score;
-        }
-
-        return (
-          new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime()
-        );
-      })
+      .sort(sortPreviewCandidates)
       .slice(0, 6);
 
     if (broaderPreview.length > 0) {
@@ -205,17 +207,13 @@ function toPreviewTenders(
         (candidate) =>
           candidate.regionMatch ||
           recommendationContext.regionTerms.length === 0 ||
-          !candidate.tender.contracting_authority_jib
+          !candidate.tender.contracting_authority_jib ||
+          (!candidate.tender.authority_city &&
+            !candidate.tender.authority_municipality &&
+            !candidate.tender.authority_canton &&
+            !candidate.tender.authority_entity)
       )
-      .sort((a, b) => {
-        if (a.score !== b.score) {
-          return b.score - a.score;
-        }
-
-        return (
-          new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime()
-        );
-      })
+      .sort(sortPreviewCandidates)
       .slice(0, 6);
 
     if (loosestPreview.length > 0) {
@@ -232,6 +230,29 @@ function toPreviewTenders(
         ),
         summary:
           "Prikazujemo najširi početni pregled otvorenih tendera koji mogu biti primjenjivi na osnovu vašeg djelovanja, tipa tendera i dostupnih podataka o naručiocima.",
+      });
+    }
+
+    const broadestPreview = (scoredCandidates.length > 0
+      ? scoredCandidates
+      : candidates.map((candidate) => scoreTenderRecommendation(candidate, recommendationContext)))
+      .sort(sortPreviewCandidates)
+      .slice(0, 6);
+
+    if (broadestPreview.length > 0) {
+      return Promise.resolve({
+        tenders: broadestPreview.map(
+          ({ tender }) =>
+            ({
+              id: tender.id,
+              title: tender.title,
+              deadline: tender.deadline,
+              estimated_value: tender.estimated_value,
+              contracting_authority: tender.contracting_authority,
+            }) satisfies PreviewTender
+        ),
+        summary:
+          "Prikazujemo početni pregled najvjerovatnije primjenjivih otvorenih tendera kako u ranoj fazi onboarding-a ne biste propustili relevantne prilike.",
       });
     }
   }
@@ -258,6 +279,7 @@ export async function POST(request: Request) {
   const supabase = await createClient();
 
   try {
+    const nowIso = new Date().toISOString();
     const body = (await request.json()) as {
       offeringCategories?: unknown[];
       preferredTenderTypes?: unknown[];
@@ -315,18 +337,33 @@ export async function POST(request: Request) {
     let mergedCandidates = candidateTenders;
 
     if (candidateTenders.length < 24) {
-      const { data: broadPoolRows } = await supabase
-        .from("tenders")
-        .select(
-          "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code"
-        )
-        .gt("deadline", new Date().toISOString())
-        .order("deadline", { ascending: true, nullsFirst: false })
-        .limit(600);
+      const [{ data: datedBroadPoolRows }, { data: undatedBroadPoolRows }] = await Promise.all([
+        supabase
+          .from("tenders")
+          .select(
+            "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code"
+          )
+          .gt("deadline", nowIso)
+          .order("deadline", { ascending: true, nullsFirst: false })
+          .limit(480),
+        supabase
+          .from("tenders")
+          .select(
+            "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code"
+          )
+          .is("deadline", null)
+          .order("created_at", { ascending: false })
+          .limit(180),
+      ]);
+
+      const broadPoolRows = [
+        ...((datedBroadPoolRows ?? []) as PreviewTenderCandidate[]),
+        ...((undatedBroadPoolRows ?? []) as PreviewTenderCandidate[]),
+      ];
 
       const authorityJibs = [
         ...new Set(
-          ((broadPoolRows ?? []) as PreviewTenderCandidate[])
+          broadPoolRows
             .map((tender) => tender.contracting_authority_jib)
             .filter(Boolean) as string[]
         ),
@@ -343,7 +380,7 @@ export async function POST(request: Request) {
         (authorityRows ?? []).map((authority) => [authority.jib, authority])
       );
 
-      const broaderCandidates = ((broadPoolRows ?? []) as PreviewTenderCandidate[]).map((tender) => {
+      const broaderCandidates = broadPoolRows.map((tender) => {
         const authority = tender.contracting_authority_jib
           ? authorityMap.get(tender.contracting_authority_jib)
           : null;
