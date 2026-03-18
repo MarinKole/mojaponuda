@@ -173,6 +173,12 @@ function buildContractTypeSearchConditions(preferredContractTypes: string[]): st
   });
 }
 
+function buildCpvSearchConditions(cpvPrefixes: string[]): string[] {
+  return [...new Set(cpvPrefixes.filter((prefix) => prefix.length >= 5))].map(
+    (prefix) => `cpv_code.like.${prefix}%`
+  );
+}
+
 function normalizeCpvCode(value: string | null | undefined): string | null {
   if (!value) {
     return null;
@@ -347,6 +353,7 @@ export async function fetchRecommendedTenderCandidates<
     ...buildRecommendationSearchCondition(context)
       .split(",")
       .filter(Boolean),
+    ...buildCpvSearchConditions(context.cpvPrefixes),
     ...(context.preferredContractTypes.length > 0 && context.preferredContractTypes.length < 3
       ? buildContractTypeSearchConditions(context.preferredContractTypes)
       : []),

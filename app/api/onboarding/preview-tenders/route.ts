@@ -15,6 +15,7 @@ import {
   fetchRecommendedTenderCandidates,
   hasRecommendationSignals,
   rankTenderRecommendations,
+  scoreTenderRecommendation,
 } from "@/lib/tender-recommendations";
 
 export const maxDuration = 30;
@@ -152,6 +153,47 @@ function toPreviewTenders(
   recommendationContext: ReturnType<typeof buildRecommendationContext>
 ) {
   const rankedTenders = rankTenderRecommendations(candidates, recommendationContext);
+
+  if (rankedTenders.length === 0 && candidates.length > 0) {
+    const broaderPreview = candidates
+      .map((candidate) => scoreTenderRecommendation(candidate, recommendationContext))
+      .filter(
+        (candidate) =>
+          candidate.contractMatch &&
+          candidate.regionMatch &&
+          (candidate.score >= 3 ||
+            candidate.cpvMatch ||
+            candidate.titleMatches.length > 0 ||
+            candidate.matchedKeywords.length > 0)
+      )
+      .sort((a, b) => {
+        if (a.score !== b.score) {
+          return b.score - a.score;
+        }
+
+        return (
+          new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime()
+        );
+      })
+      .slice(0, 6);
+
+    if (broaderPreview.length > 0) {
+      return Promise.resolve({
+        tenders: broaderPreview.map(
+          ({ tender }) =>
+            ({
+              id: tender.id,
+              title: tender.title,
+              deadline: tender.deadline,
+              estimated_value: tender.estimated_value,
+              contracting_authority: tender.contracting_authority,
+            }) satisfies PreviewTender
+        ),
+        summary:
+          "Prikazujemo širi početni pregled tendera na osnovu djelatnosti, tipa tendera i regije. U sljedećem koraku dodajte još konteksta za preciznije preporuke.",
+      });
+    }
+  }
 
   return maybeRerankTenderRecommendationsWithAI(rankedTenders, recommendationContext, {
     limit: 6,
