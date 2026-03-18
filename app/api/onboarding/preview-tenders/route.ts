@@ -9,12 +9,8 @@ import {
 } from "@/lib/company-profile";
 import { getOpenAIClient } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
-import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
 import {
   buildRecommendationContext,
-  fetchRecommendedTenderCandidates,
-  hasRecommendationSignals,
-  rankTenderRecommendations,
   scoreTenderRecommendation,
 } from "@/lib/tender-recommendations";
 
@@ -139,7 +135,7 @@ async function mediatePreviewSignals(
       cpvCodes: [...new Set([...cpvSeeds, ...aiCpvCodes.map((code) => code.trim())].filter((code) => code.length >= 5))].slice(0, 18),
     };
   } catch (error) {
-    console.error("Preview signal mediation error:", error);
+    console.error("[PREVIEW] Signal mediation error:", error);
     return {
       keywords: keywordSeeds,
       cpvCodes: cpvSeeds,
@@ -147,132 +143,14 @@ async function mediatePreviewSignals(
   }
 }
 
-function toPreviewTenders(
-  candidates: PreviewTenderCandidate[],
-  summary: string,
-  recommendationContext: ReturnType<typeof buildRecommendationContext>
-) {
-  const rankedTenders = rankTenderRecommendations(candidates, recommendationContext);
-  const fallbackContractGate = (candidate: ReturnType<typeof scoreTenderRecommendation>) =>
-    recommendationContext.preferredContractTypes.length === 0 ||
-    candidate.contractMatch ||
-    !candidate.tender.contract_type;
-  const sortPreviewCandidates = (
-    a: ReturnType<typeof scoreTenderRecommendation>,
-    b: ReturnType<typeof scoreTenderRecommendation>
-  ) => {
-    if (a.score !== b.score) {
-      return b.score - a.score;
-    }
-
-    return new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime();
+function toPreviewTender(candidate: PreviewTenderCandidate): PreviewTender {
+  return {
+    id: candidate.id,
+    title: candidate.title,
+    deadline: candidate.deadline,
+    estimated_value: candidate.estimated_value,
+    contracting_authority: candidate.contracting_authority,
   };
-
-  if (rankedTenders.length === 0 && candidates.length > 0) {
-    const scoredCandidates = candidates
-      .map((candidate) => scoreTenderRecommendation(candidate, recommendationContext))
-      .filter((candidate) => fallbackContractGate(candidate));
-
-    const broaderPreview = scoredCandidates
-      .filter(
-        (candidate) =>
-          (candidate.score >= 3 ||
-            candidate.cpvMatch ||
-            candidate.titleMatches.length > 0 ||
-            candidate.matchedKeywords.length > 0 ||
-            candidate.regionMatch)
-      )
-      .sort(sortPreviewCandidates)
-      .slice(0, 6);
-
-    if (broaderPreview.length > 0) {
-      return Promise.resolve({
-        tenders: broaderPreview.map(
-          ({ tender }) =>
-            ({
-              id: tender.id,
-              title: tender.title,
-              deadline: tender.deadline,
-              estimated_value: tender.estimated_value,
-              contracting_authority: tender.contracting_authority,
-            }) satisfies PreviewTender
-        ),
-        summary:
-          "Prikazujemo širi početni pregled tendera na osnovu djelatnosti, tipa tendera i regije. U sljedećem koraku dodajte još konteksta za preciznije preporuke.",
-      });
-    }
-
-    const loosestPreview = scoredCandidates
-      .filter(
-        (candidate) =>
-          candidate.regionMatch ||
-          recommendationContext.regionTerms.length === 0 ||
-          !candidate.tender.contracting_authority_jib ||
-          (!candidate.tender.authority_city &&
-            !candidate.tender.authority_municipality &&
-            !candidate.tender.authority_canton &&
-            !candidate.tender.authority_entity)
-      )
-      .sort(sortPreviewCandidates)
-      .slice(0, 6);
-
-    if (loosestPreview.length > 0) {
-      return Promise.resolve({
-        tenders: loosestPreview.map(
-          ({ tender }) =>
-            ({
-              id: tender.id,
-              title: tender.title,
-              deadline: tender.deadline,
-              estimated_value: tender.estimated_value,
-              contracting_authority: tender.contracting_authority,
-            }) satisfies PreviewTender
-        ),
-        summary:
-          "Prikazujemo najširi početni pregled otvorenih tendera koji mogu biti primjenjivi na osnovu vašeg djelovanja, tipa tendera i dostupnih podataka o naručiocima.",
-      });
-    }
-
-    const broadestPreview = (scoredCandidates.length > 0
-      ? scoredCandidates
-      : candidates.map((candidate) => scoreTenderRecommendation(candidate, recommendationContext)))
-      .sort(sortPreviewCandidates)
-      .slice(0, 6);
-
-    if (broadestPreview.length > 0) {
-      return Promise.resolve({
-        tenders: broadestPreview.map(
-          ({ tender }) =>
-            ({
-              id: tender.id,
-              title: tender.title,
-              deadline: tender.deadline,
-              estimated_value: tender.estimated_value,
-              contracting_authority: tender.contracting_authority,
-            }) satisfies PreviewTender
-        ),
-        summary:
-          "Prikazujemo početni pregled najvjerovatnije primjenjivih otvorenih tendera kako u ranoj fazi onboarding-a ne biste propustili relevantne prilike.",
-      });
-    }
-  }
-
-  return maybeRerankTenderRecommendationsWithAI(rankedTenders, recommendationContext, {
-    limit: 6,
-    shortlistSize: 8,
-  }).then((rerankedTenders) => ({
-    tenders: rerankedTenders.map(
-      ({ tender }) =>
-        ({
-          id: tender.id,
-          title: tender.title,
-          deadline: tender.deadline,
-          estimated_value: tender.estimated_value,
-          contracting_authority: tender.contracting_authority,
-        }) satisfies PreviewTender
-    ),
-    summary,
-  }));
 }
 
 export async function POST(request: Request) {
@@ -295,6 +173,8 @@ export async function POST(request: Request) {
       ? body.regions.filter((item: unknown): item is string => typeof item === "string")
       : [];
 
+    console.log("[PREVIEW] Input:", { offeringCategories, preferredTenderTypes, regions });
+
     const previewProfile: ParsedCompanyProfile = {
       primaryIndustry: derivePrimaryIndustry(offeringCategories, null),
       offeringCategories,
@@ -304,6 +184,10 @@ export async function POST(request: Request) {
     };
 
     const mediatedSignals = await mediatePreviewSignals(previewProfile, regions);
+    console.log("[PREVIEW] Mediated signals:", {
+      keywords: mediatedSignals.keywords,
+      cpvCodes: mediatedSignals.cpvCodes,
+    });
 
     const recommendationContext = buildRecommendationContext({
       industry: JSON.stringify({
@@ -318,26 +202,17 @@ export async function POST(request: Request) {
       operating_regions: regions,
     });
 
-    if (!hasRecommendationSignals(recommendationContext)) {
-      return NextResponse.json({
-        tenders: [],
-        summary: "Odaberite barem jednu djelatnost da pokažemo prve tendere.",
-      });
-    }
+    console.log("[PREVIEW] Recommendation context:", {
+      keywords: recommendationContext.keywords.length,
+      cpvPrefixes: recommendationContext.cpvPrefixes,
+      preferredContractTypes: recommendationContext.preferredContractTypes,
+      regionTerms: recommendationContext.regionTerms.length,
+      negativeSignals: recommendationContext.negativeSignals.length,
+    });
 
-    const candidateTenders = await fetchRecommendedTenderCandidates<PreviewTenderCandidate>(
-      supabase,
-      recommendationContext,
-      {
-        select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code",
-        limit: 240,
-      }
-    );
-
-    let mergedCandidates = candidateTenders;
-
-    if (candidateTenders.length < 24) {
-      const [{ data: datedBroadPoolRows }, { data: undatedBroadPoolRows }] = await Promise.all([
+    // ── Step 1: Always fetch a broad pool of ALL active tenders ──
+    const [{ data: datedRows, error: datedError }, { data: undatedRows, error: undatedError }] =
+      await Promise.all([
         supabase
           .from("tenders")
           .select(
@@ -345,7 +220,7 @@ export async function POST(request: Request) {
           )
           .gt("deadline", nowIso)
           .order("deadline", { ascending: true, nullsFirst: false })
-          .limit(480),
+          .limit(600),
         supabase
           .from("tenders")
           .select(
@@ -353,67 +228,132 @@ export async function POST(request: Request) {
           )
           .is("deadline", null)
           .order("created_at", { ascending: false })
-          .limit(180),
+          .limit(200),
       ]);
 
-      const broadPoolRows = [
-        ...((datedBroadPoolRows ?? []) as PreviewTenderCandidate[]),
-        ...((undatedBroadPoolRows ?? []) as PreviewTenderCandidate[]),
-      ];
+    console.log("[PREVIEW] Broad pool fetch:", {
+      datedCount: datedRows?.length ?? 0,
+      datedError: datedError?.message ?? null,
+      undatedCount: undatedRows?.length ?? 0,
+      undatedError: undatedError?.message ?? null,
+    });
 
-      const authorityJibs = [
-        ...new Set(
-          broadPoolRows
-            .map((tender) => tender.contracting_authority_jib)
-            .filter(Boolean) as string[]
-        ),
-      ];
+    const allPoolRows = [
+      ...((datedRows ?? []) as PreviewTenderCandidate[]),
+      ...((undatedRows ?? []) as PreviewTenderCandidate[]),
+    ];
 
-      const { data: authorityRows } = authorityJibs.length > 0
+    if (allPoolRows.length === 0) {
+      console.log("[PREVIEW] No tenders in database at all");
+      return NextResponse.json({
+        tenders: [],
+        summary:
+          "Trenutno nema aktivnih tendera u bazi. Podaci se automatski sinhronizuju sa e-Nabavke portala.",
+      });
+    }
+
+    // ── Step 2: Enrich with authority geo data ──
+    const authorityJibs = [
+      ...new Set(
+        allPoolRows
+          .map((tender) => tender.contracting_authority_jib)
+          .filter(Boolean) as string[]
+      ),
+    ];
+
+    const { data: authorityRows } =
+      authorityJibs.length > 0
         ? await supabase
             .from("contracting_authorities")
             .select("jib, city, municipality, canton, entity")
-            .in("jib", authorityJibs)
+            .in("jib", authorityJibs.slice(0, 500))
         : { data: [] };
 
-      const authorityMap = new Map(
-        (authorityRows ?? []).map((authority) => [authority.jib, authority])
-      );
+    const authorityMap = new Map(
+      (authorityRows ?? []).map((authority) => [authority.jib, authority])
+    );
 
-      const broaderCandidates = broadPoolRows.map((tender) => {
-        const authority = tender.contracting_authority_jib
-          ? authorityMap.get(tender.contracting_authority_jib)
-          : null;
+    const enrichedPool: PreviewTenderCandidate[] = allPoolRows.map((tender) => {
+      const authority = tender.contracting_authority_jib
+        ? authorityMap.get(tender.contracting_authority_jib)
+        : null;
 
-        return {
-          ...tender,
-          authority_city: authority?.city ?? null,
-          authority_municipality: authority?.municipality ?? null,
-          authority_canton: authority?.canton ?? null,
-          authority_entity: authority?.entity ?? null,
-        } satisfies PreviewTenderCandidate;
+      return {
+        ...tender,
+        authority_city: authority?.city ?? null,
+        authority_municipality: authority?.municipality ?? null,
+        authority_canton: authority?.canton ?? null,
+        authority_entity: authority?.entity ?? null,
+      };
+    });
+
+    console.log("[PREVIEW] Enriched pool size:", enrichedPool.length);
+
+    // ── Step 3: Score every tender against the profile ──
+    const scored = enrichedPool
+      .map((candidate) => scoreTenderRecommendation(candidate, recommendationContext))
+      .sort((a, b) => {
+        if (a.score !== b.score) return b.score - a.score;
+        return (
+          new Date(a.tender.deadline ?? 0).getTime() -
+          new Date(b.tender.deadline ?? 0).getTime()
+        );
       });
 
-      mergedCandidates = [
-        ...new Map(
-          [...candidateTenders, ...broaderCandidates].map((candidate) => [candidate.id, candidate])
-        ).values(),
-      ];
+    const qualified = scored.filter((item) => item.qualifies);
+    const withAnyPositive = scored.filter(
+      (item) =>
+        item.score > 0 ||
+        item.cpvMatch ||
+        item.titleMatches.length > 0 ||
+        item.matchedKeywords.length > 0
+    );
+
+    console.log("[PREVIEW] Scoring results:", {
+      totalScored: scored.length,
+      qualified: qualified.length,
+      withAnyPositive: withAnyPositive.length,
+      topScores: scored.slice(0, 5).map((item) => ({
+        title: item.tender.title.slice(0, 60),
+        score: item.score,
+        qualifies: item.qualifies,
+        cpvMatch: item.cpvMatch,
+        contractMatch: item.contractMatch,
+        regionMatch: item.regionMatch,
+        keywords: item.matchedKeywords.length,
+        titleMatches: item.titleMatches.length,
+        negPenalty: item.negativePenalty,
+      })),
+    });
+
+    // ── Step 4: Pick the best available preview set (never empty) ──
+    let previewTenders: PreviewTender[];
+    let previewSummary: string;
+
+    if (qualified.length > 0) {
+      previewTenders = qualified.slice(0, 6).map((item) => toPreviewTender(item.tender));
+      previewSummary = `Na osnovu osnovnih podataka izdvojili smo ${previewTenders.length} tendera koji najviše liče na ono što radite.`;
+    } else if (withAnyPositive.length > 0) {
+      previewTenders = withAnyPositive.slice(0, 6).map((item) => toPreviewTender(item.tender));
+      previewSummary =
+        "Prikazujemo širi početni pregled tendera na osnovu djelatnosti i dostupnih signala. U sljedećem koraku dodajte kontekst za preciznije preporuke.";
+    } else {
+      previewTenders = scored.slice(0, 6).map((item) => toPreviewTender(item.tender));
+      previewSummary =
+        "Prikazujemo najnovije otvorene tendere. U sljedećem koraku dopunite profil za preciznije preporuke.";
     }
 
-    return NextResponse.json(
-      await toPreviewTenders(
-        mergedCandidates,
-        candidateTenders.length > 0
-          ? `Na osnovu osnovnih podataka izdvojili smo ${Math.min(candidateTenders.length, 6)} tendera koji najviše liče na ono što radite.`
-          : mergedCandidates.length > 0
-            ? "Prikazujemo širi početni pregled tendera kako ne biste propustili relevantne prilike već u prvom koraku."
-          : "Za ovaj osnovni unos još nema dovoljno jasnih poklapanja. U sljedećem koraku dopunite profil i dobit ćete preciznije preporuke.",
-        recommendationContext
-      )
-    );
+    console.log("[PREVIEW] Final result:", {
+      tendersReturned: previewTenders.length,
+      tier: qualified.length > 0 ? "qualified" : withAnyPositive.length > 0 ? "positive" : "broadest",
+    });
+
+    return NextResponse.json({
+      tenders: previewTenders,
+      summary: previewSummary,
+    });
   } catch (error) {
-    console.error("Preview tenders error:", error);
+    console.error("[PREVIEW] Unhandled error:", error);
     return NextResponse.json({
       tenders: [],
       summary:
