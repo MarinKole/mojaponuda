@@ -186,6 +186,20 @@ CREATE TABLE authority_requirement_patterns (
   UNIQUE (contracting_authority_jib, document_type, tender_id)
 );
 
+-- admin_portal_lead_notes — interne admin bilješke za portal leadove
+CREATE TABLE admin_portal_lead_notes (
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_jib          text NOT NULL UNIQUE,
+  lead_name         text NOT NULL,
+  note              text,
+  outreach_status   text NOT NULL DEFAULT 'nije_kontaktiran',
+  last_contacted_at timestamptz,
+  next_follow_up_at timestamptz,
+  updated_by        text,
+  created_at        timestamptz NOT NULL DEFAULT now(),
+  updated_at        timestamptz NOT NULL DEFAULT now()
+);
+
 -- sync_log — evidencija API sinhronizacije
 CREATE TABLE sync_log (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -262,6 +276,10 @@ CREATE INDEX idx_arp_authority_jib ON authority_requirement_patterns(contracting
 CREATE INDEX idx_arp_document_type ON authority_requirement_patterns(document_type);
 CREATE INDEX idx_arp_tender_id ON authority_requirement_patterns(tender_id);
 
+-- admin_portal_lead_notes
+CREATE INDEX idx_admin_portal_lead_notes_status ON admin_portal_lead_notes(outreach_status);
+CREATE INDEX idx_admin_portal_lead_notes_next_follow_up ON admin_portal_lead_notes(next_follow_up_at);
+
 -- sync_log
 CREATE INDEX idx_sync_log_endpoint ON sync_log(endpoint);
 CREATE INDEX idx_sync_log_ran_at ON sync_log(ran_at);
@@ -282,6 +300,7 @@ ALTER TABLE market_companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE award_decisions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE planned_procurements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE authority_requirement_patterns ENABLE ROW LEVEL SECURITY;
+ ALTER TABLE admin_portal_lead_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sync_log ENABLE ROW LEVEL SECURITY;
 
 -- companies: korisnik vidi samo svoju firmu
@@ -347,6 +366,11 @@ CREATE POLICY "Users can update own bids"
 CREATE POLICY "Users can delete own bids"
   ON bids FOR DELETE
   USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
+
+CREATE POLICY "Service role can manage admin_portal_lead_notes"
+  ON admin_portal_lead_notes FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
 
 -- bid_checklist_items: korisnik vidi samo stavke svojih ponuda
 CREATE POLICY "Users can view own bid_checklist_items"

@@ -18,6 +18,7 @@ import {
   Settings,
   ChevronDown,
   Shield,
+  Target,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -49,6 +50,7 @@ const accountItems: NavItem[] = [
 
 const adminItems: NavItem[] = [
   { href: "/dashboard/admin", label: "Admin pregled", icon: Shield, exact: true },
+  { href: "/dashboard/admin/leads", label: "Portal leadovi", icon: Target },
   { href: "/dashboard/admin/crm", label: "CRM računi", icon: Users },
 ];
 
@@ -62,6 +64,13 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false }: Da
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const sections = isAdmin
+    ? [{ label: "Admin", items: adminItems }]
+    : [
+        { label: "Glavno", items: coreItems },
+        { label: "Tržište", items: intelligenceItems },
+        { label: "Račun", items: accountItems },
+      ];
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -106,51 +115,24 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false }: Da
           </div>
           <div>
             <p className="font-heading text-lg font-bold tracking-tight text-white">MojaPonuda.ba</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Početna</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{isAdmin ? "Admin" : "Početna"}</p>
           </div>
         </Link>
       </div>
 
       <nav className="hide-scrollbar min-h-0 flex-1 overflow-y-auto pr-1">
-        <div className="mb-6 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Glavno</p>
-        </div>
-        <div className="space-y-1">
-          {coreItems.map((item) => (
-            <NavLink key={item.href} item={item} />
-          ))}
-        </div>
-
-        <div className="mb-6 mt-7 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Tržište</p>
-        </div>
-        <div className="space-y-1">
-          {intelligenceItems.map((item) => (
-            <NavLink key={item.href} item={item} />
-          ))}
-        </div>
-
-        <div className="mb-6 mt-7 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Račun</p>
-        </div>
-        <div className="space-y-1">
-          {accountItems.map((item) => (
-            <NavLink key={item.href} item={item} />
-          ))}
-        </div>
-
-        {isAdmin ? (
-          <>
-            <div className="mb-6 mt-7 px-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Admin</p>
+        {sections.map((section, index) => (
+          <div key={section.label} className={index === 0 ? "" : "mt-7"}>
+            <div className="mb-6 px-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">{section.label}</p>
             </div>
             <div className="space-y-1">
-              {adminItems.map((item) => (
+              {section.items.map((item) => (
                 <NavLink key={item.href} item={item} />
               ))}
             </div>
-          </>
-        ) : null}
+          </div>
+        ))}
       </nav>
 
       <div className="mt-auto border-t border-white/8 pt-4">

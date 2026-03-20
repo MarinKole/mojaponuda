@@ -534,6 +534,45 @@ export interface Database {
           }
         ];
       };
+      admin_portal_lead_notes: {
+        Row: {
+          id: string;
+          lead_jib: string;
+          lead_name: string;
+          note: string | null;
+          outreach_status: string;
+          last_contacted_at: string | null;
+          next_follow_up_at: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_jib: string;
+          lead_name: string;
+          note?: string | null;
+          outreach_status?: string;
+          last_contacted_at?: string | null;
+          next_follow_up_at?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_jib?: string;
+          lead_name?: string;
+          note?: string | null;
+          outreach_status?: string;
+          last_contacted_at?: string | null;
+          next_follow_up_at?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       sync_log: {
         Row: {
           id: string;
@@ -636,6 +675,10 @@ export type AwardDecisionUpdate = Database["public"]["Tables"]["award_decisions"
 export type PlannedProcurement = Database["public"]["Tables"]["planned_procurements"]["Row"];
 export type PlannedProcurementInsert = Database["public"]["Tables"]["planned_procurements"]["Insert"];
 export type PlannedProcurementUpdate = Database["public"]["Tables"]["planned_procurements"]["Update"];
+
+export type AdminPortalLeadNote = Database["public"]["Tables"]["admin_portal_lead_notes"]["Row"];
+export type AdminPortalLeadNoteInsert = Database["public"]["Tables"]["admin_portal_lead_notes"]["Insert"];
+export type AdminPortalLeadNoteUpdate = Database["public"]["Tables"]["admin_portal_lead_notes"]["Update"];
 
 export type DocumentWithExpiry = Database["public"]["Views"]["documents_with_expiry"]["Row"];
 
