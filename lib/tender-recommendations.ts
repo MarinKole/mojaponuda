@@ -72,7 +72,14 @@ export interface ScoredTenderRecommendation<TTender extends RecommendationTender
   neighboringRegionMatch: boolean;
   locationScope: RecommendationLocationScope;
   locationPriority: number;
+  positiveSignalCount: number;
+  fallbackEligible: boolean;
   reasons: string[];
+}
+
+interface RecommendationSelectionOptions {
+  limit?: number;
+  minimumResults?: number;
 }
 
 interface FetchRecommendedTenderCandidatesOptions {
@@ -363,6 +370,66 @@ function getLocationPriority(scope: RecommendationLocationScope): number {
   }
 }
 
+function compareScoredRecommendations<TTender extends RecommendationTenderInput>(
+  a: ScoredTenderRecommendation<TTender>,
+  b: ScoredTenderRecommendation<TTender>
+): number {
+  if (a.score !== b.score) {
+    return b.score - a.score;
+  }
+
+  if (a.positiveSignalCount !== b.positiveSignalCount) {
+    return b.positiveSignalCount - a.positiveSignalCount;
+  }
+
+  if (a.locationPriority !== b.locationPriority) {
+    return a.locationPriority - b.locationPriority;
+  }
+
+  return new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime();
+}
+
+function dedupeScoredRecommendations<TTender extends RecommendationTenderInput>(
+  items: Array<ScoredTenderRecommendation<TTender>>
+): Array<ScoredTenderRecommendation<TTender>> {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    if (seen.has(item.tender.id)) {
+      return false;
+    }
+
+    seen.add(item.tender.id);
+    return true;
+  });
+}
+
+export function selectTenderRecommendations<TTender extends RecommendationTenderInput>(
+  tenders: TTender[],
+  context: RecommendationContext,
+  options: RecommendationSelectionOptions = {}
+): Array<ScoredTenderRecommendation<TTender>> {
+  const scored = tenders.map((tender) => scoreTenderRecommendation(tender, context));
+  const strict = scored.filter((item) => item.qualifies).sort(compareScoredRecommendations);
+  const minimumResults = options.minimumResults ?? 0;
+
+  let selected = [...strict];
+
+  if (minimumResults > 0 && strict.length < minimumResults) {
+    const fallback = scored
+      .filter((item) => !item.qualifies && item.fallbackEligible)
+      .sort(compareScoredRecommendations);
+
+    selected = dedupeScoredRecommendations([...strict, ...fallback]);
+  }
+
+  if (typeof options.limit === "number") {
+    return selected.slice(0, options.limit);
+  }
+
+  return selected;
+}
+
 function buildKeywordReasons(matchedKeywords: string[]): string[] {
   if (matchedKeywords.length === 0) {
     return [];
@@ -593,12 +660,23 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
 
   const hasBusinessSignalInProfile = context.keywords.length > 0 || context.cpvPrefixes.length > 0;
   const hasPositiveSignal = cpvMatch || titleMatches.length > 0 || matchedKeywords.length >= 2;
+  const positiveSignalCount =
+    (cpvMatch ? 3 : 0) +
+    titleMatches.length * 2 +
+    matchedKeywords.length +
+    (contractMatch ? 1 : 0) +
+    (regionMatch ? 2 : sameGroupRegionMatch ? 1 : neighboringRegionMatch ? 1 : 0);
   const fallbackTypeScopedMatch =
     !hasBusinessSignalInProfile &&
     context.preferredContractTypes.length > 0 &&
     contractMatch &&
     (!hasLocationPreference || locationScope !== "broad");
   const blockedByNegativeTitle = negativeTitleMatches.length > 0 && !cpvMatch && titleMatches.length === 0;
+  const fallbackEligible =
+    !blockedByNegativeTitle &&
+    contractMatch &&
+    score >= 2 &&
+    (cpvMatch || titleMatches.length > 0 || matchedKeywords.length > 0);
   const qualifies =
     ((hasPositiveSignal && score >= (cpvMatch ? 2 : 4)) || fallbackTypeScopedMatch) &&
     contractMatch &&
@@ -634,6 +712,8 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
     neighboringRegionMatch,
     locationScope,
     locationPriority,
+    positiveSignalCount,
+    fallbackEligible,
     reasons,
   };
 }
@@ -643,22 +723,7 @@ export function rankTenderRecommendations<TTender extends RecommendationTenderIn
   context: RecommendationContext,
   limit?: number
 ): Array<ScoredTenderRecommendation<TTender>> {
-  const ranked = tenders
-    .map((tender) => scoreTenderRecommendation(tender, context))
-    .filter((item) => item.qualifies)
-    .sort((a, b) => {
-      if (a.score !== b.score) {
-        return b.score - a.score;
-      }
-
-      if (a.locationPriority !== b.locationPriority) {
-        return a.locationPriority - b.locationPriority;
-      }
-
-      return (
-        new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime()
-      );
-    });
+  const ranked = selectTenderRecommendations(tenders, context);
 
   return typeof limit === "number" ? ranked.slice(0, limit) : ranked;
 }

@@ -160,7 +160,7 @@ export function TenderFilters() {
       </div>
 
       {/* Red 2: Datumi + vrijednosti + dugmad */}
-      <div className="flex flex-wrap items-end gap-5 border-t border-slate-50 pt-5">
+      <div className="grid gap-5 border-t border-slate-50 pt-5 xl:grid-cols-[minmax(280px,1.35fr)_150px_150px_140px_140px_auto] xl:items-start">
         <div className="min-w-[280px] flex-1 space-y-2">
           <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
             Lokacija tendera
@@ -216,7 +216,7 @@ export function TenderFilters() {
             className="h-11 rounded-xl border-slate-200 text-sm shadow-sm focus-visible:ring-primary focus-visible:border-primary transition-all"
           />
         </div>
-        <div className="flex gap-3 flex-1 justify-end mt-2 sm:mt-0">
+        <div className="flex gap-3 self-end xl:justify-end">
           <Button 
             variant="outline" 
             onClick={resetFilters} 

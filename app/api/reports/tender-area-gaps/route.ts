@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminEmail } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getTenderAreaGapReport } from "@/lib/tender-area-report";
 
@@ -13,6 +14,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: "Morate biti prijavljeni da otvorite ovaj izvještaj." },
         { status: 401 }
+      );
+    }
+
+    if (!isAdminEmail(user.email)) {
+      return NextResponse.json(
+        { error: "Samo admin može otvoriti ovaj izvještaj." },
+        { status: 403 }
       );
     }
 

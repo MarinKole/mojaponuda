@@ -18,6 +18,7 @@ import {
   Settings,
   ChevronDown,
   Shield,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -48,6 +49,7 @@ const accountItems: NavItem[] = [
 
 const adminItems: NavItem[] = [
   { href: "/dashboard/admin", label: "Admin pregled", icon: Shield, exact: true },
+  { href: "/dashboard/admin/crm", label: "CRM računi", icon: Users },
 ];
 
 interface DashboardSidebarProps {

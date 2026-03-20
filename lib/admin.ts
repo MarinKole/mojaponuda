@@ -2,15 +2,10 @@ import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
-const DEFAULT_ADMIN_EMAILS = ["marin.kolenda@outlook.com"];
+const ADMIN_EMAILS = ["marin.kolenda@outlook.com"];
 
 export function getAdminEmails(): string[] {
-  const configured = (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-
-  return configured.length > 0 ? configured : DEFAULT_ADMIN_EMAILS;
+  return ADMIN_EMAILS;
 }
 
 export function isAdminEmail(email?: string | null): boolean {

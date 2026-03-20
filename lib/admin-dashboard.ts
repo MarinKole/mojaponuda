@@ -1,4 +1,5 @@
 import type { User } from "@supabase/supabase-js";
+import { getAdminEmails } from "@/lib/admin";
 import { isCompanyProfileComplete } from "@/lib/demo";
 import { getPlanFromVariantId, PLANS, type PlanTier } from "@/lib/plans";
 import { parseCompanyProfile, getProfileOptionLabel } from "@/lib/company-profile";
@@ -32,7 +33,10 @@ interface CompanyUsageSnapshot {
 
 export interface AdminDashboardRow {
   userId: string;
+  companyId: string | null;
   email: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
   createdAt: string;
   lastSignInAt: string | null;
   companyName: string | null;
@@ -43,12 +47,15 @@ export interface AdminDashboardRow {
   planName: string;
   planId: PlanTier | "none";
   subscriptionStatus: string;
+  subscriptionEndsAt: string | null;
   documentsCount: number;
   activeBids: number;
   totalBids: number;
   storageBytes: number;
   lastActivityAt: string | null;
   commercialSignal: string;
+  healthScore: number;
+  healthStatus: "Odličan" | "Pažnja" | "Rizik";
 }
 
 export interface AdminPlanDistributionItem {
@@ -65,6 +72,41 @@ export interface AdminSyncStatusItem {
   recordsAdded: number;
   recordsUpdated: number;
   freshness: "healthy" | "warning" | "stale" | "unknown";
+}
+
+export interface AdminDailyOverviewPoint {
+  label: string;
+  signups: number;
+  companySetups: number;
+  newPaying: number;
+  activeUsers: number;
+  newBids: number;
+  submittedBids: number;
+  newDocuments: number;
+}
+
+export interface AdminCohortPoint {
+  label: string;
+  signups: number;
+  companySetups: number;
+  onboarded: number;
+  paying: number;
+}
+
+export type AdminCrmStage =
+  | "Novi lead"
+  | "Aktivacija"
+  | "Retention"
+  | "Ekspanzija"
+  | "Stabilan račun";
+
+export type AdminCrmPriority = "visok" | "srednji" | "nizak";
+
+export interface AdminCrmAccount extends AdminDashboardRow {
+  outreachStage: AdminCrmStage;
+  outreachPriority: AdminCrmPriority;
+  outreachReason: string;
+  nextAction: string;
 }
 
 export interface AdminDashboardData {
@@ -104,6 +146,45 @@ export interface AdminDashboardData {
     onboardingStalls: number;
     highIntentAccounts: number;
   };
+  dailyOverview: AdminDailyOverviewPoint[];
+  cohorts: AdminCohortPoint[];
+  financeAudit: {
+    inactiveAccounts: number;
+    cancelledSubscriptions: number;
+    renewalsNext7d: number;
+    renewalsNext30d: number;
+    estimatedCollectionNext30d: number;
+  };
+  customerHealth: {
+    healthyAccounts: number;
+    attentionAccounts: number;
+    riskAccounts: number;
+    atRiskAccounts: AdminDashboardRow[];
+    expansionAccounts: AdminDashboardRow[];
+    recentlyActivatedAccounts: AdminDashboardRow[];
+  };
+  productUsage: {
+    companiesWithDocuments: number;
+    companiesWithBids: number;
+    averageDocumentsPerCompany: number;
+    averageBidsPerCompany: number;
+    bidSubmissionRate: number;
+    tenderCaptureRate: number;
+  };
+  crm: {
+    totalAccounts: number;
+    companiesWithContacts: number;
+    missingContactChannels: number;
+    newLeadsCount: number;
+    activationQueueCount: number;
+    retentionQueueCount: number;
+    expansionQueueCount: number;
+    accounts: AdminCrmAccount[];
+    newLeads: AdminCrmAccount[];
+    activationQueue: AdminCrmAccount[];
+    retentionQueue: AdminCrmAccount[];
+    expansionQueue: AdminCrmAccount[];
+  };
   operations: {
     totalDocuments: number;
     totalStorageBytes: number;
@@ -135,6 +216,32 @@ export interface AdminDashboardData {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "past_due"]);
+
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function toDateKey(value: string | Date): string {
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+function toMonthKey(value: string | Date): string {
+  return new Date(value).toISOString().slice(0, 7);
+}
+
+function formatDayLabel(value: string | Date): string {
+  return new Intl.DateTimeFormat("bs-BA", {
+    day: "2-digit",
+    month: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatMonthLabel(value: string | Date): string {
+  return new Intl.DateTimeFormat("bs-BA", {
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
 
 function isRecordWithinDays(dateValue: string | null | undefined, days: number): boolean {
   if (!dateValue) {
@@ -195,6 +302,166 @@ function getRegionsLabel(company: Pick<Company, "operating_regions"> | null): st
   }
 
   return regions.slice(0, 2).join(", ") + (regions.length > 2 ? ` +${regions.length - 2}` : "");
+}
+
+function scoreAccountHealth(input: {
+  onboardingStatus: string;
+  subscriptionStatus: string;
+  lastActivityAt: string | null;
+  lastSignInAt: string | null;
+  documentsCount: number;
+  activeBids: number;
+  commercialSignal: string;
+}): { score: number; status: "Odličan" | "Pažnja" | "Rizik" } {
+  let score = 0;
+
+  if (input.onboardingStatus === "Završen") {
+    score += 25;
+  } else if (input.onboardingStatus === "U toku") {
+    score += 10;
+  } else {
+    score -= 10;
+  }
+
+  if (input.subscriptionStatus === "active") {
+    score += 25;
+  } else if (input.subscriptionStatus === "past_due") {
+    score += 8;
+  } else if (input.subscriptionStatus === "cancelled") {
+    score -= 8;
+  }
+
+  const activityDate = input.lastActivityAt ?? input.lastSignInAt;
+  if (isRecordWithinDays(activityDate, 7)) {
+    score += 20;
+  } else if (isRecordWithinDays(activityDate, 30)) {
+    score += 10;
+  } else {
+    score -= 10;
+  }
+
+  if (input.activeBids > 0) {
+    score += 15;
+  }
+
+  if (input.documentsCount >= 5) {
+    score += 10;
+  } else if (input.documentsCount > 0) {
+    score += 5;
+  }
+
+  if (input.commercialSignal.includes("Kandidat")) {
+    score += 5;
+  }
+
+  if (input.commercialSignal.includes("riziku")) {
+    score -= 20;
+  }
+
+  if (input.commercialSignal.includes("Zastoj")) {
+    score -= 15;
+  }
+
+  score = clampNumber(score, 0, 100);
+
+  if (score >= 70) {
+    return { score, status: "Odličan" };
+  }
+
+  if (score >= 40) {
+    return { score, status: "Pažnja" };
+  }
+
+  return { score, status: "Rizik" };
+}
+
+function getCrmPriorityRank(priority: AdminCrmPriority): number {
+  switch (priority) {
+    case "visok":
+      return 3;
+    case "srednji":
+      return 2;
+    default:
+      return 1;
+  }
+}
+
+function getCrmStageRank(stage: AdminCrmStage): number {
+  switch (stage) {
+    case "Retention":
+      return 5;
+    case "Aktivacija":
+      return 4;
+    case "Ekspanzija":
+      return 3;
+    case "Novi lead":
+      return 2;
+    default:
+      return 1;
+  }
+}
+
+function deriveCrmProfile(row: AdminDashboardRow): Omit<AdminCrmAccount, keyof AdminDashboardRow> {
+  if (!row.companyName) {
+    return {
+      outreachStage: "Novi lead",
+      outreachPriority: isRecordWithinDays(row.createdAt, 14) ? "visok" : "srednji",
+      outreachReason: "Korisnik je registrovan, ali još nije otvorio firmu niti ušao u pravi onboarding tok.",
+      nextAction: "Kontaktirati i pomoći oko otvaranja firme i prvog profila.",
+    };
+  }
+
+  if (row.subscriptionStatus === "past_due" || row.healthStatus === "Rizik" || row.commercialSignal === "Naplata u riziku") {
+    return {
+      outreachStage: "Retention",
+      outreachPriority: "visok",
+      outreachReason: "Račun pokazuje billing ili churn rizik i traži direktan follow-up.",
+      nextAction: "Provjeriti razlog pada aktivnosti ili naplate i javiti se istog dana.",
+    };
+  }
+
+  if (row.onboardingStatus !== "Završen") {
+    return {
+      outreachStage: "Aktivacija",
+      outreachPriority: isRecordWithinDays(row.lastSignInAt ?? row.createdAt, 14) ? "visok" : "srednji",
+      outreachReason: "Firma postoji, ali onboarding još nije završen pa račun nije došao do pune vrijednosti.",
+      nextAction: "Voditi korisnika do završetka profila i prvog relevantnog tendera.",
+    };
+  }
+
+  if (row.subscriptionStatus === "inactive" && row.commercialSignal === "Spreman za aktivaciju") {
+    return {
+      outreachStage: "Aktivacija",
+      outreachPriority: "visok",
+      outreachReason: "Profil je spreman, postoji signal korištenja, ali pretplata nije aktivirana.",
+      nextAction: "Pokrenuti komercijalni follow-up za prvu aktivaciju pretplate.",
+    };
+  }
+
+  if (row.commercialSignal.includes("Kandidat")) {
+    return {
+      outreachStage: "Ekspanzija",
+      outreachPriority: row.healthStatus === "Odličan" ? "visok" : "srednji",
+      outreachReason: "Račun pokazuje da izlazi iz okvira trenutnog plana i ima prostor za upgrade.",
+      nextAction: "Otvoriti razgovor o jačem planu i dodatnoj podršci.",
+    };
+  }
+
+  if (row.subscriptionStatus === "active" && isRecordWithinDays(row.createdAt, 30)) {
+    return {
+      outreachStage: "Aktivacija",
+      outreachPriority: "srednji",
+      outreachReason: "Novo aktiviran račun je u osjetljivoj fazi ranog retentiona i treba pažnju.",
+      nextAction: "Provjeriti da li je korisnik stigao do prve konkretne poslovne vrijednosti.",
+    };
+  }
+
+  return {
+    outreachStage: "Stabilan račun",
+    outreachPriority: "nizak",
+    outreachReason: "Račun trenutno nema hitan komercijalni ili retention rizik.",
+    nextAction: "Održavati odnos i pratiti promjene kroz health i usage signale.",
+  };
 }
 
 function hasAreaLabel(aiAnalysis: Json | null): boolean {
@@ -390,10 +657,25 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
     throw new Error(`Ne mogu učitati sync log: ${syncResult.error.message}`);
   }
 
-  const companies = (companiesResult.data ?? []) as Pick<Company, "id" | "user_id" | "name" | "jib" | "contact_email" | "contact_phone" | "industry" | "keywords" | "operating_regions" | "created_at">[];
-  const subscriptions = (subscriptionsResult.data ?? []) as Pick<Subscription, "id" | "user_id" | "lemonsqueezy_variant_id" | "status" | "current_period_end" | "created_at">[];
-  const documents = (documentsResult.data ?? []) as Pick<Document, "company_id" | "size" | "expires_at" | "created_at">[];
-  const bids = (bidsResult.data ?? []) as Pick<Bid, "company_id" | "status" | "created_at">[];
+  const adminEmailSet = new Set(getAdminEmails().map((email) => email.trim().toLowerCase()));
+  const customerUsers = users.filter(
+    (user) => !adminEmailSet.has((user.email ?? "").trim().toLowerCase())
+  );
+  const customerUserIdSet = new Set(customerUsers.map((user) => user.id));
+
+  const companies = ((companiesResult.data ?? []) as Pick<Company, "id" | "user_id" | "name" | "jib" | "contact_email" | "contact_phone" | "industry" | "keywords" | "operating_regions" | "created_at">[]).filter(
+    (company) => customerUserIdSet.has(company.user_id)
+  );
+  const companyIdSet = new Set(companies.map((company) => company.id));
+  const subscriptions = ((subscriptionsResult.data ?? []) as Pick<Subscription, "id" | "user_id" | "lemonsqueezy_variant_id" | "status" | "current_period_end" | "created_at">[]).filter(
+    (subscription) => customerUserIdSet.has(subscription.user_id)
+  );
+  const documents = ((documentsResult.data ?? []) as Pick<Document, "company_id" | "size" | "expires_at" | "created_at">[]).filter(
+    (document) => companyIdSet.has(document.company_id)
+  );
+  const bids = ((bidsResult.data ?? []) as Pick<Bid, "company_id" | "status" | "created_at">[]).filter(
+    (bid) => companyIdSet.has(bid.company_id)
+  );
   const tenders = (tendersResult.data ?? []) as Pick<Tender, "id" | "deadline" | "estimated_value" | "contract_type" | "status" | "ai_analysis" | "created_at">[];
   const authorities = (authoritiesResult.data ?? []) as Pick<ContractingAuthority, "id" | "city" | "municipality" | "canton" | "entity">[];
   const awards = (awardsResult.data ?? []) as Pick<AwardDecision, "winning_price" | "estimated_value" | "total_bidders_count" | "award_date" | "created_at">[];
@@ -487,15 +769,18 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
     }
   }
 
-  const dashboardRows: AdminDashboardRow[] = users.map((user) => {
+  const latestSubscriptionByUserId = new Map<string, Subscription | null>();
+  const dashboardRows: AdminDashboardRow[] = customerUsers.map((user) => {
     const company = companyByUserId.get(user.id) ?? null;
     const usage = company ? usageByCompanyId.get(company.id) : null;
     const subscription = pickLatestSubscription(subscriptionsByUserId.get(user.id) ?? []);
+    latestSubscriptionByUserId.set(user.id, subscription);
     const isSubscribed = Boolean(subscription && ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status));
     const plan = isSubscribed
       ? getPlanFromVariantId(subscription?.lemonsqueezy_variant_id || null)
       : null;
     const onboardingComplete = company ? isCompanyProfileComplete(company as Company) : false;
+    const lastActivityAt = getLatestDate(usage?.lastActivityAt, user.last_sign_in_at ?? null);
     const commercialSignal = getCommercialSignal({
       subscription,
       usage: usage ?? {
@@ -514,6 +799,15 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
       lastSignInAt: user.last_sign_in_at ?? null,
       planId: plan?.id ?? "none",
     });
+    const { score: healthScore, status: healthStatus } = scoreAccountHealth({
+      onboardingStatus: !company ? "Nema firme" : onboardingComplete ? "Završen" : "U toku",
+      subscriptionStatus: subscription?.status ?? "inactive",
+      lastActivityAt,
+      lastSignInAt: user.last_sign_in_at ?? null,
+      documentsCount: usage?.documentsCount ?? 0,
+      activeBids: usage?.activeBids ?? 0,
+      commercialSignal,
+    });
 
     if (plan) {
       const bucket = planDistributionMap.get(plan.id);
@@ -529,7 +823,10 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
 
     return {
       userId: user.id,
+      companyId: company?.id ?? null,
       email: user.email ?? "Bez emaila",
+      contactEmail: company?.contact_email ?? null,
+      contactPhone: company?.contact_phone ?? null,
       createdAt: user.created_at,
       lastSignInAt: user.last_sign_in_at ?? null,
       companyName: company?.name ?? null,
@@ -540,16 +837,19 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
       planName: plan?.name ?? "Bez aktivne pretplate",
       planId: plan?.id ?? "none",
       subscriptionStatus: subscription?.status ?? "inactive",
+      subscriptionEndsAt: subscription?.current_period_end ?? null,
       documentsCount: usage?.documentsCount ?? 0,
       activeBids: usage?.activeBids ?? 0,
       totalBids: usage?.totalBids ?? 0,
       storageBytes: usage?.storageBytes ?? 0,
-      lastActivityAt: getLatestDate(usage?.lastActivityAt, user.last_sign_in_at ?? null),
+      lastActivityAt,
       commercialSignal,
+      healthScore,
+      healthStatus,
     };
   });
 
-  const totalUsers = users.length;
+  const totalUsers = customerUsers.length;
   const companiesCount = companies.length;
   const completedProfiles = companies.filter((company) => isCompanyProfileComplete(company as Company)).length;
   const activeSubscriptions = dashboardRows.filter((row) => row.subscriptionStatus === "active").length;
@@ -618,11 +918,12 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
     0
   );
 
-  const newUsers30d = users.filter((user) => isRecordWithinDays(user.created_at, 30)).length;
-  const signedInLast7Days = users.filter((user) => isRecordWithinDays(user.last_sign_in_at, 7)).length;
+  const newUsers30d = customerUsers.filter((user) => isRecordWithinDays(user.created_at, 30)).length;
+  const signedInLast7Days = customerUsers.filter((user) => isRecordWithinDays(user.last_sign_in_at, 7)).length;
   const companySetupRate = totalUsers > 0 ? Math.round((companiesCount / totalUsers) * 100) : 0;
   const profileCompletionRate = companiesCount > 0 ? Math.round((completedProfiles / companiesCount) * 100) : 0;
   const payingConversionRate = totalUsers > 0 ? Math.round(((activeSubscriptions + pastDueSubscriptions) / totalUsers) * 100) : 0;
+  const in7Days = now + 7 * DAY_MS;
   const renewalsNext30d = subscriptions.filter(
     (subscription) =>
       ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status) &&
@@ -630,9 +931,30 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
       new Date(subscription.current_period_end).getTime() >= now &&
       new Date(subscription.current_period_end).getTime() <= in30Days
   ).length;
+  const renewalsNext7d = subscriptions.filter(
+    (subscription) =>
+      ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status) &&
+      subscription.current_period_end &&
+      new Date(subscription.current_period_end).getTime() >= now &&
+      new Date(subscription.current_period_end).getTime() <= in7Days
+  ).length;
   const newPaying30d = subscriptions.filter(
     (subscription) => ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status) && isRecordWithinDays(subscription.created_at, 30)
   ).length;
+  const cancelledSubscriptions = dashboardRows.filter((row) => row.subscriptionStatus === "cancelled").length;
+  const inactiveAccounts = dashboardRows.filter((row) => row.subscriptionStatus === "inactive").length;
+  const estimatedCollectionNext30d = subscriptions.reduce((sum, subscription) => {
+    if (
+      subscription.status !== "active" ||
+      !subscription.current_period_end ||
+      new Date(subscription.current_period_end).getTime() < now ||
+      new Date(subscription.current_period_end).getTime() > in30Days
+    ) {
+      return sum;
+    }
+
+    return sum + getPlanFromVariantId(subscription.lemonsqueezy_variant_id || null).price;
+  }, 0);
 
   const upgradeCandidates = dashboardRows.filter((row) =>
     row.commercialSignal === "Kandidat za Puni paket" || row.commercialSignal === "Kandidat za Agencijski paket"
@@ -650,6 +972,180 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
     (row) => row.activeBids > 0 || row.documentsCount >= 5
   ).length;
 
+  const dailySeed = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now - (6 - index) * DAY_MS);
+    return {
+      key: toDateKey(date),
+      label: formatDayLabel(date),
+      signups: 0,
+      companySetups: 0,
+      newPaying: 0,
+      activeUsers: 0,
+      newBids: 0,
+      submittedBids: 0,
+      newDocuments: 0,
+    };
+  });
+  const dailyMap = new Map(dailySeed.map((point) => [point.key, point]));
+
+  for (const user of customerUsers) {
+    const signupPoint = dailyMap.get(toDateKey(user.created_at));
+    if (signupPoint) {
+      signupPoint.signups += 1;
+    }
+
+    if (user.last_sign_in_at) {
+      const activePoint = dailyMap.get(toDateKey(user.last_sign_in_at));
+      if (activePoint) {
+        activePoint.activeUsers += 1;
+      }
+    }
+  }
+
+  for (const company of companies) {
+    const companyPoint = dailyMap.get(toDateKey(company.created_at));
+    if (companyPoint) {
+      companyPoint.companySetups += 1;
+    }
+  }
+
+  for (const subscription of subscriptions) {
+    if (!ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status)) {
+      continue;
+    }
+
+    const payingPoint = dailyMap.get(toDateKey(subscription.created_at));
+    if (payingPoint) {
+      payingPoint.newPaying += 1;
+    }
+  }
+
+  for (const bid of bids) {
+    const bidPoint = dailyMap.get(toDateKey(bid.created_at));
+    if (!bidPoint) {
+      continue;
+    }
+
+    bidPoint.newBids += 1;
+    if (bid.status === "submitted") {
+      bidPoint.submittedBids += 1;
+    }
+  }
+
+  for (const document of documents) {
+    const documentPoint = dailyMap.get(toDateKey(document.created_at));
+    if (documentPoint) {
+      documentPoint.newDocuments += 1;
+    }
+  }
+
+  const cohortSeed = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(new Date().getFullYear(), new Date().getMonth() - (5 - index), 1);
+    return {
+      key: toMonthKey(date),
+      label: formatMonthLabel(date),
+      signups: 0,
+      companySetups: 0,
+      onboarded: 0,
+      paying: 0,
+    };
+  });
+  const cohortMap = new Map(cohortSeed.map((point) => [point.key, point]));
+
+  for (const user of customerUsers) {
+    const point = cohortMap.get(toMonthKey(user.created_at));
+    if (point) {
+      point.signups += 1;
+    }
+  }
+
+  for (const company of companies) {
+    const point = cohortMap.get(toMonthKey(company.created_at));
+    if (!point) {
+      continue;
+    }
+
+    point.companySetups += 1;
+    if (isCompanyProfileComplete(company as Company)) {
+      point.onboarded += 1;
+    }
+  }
+
+  for (const subscription of subscriptions) {
+    if (!ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status)) {
+      continue;
+    }
+
+    const point = cohortMap.get(toMonthKey(subscription.created_at));
+    if (point) {
+      point.paying += 1;
+    }
+  }
+
+  const companiesWithDocuments = [...usageByCompanyId.values()].filter((usage) => usage.documentsCount > 0).length;
+  const companiesWithBids = [...usageByCompanyId.values()].filter((usage) => usage.totalBids > 0).length;
+  const averageDocumentsPerCompany = companiesCount > 0 ? Number((totalDocuments / companiesCount).toFixed(1)) : 0;
+  const averageBidsPerCompany = companiesCount > 0 ? Number((totalBids / companiesCount).toFixed(1)) : 0;
+  const bidSubmissionRate = totalBids > 0 ? Math.round((submittedBids / totalBids) * 100) : 0;
+  const tenderCaptureRate = openTenders > 0 ? Math.round((activeBids / openTenders) * 100) : 0;
+
+  const healthyAccounts = dashboardRows.filter((row) => row.healthStatus === "Odličan").length;
+  const attentionAccounts = dashboardRows.filter((row) => row.healthStatus === "Pažnja").length;
+  const riskAccounts = dashboardRows.filter((row) => row.healthStatus === "Rizik").length;
+
+  const atRiskAccounts = [...dashboardRows]
+    .filter(
+      (row) =>
+        row.subscriptionStatus === "past_due" ||
+        row.healthStatus === "Rizik" ||
+        row.commercialSignal === "Naplata u riziku"
+    )
+    .sort((a, b) => a.healthScore - b.healthScore || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .slice(0, 8);
+
+  const expansionAccounts = [...dashboardRows]
+    .filter((row) => row.commercialSignal.includes("Kandidat"))
+    .sort((a, b) => b.healthScore - a.healthScore || b.activeBids - a.activeBids || b.documentsCount - a.documentsCount)
+    .slice(0, 8);
+
+  const recentlyActivatedAccounts = [...dashboardRows]
+    .filter((row) => {
+      const latestSubscription = latestSubscriptionByUserId.get(row.userId);
+      return Boolean(latestSubscription?.status === "active" && isRecordWithinDays(latestSubscription.created_at, 30));
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 8);
+
+  const crmAccounts = dashboardRows
+    .map<AdminCrmAccount>((row) => ({
+      ...row,
+      ...deriveCrmProfile(row),
+    }))
+    .sort((a, b) => {
+      const priorityDiff = getCrmPriorityRank(b.outreachPriority) - getCrmPriorityRank(a.outreachPriority);
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+
+      const stageDiff = getCrmStageRank(b.outreachStage) - getCrmStageRank(a.outreachStage);
+      if (stageDiff !== 0) {
+        return stageDiff;
+      }
+
+      return new Date(b.lastActivityAt ?? b.createdAt).getTime() - new Date(a.lastActivityAt ?? a.createdAt).getTime();
+    });
+
+  const newLeads = crmAccounts.filter((account) => account.outreachStage === "Novi lead").slice(0, 12);
+  const activationQueue = crmAccounts.filter((account) => account.outreachStage === "Aktivacija").slice(0, 12);
+  const retentionQueue = crmAccounts.filter((account) => account.outreachStage === "Retention").slice(0, 12);
+  const expansionQueue = crmAccounts.filter((account) => account.outreachStage === "Ekspanzija").slice(0, 12);
+  const companiesWithContacts = crmAccounts.filter(
+    (account) => Boolean(account.contactEmail || account.contactPhone)
+  ).length;
+  const missingContactChannels = crmAccounts.filter(
+    (account) => account.companyName && !account.contactEmail && !account.contactPhone
+  ).length;
+
   const recentUsers = [...dashboardRows]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 12);
@@ -661,7 +1157,7 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
         return activityDiff;
       }
 
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return b.healthScore - a.healthScore || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     })
     .slice(0, 12);
   const topIndustries = [...industryCounts.entries()]
@@ -706,6 +1202,60 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
       onboardingStalls,
       highIntentAccounts,
     },
+    dailyOverview: dailySeed.map((point) => ({
+      label: point.label,
+      signups: point.signups,
+      companySetups: point.companySetups,
+      newPaying: point.newPaying,
+      activeUsers: point.activeUsers,
+      newBids: point.newBids,
+      submittedBids: point.submittedBids,
+      newDocuments: point.newDocuments,
+    })),
+    cohorts: cohortSeed.map((point) => ({
+      label: point.label,
+      signups: point.signups,
+      companySetups: point.companySetups,
+      onboarded: point.onboarded,
+      paying: point.paying,
+    })),
+    financeAudit: {
+      inactiveAccounts,
+      cancelledSubscriptions,
+      renewalsNext7d,
+      renewalsNext30d,
+      estimatedCollectionNext30d,
+    },
+    customerHealth: {
+      healthyAccounts,
+      attentionAccounts,
+      riskAccounts,
+      atRiskAccounts,
+      expansionAccounts,
+      recentlyActivatedAccounts,
+    },
+    productUsage: {
+      companiesWithDocuments,
+      companiesWithBids,
+      averageDocumentsPerCompany,
+      averageBidsPerCompany,
+      bidSubmissionRate,
+      tenderCaptureRate,
+    },
+    crm: {
+      totalAccounts: crmAccounts.length,
+      companiesWithContacts,
+      missingContactChannels,
+      newLeadsCount: newLeads.length,
+      activationQueueCount: activationQueue.length,
+      retentionQueueCount: retentionQueue.length,
+      expansionQueueCount: expansionQueue.length,
+      accounts: crmAccounts,
+      newLeads,
+      activationQueue,
+      retentionQueue,
+      expansionQueue,
+    },
     operations: {
       totalDocuments,
       totalStorageBytes,
@@ -727,43 +1277,6 @@ export async function loadAdminDashboardData(): Promise<AdminDashboardData> {
       realizedMarketValue30d,
       syncStatuses: buildSyncStatuses(syncRows),
     },
-    roadmap: [
-      {
-        title: "Billing i naplata audit",
-        description: "Webhook audit, neuspjele naplate, refundi i detaljni billing trail po računu.",
-        phase: "Sljedeće",
-        priority: "high",
-      },
-      {
-        title: "Kohorte i aktivacija",
-        description: "Praćenje aktivacije po cohorti: registracija, onboarding, prvi tender, prva ponuda, prva uplata.",
-        phase: "Sljedeće",
-        priority: "high",
-      },
-      {
-        title: "Customer health scoring",
-        description: "Računi pod rizikom churn-a, pad aktivnosti, pad logina, istek pretplate i signal za prodajni follow-up.",
-        phase: "Naredna iteracija",
-        priority: "high",
-      },
-      {
-        title: "Tender-to-bid conversion",
-        description: "Koliko preporučenih tendera prelazi u otvorene bid workspaces i koji segmenti imaju najbolju konverziju.",
-        phase: "Naredna iteracija",
-        priority: "medium",
-      },
-      {
-        title: "Lemon Squeezy order history",
-        description: "Stvarna historija uplata, LTV, naplaćeni prihodi po mjesecu i planu, ne samo procijenjeni MRR.",
-        phase: "Kasnije",
-        priority: "medium",
-      },
-      {
-        title: "Support i account ops",
-        description: "Interni notes, status korisničkih upita, ručne oznake računa i komercijalni follow-up pipeline.",
-        phase: "Kasnije",
-        priority: "medium",
-      },
-    ],
+    roadmap: [],
   };
 }

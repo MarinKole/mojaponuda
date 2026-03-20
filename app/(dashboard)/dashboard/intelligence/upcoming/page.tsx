@@ -70,7 +70,7 @@ export default async function UpcomingPage() {
       </div>
 
       {/* Kartice */}
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className={`grid gap-6 ${upcomingValueKnownCount > 0 ? "sm:grid-cols-2" : "sm:grid-cols-1"}`}>
         <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
              <Calendar className="size-24 text-blue-500 transform rotate-12" />
@@ -85,23 +85,23 @@ export default async function UpcomingPage() {
           <p className="mt-1 text-sm text-slate-500 font-medium">Prilike koje dolaze uskoro</p>
         </div>
 
-        <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-             <TrendingUp className="size-24 text-emerald-500 transform -rotate-12" />
-          </div>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Procijenjena vrijednost</p>
-            <div className="size-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <ArrowUpRight className="size-5" />
+        {upcomingValueKnownCount > 0 ? (
+          <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+               <TrendingUp className="size-24 text-emerald-500 transform -rotate-12" />
             </div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Procijenjena vrijednost</p>
+              <div className="size-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <ArrowUpRight className="size-5" />
+              </div>
+            </div>
+            <p className="text-4xl font-heading font-extrabold text-slate-900">{formatCurrencyKM(totalUpcomingValue)}</p>
+            <p className="mt-1 text-sm text-slate-500 font-medium">
+              Vrijednost objavljena za {upcomingValueKnownCount} tendera
+            </p>
           </div>
-          <p className="text-4xl font-heading font-extrabold text-slate-900">{upcomingValueKnownCount > 0 ? formatCurrencyKM(totalUpcomingValue) : "—"}</p>
-          <p className="mt-1 text-sm text-slate-500 font-medium">
-            {upcomingValueKnownCount > 0
-              ? `Vrijednost objavljena za ${upcomingValueKnownCount} tendera`
-              : "Vrijednost još nije objavljena"}
-          </p>
-        </div>
+        ) : null}
       </div>
 
       {/* Nadolazeći */}
@@ -119,7 +119,7 @@ export default async function UpcomingPage() {
               <Calendar className="size-6" />
             </div>
             <p className="text-sm font-medium text-slate-900">Nema planiranih tendera</p>
-            <p className="text-xs text-slate-500 mt-1">Trenutno nema planiranih nabavki u vašem prostoru.</p>
+            <p className="text-xs text-slate-500 mt-1">Trenutno nema planiranih nabavki koje dovoljno odgovaraju vašem profilu i lokaciji firme.</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">

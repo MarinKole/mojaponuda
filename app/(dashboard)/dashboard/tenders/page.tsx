@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin";
 import type { Tender } from "@/types/database";
 import { buildRegionSearchTerms } from "@/lib/constants/regions";
 import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
@@ -9,7 +10,7 @@ import {
   fetchRecommendedTenderCandidates,
   hasRecommendationSignals,
   matchesTenderLocationTerms,
-  rankTenderRecommendations,
+  selectTenderRecommendations,
   type RecommendationContext,
 } from "@/lib/tender-recommendations";
 import { TenderFilters } from "@/components/tenders/tender-filters";
@@ -67,11 +68,12 @@ async function TendersContent({ searchParams }: TendersPageProps) {
   let recommendationContext: RecommendationContext | null = null;
   let hasProfile = false;
   let hasRecommendationSignalsForProfile = false;
+  let existingBidTenderIds = new Set<string>();
 
   if (activeTab === "recommended" && user) {
     const { data: company } = await supabase
       .from("companies")
-      .select("industry, keywords, cpv_codes, operating_regions")
+      .select("id, industry, keywords, cpv_codes, operating_regions")
       .eq("user_id", user.id)
       .single();
 
@@ -79,6 +81,17 @@ async function TendersContent({ searchParams }: TendersPageProps) {
       hasProfile = true;
       recommendationContext = buildRecommendationContext(company);
       hasRecommendationSignalsForProfile = hasRecommendationSignals(recommendationContext);
+
+      const { data: bidRows } = await supabase
+        .from("bids")
+        .select("tender_id")
+        .eq("company_id", company.id);
+
+      existingBidTenderIds = new Set(
+        (bidRows ?? [])
+          .map((row) => row.tender_id)
+          .filter((value): value is string => Boolean(value))
+      );
     }
   }
 
@@ -150,9 +163,15 @@ async function TendersContent({ searchParams }: TendersPageProps) {
       limit: 240,
     });
 
-    let rankedRecommendations = rankTenderRecommendations(
-      scopedRecommendationRows,
-      recommendationContext
+    const availableRecommendationRows = scopedRecommendationRows.filter(
+      (tender) => !existingBidTenderIds.has(tender.id)
+    );
+    let rankedRecommendations = selectTenderRecommendations(
+      availableRecommendationRows,
+      recommendationContext,
+      {
+        minimumResults: 10,
+      }
     );
 
     if (keywordParam) {
@@ -168,6 +187,7 @@ async function TendersContent({ searchParams }: TendersPageProps) {
       rankedRecommendations,
       recommendationContext,
       {
+        limit: Math.max(rankedRecommendations.length, 10),
         shortlistSize: 10,
       }
     );
@@ -337,7 +357,12 @@ async function TendersContent({ searchParams }: TendersPageProps) {
 
 export default async function TendersPage(props: TendersPageProps) {
   const params = await props.searchParams;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const activeTab = getSingleParam(params.tab) === "all" ? "all" : "recommended";
+  const showGeoReport = isAdminEmail(user?.email);
 
   return (
     <div className="space-y-6">
@@ -350,12 +375,14 @@ export default async function TendersPage(props: TendersPageProps) {
             Pregledajte sve aktivne tendere ili otvorite one koji se najbolje uklapaju u vaš profil i lokaciju firme.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/dashboard/tenders/geo-report">
-            <MapPinned className="size-4" />
-            Geo izvještaj
-          </Link>
-        </Button>
+        {showGeoReport ? (
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/tenders/geo-report">
+              <MapPinned className="size-4" />
+              Geo izvještaj
+            </Link>
+          </Button>
+        ) : null}
       </div>
 
       <Tabs defaultValue={activeTab} className="w-full">

@@ -13,7 +13,10 @@ import {
   hasRecommendationSignals,
   matchesCpvPrefixes,
   matchesPreferredContractTypes,
-  rankTenderRecommendations,
+  type RecommendationTenderInput,
+  type ScoredTenderRecommendation,
+  scoreTenderRecommendation,
+  selectTenderRecommendations,
 } from "@/lib/tender-recommendations";
 
 interface CompetitorAccumulator {
@@ -34,6 +37,16 @@ interface CompetitorAccumulator {
   discountCount: number;
   categoryMatchWins: number;
   authorityMatchWins: number;
+  strongTenderWins: number;
+  fallbackTenderWins: number;
+}
+
+interface FilteredCompetitorAward {
+  award: AwardRow;
+  isCategoryMatch: boolean;
+  isAuthorityMatch: boolean;
+  strongTenderMatch: boolean;
+  strongFallbackTenderMatch: boolean;
 }
 
 export interface CompetitorInsight {
@@ -170,6 +183,7 @@ export interface MarketOverviewResult {
 type AwardRow = Pick<
   Database["public"]["Tables"]["award_decisions"]["Row"],
   | "portal_award_id"
+  | "tender_id"
   | "winner_name"
   | "winner_jib"
   | "winning_price"
@@ -217,6 +231,15 @@ type TenderScopeRow = Pick<
 
 interface PlannedScopeRow extends MarketUpcomingInsight {
   cpv_code: string | null;
+}
+
+interface ScoredPlannedScopeRow {
+  plan: PlannedScopeRow;
+  score: number;
+  positiveSignalCount: number;
+  locationPriority: number;
+  qualifies: boolean;
+  fallbackEligible: boolean;
 }
 
 function uniqueStrings(values: Array<string | null | undefined>): string[] {
@@ -355,6 +378,166 @@ function scoreMarketFit(
   return keywordScore * 3 + regionScore;
 }
 
+function compareScoredPlans(a: ScoredPlannedScopeRow, b: ScoredPlannedScopeRow): number {
+  if (a.score !== b.score) {
+    return b.score - a.score;
+  }
+
+  if (a.positiveSignalCount !== b.positiveSignalCount) {
+    return b.positiveSignalCount - a.positiveSignalCount;
+  }
+
+  if (a.locationPriority !== b.locationPriority) {
+    return a.locationPriority - b.locationPriority;
+  }
+
+  return new Date(a.plan.planned_date ?? 0).getTime() - new Date(b.plan.planned_date ?? 0).getTime();
+}
+
+function isStrongCompetitorFallbackMatch(
+  recommendation:
+    | Pick<
+        ScoredTenderRecommendation<RecommendationTenderInput>,
+        | "fallbackEligible"
+        | "positiveSignalCount"
+        | "score"
+        | "locationScope"
+        | "cpvMatch"
+        | "titleMatches"
+        | "matchedKeywords"
+      >
+    | null
+): boolean {
+  if (!recommendation?.fallbackEligible) {
+    return false;
+  }
+
+  if (recommendation.locationScope === "broad") {
+    return false;
+  }
+
+  if (recommendation.score < 4 || recommendation.positiveSignalCount < 3) {
+    return false;
+  }
+
+  return (
+    recommendation.cpvMatch ||
+    recommendation.titleMatches.length > 0 ||
+    recommendation.matchedKeywords.length >= 2
+  );
+}
+
+function scoreUpcomingPlan(
+  plan: PlannedScopeRow,
+  recommendationContext: NonNullable<ReturnType<typeof buildRecommendationContext>>,
+  searchTerms: string[],
+  preferredContractTypes: string[],
+  matchedCategories: string[],
+  matchedAuthorityJibs: string[],
+  cpvPrefixes: string[]
+): ScoredPlannedScopeRow {
+  const fields = [
+    plan.description,
+    plan.contract_type,
+    plan.cpv_code,
+    plan.contracting_authorities?.name,
+    plan.contracting_authorities?.city,
+    plan.contracting_authorities?.municipality,
+    plan.contracting_authorities?.canton,
+    plan.contracting_authorities?.entity,
+  ];
+  const keywordMatches = fields.reduce((sum, field) => sum + countTermMatches(field, searchTerms), 0);
+  const exactRegionMatch = hasRegionMatch(fields, recommendationContext.regionTerms);
+  const sameGroupRegionMatch = hasRegionMatch(fields, recommendationContext.sameGroupRegionTerms);
+  const neighboringRegionMatch = hasRegionMatch(fields, recommendationContext.neighboringRegionTerms);
+  const hasLocationPreference = recommendationContext.regionTerms.length > 0;
+  const locationPriority = exactRegionMatch ? 0 : sameGroupRegionMatch ? 1 : neighboringRegionMatch ? 2 : 3;
+  const cpvMatch = matchesCpvPrefixes(plan.cpv_code, cpvPrefixes);
+  const contractMatch =
+    preferredContractTypes.length === 0 ||
+    matchesPreferredContractTypes(plan.contract_type, preferredContractTypes);
+  const authorityMatch = Boolean(
+    plan.contracting_authorities?.jib && matchedAuthorityJibs.includes(plan.contracting_authorities.jib)
+  );
+  const categoryMatch = Boolean(
+    plan.contract_type && matchedCategories.includes(plan.contract_type)
+  );
+
+  let score = keywordMatches * 4;
+  score += cpvMatch ? 8 : 0;
+  score += authorityMatch ? 4 : 0;
+  score += categoryMatch ? 2 : 0;
+  score += preferredContractTypes.length > 0 && contractMatch ? 2 : 0;
+  score += exactRegionMatch ? 3 : sameGroupRegionMatch ? 2 : neighboringRegionMatch ? 1 : 0;
+
+  const positiveSignalCount =
+    keywordMatches +
+    (cpvMatch ? 3 : 0) +
+    (authorityMatch ? 2 : 0) +
+    (categoryMatch ? 1 : 0) +
+    (exactRegionMatch ? 2 : sameGroupRegionMatch ? 1 : neighboringRegionMatch ? 1 : 0);
+
+  const hasPositiveSignal = cpvMatch || keywordMatches > 0 || authorityMatch || categoryMatch;
+  const qualifies = contractMatch && hasPositiveSignal && (!hasLocationPreference || locationPriority < 3);
+  const fallbackEligible = contractMatch && hasPositiveSignal && score >= 2;
+
+  return {
+    plan,
+    score,
+    positiveSignalCount,
+    locationPriority,
+    qualifies,
+    fallbackEligible,
+  };
+}
+
+function selectUpcomingPlans(
+  plans: PlannedScopeRow[],
+  recommendationContext: NonNullable<ReturnType<typeof buildRecommendationContext>>,
+  searchTerms: string[],
+  preferredContractTypes: string[],
+  matchedCategories: string[],
+  matchedAuthorityJibs: string[],
+  cpvPrefixes: string[],
+  minimumResults = 5,
+  limit = 8
+): PlannedScopeRow[] {
+  const scored = plans.map((plan) =>
+    scoreUpcomingPlan(
+      plan,
+      recommendationContext,
+      searchTerms,
+      preferredContractTypes,
+      matchedCategories,
+      matchedAuthorityJibs,
+      cpvPrefixes
+    )
+  );
+  const strict = scored.filter((item) => item.qualifies).sort(compareScoredPlans);
+  const fallback = scored
+    .filter((item) => !item.qualifies && item.fallbackEligible)
+    .sort(compareScoredPlans);
+  const selected = [...strict];
+
+  if (selected.length < minimumResults) {
+    const usedIds = new Set(selected.map((item) => item.plan.id));
+    for (const item of fallback) {
+      if (usedIds.has(item.plan.id)) {
+        continue;
+      }
+
+      selected.push(item);
+      usedIds.add(item.plan.id);
+
+      if (selected.length >= minimumResults) {
+        break;
+      }
+    }
+  }
+
+  return selected.slice(0, limit).map((item) => item.plan);
+}
+
 function isPlanRelevant(
   plan: PlannedScopeRow,
   searchTerms: string[],
@@ -414,6 +597,7 @@ export async function getCompetitorAnalysis(
   company: Pick<Company, "jib" | "keywords" | "operating_regions" | "industry">
 ): Promise<CompetitorAnalysisResult> {
   const profile = parseCompanyProfile(company.industry);
+  const recommendationContext = buildRecommendationContext(company);
   const searchTerms = buildSearchTerms(company);
   const operatingRegions = buildRegionSearchTerms(company.operating_regions ?? []);
   const preferredContractTypes = getPreferredContractTypes(
@@ -442,6 +626,7 @@ export async function getCompetitorAnalysis(
     contract_type: string | null;
     title: string;
     raw_description: string | null;
+    ai_analysis?: Database["public"]["Tables"]["tenders"]["Row"]["ai_analysis"];
     authority_city?: string | null;
     authority_municipality?: string | null;
     authority_canton?: string | null;
@@ -550,7 +735,7 @@ export async function getCompetitorAnalysis(
     ? await supabase
         .from("award_decisions")
         .select(
-          "portal_award_id, winner_name, winner_jib, winning_price, contract_type, award_date, total_bidders_count, discount_pct, procedure_type, contracting_authority_jib"
+          "portal_award_id, tender_id, winner_name, winner_jib, winning_price, contract_type, award_date, total_bidders_count, discount_pct, procedure_type, contracting_authority_jib"
         )
         .in("contract_type", matchedCategories)
         .not("winner_jib", "is", null)
@@ -562,7 +747,7 @@ export async function getCompetitorAnalysis(
     ? await supabase
         .from("award_decisions")
         .select(
-          "portal_award_id, winner_name, winner_jib, winning_price, contract_type, award_date, total_bidders_count, discount_pct, procedure_type, contracting_authority_jib"
+          "portal_award_id, tender_id, winner_name, winner_jib, winning_price, contract_type, award_date, total_bidders_count, discount_pct, procedure_type, contracting_authority_jib"
         )
         .in("contracting_authority_jib", relevantAuthorityJibs)
         .not("winner_jib", "is", null)
@@ -571,6 +756,33 @@ export async function getCompetitorAnalysis(
     : { data: [] };
 
   const awardRows = [...(categoryAwards ?? []), ...(authorityAwards ?? [])] as AwardRow[];
+
+  const awardTenderIds = uniqueStrings(awardRows.map((award) => award.tender_id));
+  const { data: awardTenderRows } = awardTenderIds.length > 0
+    ? await supabase
+        .from("tenders")
+        .select(
+          "id, title, raw_description, contract_type, contracting_authority, contracting_authority_jib, deadline, estimated_value, ai_analysis"
+        )
+        .in("id", awardTenderIds)
+    : { data: [] };
+  const awardScopedTenders = withAuthorityLocation(
+    ((awardTenderRows ?? []) as Array<{
+      id: string;
+      title: string;
+      raw_description: string | null;
+      contract_type: string | null;
+      contracting_authority: string | null;
+      contracting_authority_jib: string | null;
+      deadline: string | null;
+      estimated_value: number | null;
+      ai_analysis: Database["public"]["Tables"]["tenders"]["Row"]["ai_analysis"];
+    }>),
+    authorityMap
+  );
+  const awardTenderScoreMap = new Map(
+    awardScopedTenders.map((tender) => [tender.id, scoreTenderRecommendation(tender, recommendationContext)])
+  );
 
   const missingAuthorityJibs = uniqueStrings(
     awardRows.map((award) => award.contracting_authority_jib).filter((jib) => jib && !authorityMap.has(jib))
@@ -586,7 +798,7 @@ export async function getCompetitorAnalysis(
     }
   }
 
-  const awardMap = new Map<string, AwardRow>();
+  const filteredAwardMap = new Map<string, FilteredCompetitorAward>();
   const matchedCategorySet = new Set(matchedCategories);
   const matchedAuthoritySet = new Set(relevantAuthorityJibs);
   for (const award of awardRows) {
@@ -612,25 +824,45 @@ export async function getCompetitorAnalysis(
       operatingRegions,
       preferredContractTypes
     );
+    const linkedTenderScore = award.tender_id ? awardTenderScoreMap.get(award.tender_id) ?? null : null;
+    const regionMatch = hasRegionMatch(
+      [
+        authorityName,
+        authorityMeta?.city,
+        authorityMeta?.municipality,
+        authorityMeta?.canton,
+        authorityMeta?.entity,
+        authorityMeta?.authority_type,
+      ],
+      operatingRegions
+    );
+    const strongTenderMatch = Boolean(linkedTenderScore?.qualifies);
+    const strongFallbackTenderMatch = isStrongCompetitorFallbackMatch(linkedTenderScore);
+    const hasBusinessSignalInProfile =
+      searchTerms.length > 0 || recommendationContext.cpvPrefixes.length > 0;
+    const strongAuthorityEvidence =
+      isAuthorityMatch &&
+      isProfileMatch &&
+      (operatingRegions.length === 0 || regionMatch) &&
+      (searchTerms.length === 0 || isCategoryMatch);
+
+    if (
+      linkedTenderScore &&
+      !linkedTenderScore.qualifies &&
+      !strongFallbackTenderMatch
+    ) {
+      continue;
+    }
+
+    if (!linkedTenderScore && hasBusinessSignalInProfile) {
+      continue;
+    }
 
     if (!(isCategoryMatch || isAuthorityMatch || isProfileMatch)) {
       continue;
     }
 
-    if (
-      operatingRegions.length > 0 &&
-      !hasRegionMatch(
-        [
-          authorityName,
-          authorityMeta?.city,
-          authorityMeta?.municipality,
-          authorityMeta?.canton,
-          authorityMeta?.entity,
-          authorityMeta?.authority_type,
-        ],
-        operatingRegions
-      )
-    ) {
+    if (operatingRegions.length > 0 && !regionMatch) {
       continue;
     }
 
@@ -638,7 +870,23 @@ export async function getCompetitorAnalysis(
       continue;
     }
 
-    awardMap.set(award.portal_award_id, award);
+    const passesEvidenceGate =
+      strongTenderMatch ||
+      strongFallbackTenderMatch ||
+      strongAuthorityEvidence ||
+      (!hasBusinessSignalInProfile && isAuthorityMatch && isCategoryMatch && regionMatch);
+
+    if (!passesEvidenceGate) {
+      continue;
+    }
+
+    filteredAwardMap.set(award.portal_award_id, {
+      award,
+      isCategoryMatch,
+      isAuthorityMatch,
+      strongTenderMatch,
+      strongFallbackTenderMatch,
+    });
   }
 
   const competitorMap = new Map<string, CompetitorAccumulator>();
@@ -655,7 +903,15 @@ export async function getCompetitorAnalysis(
     }
   >();
 
-  for (const award of awardMap.values()) {
+  for (const filteredAward of filteredAwardMap.values()) {
+    const {
+      award,
+      isCategoryMatch,
+      isAuthorityMatch,
+      strongTenderMatch,
+      strongFallbackTenderMatch,
+    } = filteredAward;
+
     if (!award.winner_jib || award.winner_jib === company.jib) {
       continue;
     }
@@ -676,8 +932,6 @@ export async function getCompetitorAnalysis(
         : Number(award.discount_pct);
     const existing = competitorMap.get(award.winner_jib);
     const isRecent = Boolean(award.award_date && award.award_date >= ninetyDaysAgo);
-    const isCategoryMatch = Boolean(award.contract_type && matchedCategorySet.has(award.contract_type));
-    const isAuthorityMatch = Boolean(authorityJib && matchedAuthoritySet.has(authorityJib));
 
     if (existing) {
       existing.wins += 1;
@@ -713,6 +967,12 @@ export async function getCompetitorAnalysis(
       if (isAuthorityMatch) {
         existing.authorityMatchWins += 1;
       }
+      if (strongTenderMatch) {
+        existing.strongTenderWins += 1;
+      }
+      if (strongFallbackTenderMatch) {
+        existing.fallbackTenderWins += 1;
+      }
     } else {
       const authorityCounts = new Map<string, number>();
       if (authorityJib) {
@@ -737,6 +997,8 @@ export async function getCompetitorAnalysis(
         discountCount: typeof discount === "number" && Number.isFinite(discount) ? 1 : 0,
         categoryMatchWins: isCategoryMatch ? 1 : 0,
         authorityMatchWins: isAuthorityMatch ? 1 : 0,
+        strongTenderWins: strongTenderMatch ? 1 : 0,
+        fallbackTenderWins: strongFallbackTenderMatch ? 1 : 0,
       });
     }
 
@@ -774,14 +1036,23 @@ export async function getCompetitorAnalysis(
   );
 
   const competitors = [...competitorMap.values()]
+    .filter(
+      (competitor) =>
+        competitor.strongTenderWins > 0 ||
+        competitor.authorityMatchWins >= 2 ||
+        competitor.fallbackTenderWins >= 2 ||
+        (competitor.authorityMatchWins >= 1 && competitor.categoryMatchWins >= 2)
+    )
     .map<CompetitorInsight>((competitor) => {
       const marketCompany = marketCompanyMap.get(competitor.jib);
       const avgAwardValue = competitor.wins > 0 ? competitor.totalValue / competitor.wins : null;
       const signalScore =
         competitor.wins * 4 +
         competitor.recentWins90d * 6 +
-        competitor.authorityMatchWins * 3 +
-        competitor.categoryMatchWins * 3 +
+        competitor.authorityMatchWins * 4 +
+        competitor.categoryMatchWins * 2 +
+        competitor.strongTenderWins * 8 +
+        competitor.fallbackTenderWins * 3 +
         (marketCompany?.win_rate ?? 0) / 10 +
         competitor.totalValue / 100000;
 
@@ -845,7 +1116,7 @@ export async function getCompetitorAnalysis(
     matchedCategories,
     matchedTenderCount: profileAuthorityRows.length,
     matchedAuthorityCount: relevantAuthorityJibs.length,
-    trackedAwardsCount: awardMap.size,
+    trackedAwardsCount: filteredAwardMap.size,
     totalCompetitorValue: competitors.reduce((sum, competitor) => sum + competitor.total_value, 0),
     totalCompetitorWins: competitors.reduce((sum, competitor) => sum + competitor.wins, 0),
   };
@@ -912,18 +1183,19 @@ export async function getMarketOverview(
   ]);
 
   const matchedActiveTenders = company && recommendationContext && hasRecommendationSignals(recommendationContext)
-    ? rankTenderRecommendations(
+    ? selectTenderRecommendations(
         await fetchRecommendedTenderCandidates<TenderScopeRow>(
           supabase,
           recommendationContext,
           {
             select:
-              "id, title, raw_description, contract_type, contracting_authority, contracting_authority_jib, estimated_value, deadline, created_at, cpv_code",
+              "id, title, raw_description, contract_type, contracting_authority, contracting_authority_jib, estimated_value, deadline, created_at",
             nowIso,
             limit: 240,
           }
         ),
-        recommendationContext
+        recommendationContext,
+        { minimumResults: 10 }
       ).map(({ tender, score }) => ({
         ...tender,
         market_fit_score: score,
@@ -990,9 +1262,9 @@ export async function getMarketOverview(
       })
     : [];
 
-  const scopedUpcomingPlansData = profileScoped
-    ? ((allUpcomingPlans ?? []) as PlannedScopeRow[])
-        .filter((plan) =>
+  const scopedUpcomingPlansData = profileScoped && recommendationContext
+    ? selectUpcomingPlans(
+        ((allUpcomingPlans ?? []) as PlannedScopeRow[]).filter((plan) =>
           isPlanRelevant(
             plan,
             searchTerms,
@@ -1001,9 +1273,19 @@ export async function getMarketOverview(
             matchedCategories,
             matchedAuthorityJibs,
             cpvPrefixes
-          )
-        )
-        .slice(0, 8)
+          ) ||
+          countTermMatches(plan.description, searchTerms) > 0 ||
+          matchesCpvPrefixes(plan.cpv_code, cpvPrefixes)
+        ),
+        recommendationContext,
+        searchTerms,
+        preferredContractTypes,
+        matchedCategories,
+        matchedAuthorityJibs,
+        cpvPrefixes,
+        5,
+        8
+      )
     : [];
 
   const useProfileScope = profileScoped;

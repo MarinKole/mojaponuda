@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isAdminEmail } from "@/lib/admin";
 import {
   getTenderAreaGapReport,
   type TenderAreaGapReportItem,
@@ -71,6 +72,10 @@ export default async function TenderGeoReportPage({
 
   if (!user) {
     redirect("/login");
+  }
+
+  if (!isAdminEmail(user.email)) {
+    redirect("/dashboard/tenders");
   }
 
   const report = await getTenderAreaGapReport(supabase, {

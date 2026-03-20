@@ -15,7 +15,7 @@ import {
   buildRecommendationContext,
   fetchRecommendedTenderCandidates,
   hasRecommendationSignals,
-  rankTenderRecommendations,
+  selectTenderRecommendations,
 } from "@/lib/tender-recommendations";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { ProGate } from "@/components/subscription/pro-gate";
@@ -72,9 +72,10 @@ export default async function IntelligencePage() {
         limit: 240,
       });
 
-      recommendedOpenCount = rankTenderRecommendations(
+      recommendedOpenCount = selectTenderRecommendations(
         scopedRecommendationRows,
-        recommendationContext
+        recommendationContext,
+        { minimumResults: 10 }
       ).length;
     } else {
       recommendedOpenCount = 0;
@@ -83,8 +84,10 @@ export default async function IntelligencePage() {
 
   const recommendedScopedCount = recommendedOpenCount ?? marketOverview.activeTenderCount;
   const openTenderCardDescription = recommendedOpenCount !== null
-    ? `U vašem prostoru je otvoreno ${marketOverview.activeTenderCount}, a ${recommendedScopedCount} trenutno jasno odgovara profilu.`
-    : "Tenderi koji trenutno najviše odgovaraju vašem profilu i području rada.";
+    ? recommendedScopedCount > 0
+      ? `${recommendedScopedCount} otvorenih tendera trenutno dovoljno odgovara vašem profilu i lokaciji firme.`
+      : "Trenutno nema otvorenih tendera koji dovoljno jasno odgovaraju vašem profilu i lokaciji firme."
+    : "Tenderi koji trenutno najviše odgovaraju vašem profilu i lokaciji firme.";
   const displayCategoryData = marketOverview.categoryData.length > 0
     ? marketOverview.categoryData
     : isDemoAccount
@@ -116,9 +119,9 @@ export default async function IntelligencePage() {
         }))
       : [];
   const displayUpcomingPlans = marketOverview.upcomingPlans.length > 0
-    ? marketOverview.upcomingPlans
+    ? marketOverview.upcomingPlans.slice(0, 5)
     : isDemoAccount
-      ? demoUpcomingProcurements.slice(0, 4)
+      ? demoUpcomingProcurements.slice(0, 5)
       : [];
   const displayProcedureData = marketOverview.procedureData.length > 0
     ? marketOverview.procedureData
@@ -447,7 +450,7 @@ export default async function IntelligencePage() {
           <div className="flex-1 p-2">
             <div className="space-y-1">
               {displayTopWinners.map((winner, index) => (
-                <div key={winner.jib} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
+                <Link href={`/dashboard/intelligence/company/${winner.jib}`} key={winner.jib} className="flex items-center justify-between rounded-xl px-4 py-3 transition-colors hover:bg-slate-50 group">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500 transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600">
                       {index + 1}
@@ -463,7 +466,7 @@ export default async function IntelligencePage() {
                     ) : null}
                     <p className="text-xs text-slate-400">{winner.total_bids !== null ? `${winner.total_bids} ponuda` : winner.city || winner.municipality || "—"}</p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -610,7 +613,7 @@ export default async function IntelligencePage() {
               </div>
               <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {displayCompetitors.slice(0, 9).map((competitor) => (
-                  <div key={`${competitor.jib}-card`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <Link href={`/dashboard/intelligence/company/${competitor.jib}`} key={`${competitor.jib}-card`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition-colors hover:border-rose-200 hover:bg-white">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-bold text-slate-900">{competitor.name}</p>
@@ -639,7 +642,7 @@ export default async function IntelligencePage() {
                         </span>
                       ))}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

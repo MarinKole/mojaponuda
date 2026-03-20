@@ -10,7 +10,9 @@ export interface MarketSummaryResult {
 function buildFallbackSummary(overview: MarketOverviewResult): MarketSummaryResult {
   const topCategory = overview.categoryData[0]?.category ?? "više kategorija";
   const sentences = [
-    `Otvoreno je ${overview.activeTenderCount} tendera u vašem prostoru.`,
+    overview.activeTenderCount > 0
+      ? `Trenutno je otvoreno ${overview.activeTenderCount} tendera koji se dovoljno poklapaju s vašim profilom i lokacijom firme.`
+      : "Trenutno ne vidimo otvorene tendere koji se dovoljno poklapaju s vašim profilom i lokacijom firme.",
     ...(overview.activeTenderValueKnownCount > 0
       ? [`Objavljena procijenjena vrijednost otvorenih tendera iznosi ${formatCurrencyKM(overview.activeTenderValue)}.`]
       : []),

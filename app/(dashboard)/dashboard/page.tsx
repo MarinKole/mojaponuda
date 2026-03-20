@@ -17,7 +17,7 @@ import {
   buildRecommendationContext,
   fetchRecommendedTenderCandidates,
   hasRecommendationSignals,
-  rankTenderRecommendations,
+  selectTenderRecommendations,
 } from "@/lib/tender-recommendations";
 import { getSubscriptionStatus } from "@/lib/subscription";
 
@@ -148,12 +148,13 @@ export default async function DashboardPage() {
 
   const { data: allBidRowsData } = await supabase
     .from("bids")
-    .select("id, status, created_at, tenders(title, deadline, estimated_value, contracting_authority)")
+    .select("id, tender_id, status, created_at, tenders(title, deadline, estimated_value, contracting_authority)")
     .eq("company_id", resolvedCompany.id)
     .order("created_at", { ascending: false });
 
   const allBidRows = ((allBidRowsData ?? []) as {
     id: string;
+    tender_id: string;
     status: BidStatus;
     created_at: string;
     tenders: {
@@ -163,6 +164,11 @@ export default async function DashboardPage() {
       contracting_authority: string | null;
     } | null;
   }[]);
+  const existingBidTenderIds = new Set(
+    allBidRows
+      .map((bid) => bid.tender_id)
+      .filter((value): value is string => Boolean(value))
+  );
 
   const portfolioBids = allBidRows.length > 0
     ? allBidRows.map((bid) => ({
@@ -255,9 +261,15 @@ export default async function DashboardPage() {
       limit: 60,
     });
 
-    const rankedRelevantTenders = rankTenderRecommendations(
-      relevantRows,
-      recommendationContext
+    const availableRelevantRows = relevantRows.filter(
+      (tender) => !existingBidTenderIds.has(tender.id)
+    );
+    const rankedRelevantTenders = selectTenderRecommendations(
+      availableRelevantRows,
+      recommendationContext,
+      {
+        minimumResults: 10,
+      }
     );
 
     relevantTenders = (
@@ -408,7 +420,7 @@ export default async function DashboardPage() {
         : relevantTenders[0]
           ? {
               title: "Pogledajte novi tender",
-              description: `Tender \"${relevantTenders[0].title}\" izgleda kao realna prilika na osnovu vašeg profila i područja rada.`,
+              description: `Tender \"${relevantTenders[0].title}\" izgleda kao realna prilika na osnovu vaše djelatnosti i lokacije firme.`,
               href: `/dashboard/tenders/${relevantTenders[0].id}`,
               cta: "Otvori tender",
               meta: `${relevantTenderCount} relevantnih tendera`,
@@ -434,7 +446,12 @@ export default async function DashboardPage() {
     {
       title: "Relevantne prilike",
       value: String(relevantTenderCount),
-      meta: relevantTenderCount > 0 ? `${formatCompactCurrency(relevantTenderValue)} potencijalne vrijednosti` : "Dopunite profil za jasnije prijedloge",
+      meta:
+        relevantTenderCount > 0
+          ? relevantTenderValue > 0
+            ? `Poznata vrijednost ${formatCompactCurrency(relevantTenderValue)}`
+            : "Najbolje otvorene prilike iz vašeg profila"
+          : "Dopunite profil za jasnije prijedloge",
       href: "/dashboard/tenders?tab=recommended",
       icon: "search" as const,
     },
