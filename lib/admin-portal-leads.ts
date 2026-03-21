@@ -38,6 +38,7 @@ export interface AdminPortalLead {
   totalWinsCount: number;
   totalWonValue: number;
   recentAwards180d: number;
+  recentAuthorityCount180d: number;
   recentWonValue180d: number;
   lastAwardDate: string | null;
   lastWinningPrice: number | null;
@@ -238,53 +239,102 @@ function getTemperature(score: number): AdminPortalLeadTemperature {
   return "Pratiti";
 }
 
+function hasBuyingFitVolume(totalWinsCount: number, totalWonValue: number): boolean {
+  return totalWinsCount >= 2 && totalWinsCount <= 12 && totalWonValue >= 25_000 && totalWonValue <= 1_500_000;
+}
+
+function isTooSmallLead(input: {
+  totalWinsCount: number;
+  totalWonValue: number;
+  recentAwards180d: number;
+  authorityPlannedCount90d: number;
+}): boolean {
+  return input.totalWinsCount === 1 && input.totalWonValue < 25_000 && input.recentAwards180d === 0 && input.authorityPlannedCount90d === 0;
+}
+
+function isEnterpriseHeavyLead(totalWinsCount: number, totalWonValue: number): boolean {
+  return totalWinsCount >= 15 || totalWonValue >= 2_000_000;
+}
+
 function getRecommendedAction(input: {
   temperature: AdminPortalLeadTemperature;
   hasPipeline: boolean;
   recentAwards: number;
   totalWinsCount: number;
+  recentAuthorityCount180d: number;
+  averageBidders: number | null;
+  totalWonValue: number;
 }): string {
-  const { temperature, hasPipeline, recentAwards, totalWinsCount } = input;
+  const { temperature, hasPipeline, recentAwards, totalWinsCount, recentAuthorityCount180d, averageBidders, totalWonValue } = input;
+  const buyingFitVolume = hasBuyingFitVolume(totalWinsCount, totalWonValue);
 
   if (temperature === "Vruć lead") {
-    return hasPipeline
-      ? "Kontaktirati prioritetno uz referencu na njihove potvrđene pobjede i planirane nabavke kod istog naručioca."
-      : recentAwards > 0
-        ? "Kontaktirati prioritetno dok je firma aktivna na portalu i vezati poruku za njihove svježe potvrđene pobjede."
-        : "Kontaktirati prioritetno uz referencu na potvrđene pobjede i potrebu za sigurnijom pripremom narednih ponuda.";
+    if (hasPipeline) {
+      return "Kontaktirati prioritetno: imaju aktivan tender ciklus i novi pipeline kod poznatog naručioca, pa je ovo pravi trenutak za poruku o boljoj kontroli narednih prijava.";
+    }
+
+    if (recentAwards >= 2 || recentAuthorityCount180d >= 2) {
+      return "Kontaktirati prioritetno uz poruku o manje haosa oko rokova, dokumentacije i koordinacije kroz više aktivnih postupaka.";
+    }
+
+    if (averageBidders !== null && averageBidders >= 3) {
+      return "Kontaktirati prioritetno uz fokus na kontrolu rizika i disciplinu prijave u konkurentnim postupcima.";
+    }
+
+    return buyingFitVolume
+      ? "Kontaktirati prioritetno: djeluju kao firma koja ima dovoljno tender volumena da alat brzo opravda cijenu."
+      : "Kontaktirati prioritetno uz referencu na potvrđene pobjede i potrebu za sigurnijom pripremom narednih ponuda.";
   }
 
   if (temperature === "Dobar lead") {
-    return hasPipeline
-      ? "Ubaciti u uži follow-up i javiti se prije narednog talasa planiranih nabavki kod poznatog naručioca."
-      : recentAwards > 0
-        ? "Poslati personalizovan outreach sa fokusom na njihove svježe dodjele i bolju kontrolu narednih prijava."
-        : "Držati u aktivnoj shortlisti i javiti se na sljedeći potvrđeni signal sa portala.";
+    if (hasPipeline) {
+      return "Ubaciti u uži follow-up i javiti se prije narednog talasa planiranih nabavki kod poznatog naručioca.";
+    }
+
+    if (recentAwards > 0) {
+      return "Poslati personalizovan outreach sa fokusom na njihove svježe dodjele i bolju kontrolu narednih prijava.";
+    }
+
+    return buyingFitVolume
+      ? "Držati u užoj shortlisti: djeluju kao dobar fit za plaćeni alat i vrijedi ih aktivirati na sljedeći jasan tender signal."
+      : "Držati u aktivnoj shortlisti i javiti se na sljedeći potvrđeni signal sa portala.";
   }
 
   return hasPipeline
     ? "Držati na radaru i aktivirati outreach prije narednog talasa planiranih nabavki kod poznatog naručioca."
-    : totalWinsCount >= 3
-      ? "Držati na radaru kao dokazano aktivnu tender firmu i javiti se kada se pojavi nova pobjeda ili veća nabavka."
+    : recentAwards > 0 || totalWinsCount >= 3
+      ? "Držati na radaru kao aktivnu tender firmu i javiti se kada se pojavi novi svježi povod ili veći postupak."
       : "Pratiti i aktivirati outreach na prvu narednu potvrđenu dodjelu ili novi pipeline signal.";
 }
 
 function buildLeadRationale(input: {
   totalWinsCount: number;
   recentAwards180d: number;
+  recentAuthorityCount180d: number;
   authorityPlannedCount90d: number;
   totalWonValue: number;
+  averageBidders: number | null;
 }): string {
-  if (input.recentAwards180d >= 2 && input.totalWonValue >= 100_000) {
-    return `Ozbiljan komercijalni igrač sa svježim pobjedama i dovoljno velikim portfeljem da alat za kontrolu rizika ima jasan ROI.`;
+  const buyingFitVolume = hasBuyingFitVolume(input.totalWinsCount, input.totalWonValue);
+
+  if (buyingFitVolume && input.recentAwards180d >= 2 && input.authorityPlannedCount90d > 0) {
+    return `Firma je u aktivnom tender ciklusu i ispred sebe već ima novi pipeline — dobar trenutak za alat koji uvodi disciplinu prije narednih prijava.`;
+  }
+
+  if (input.recentAwards180d >= 2 && input.recentAuthorityCount180d >= 2) {
+    return `Firma paralelno radi više svježih postupaka kod različitih naručilaca, što obično znači operativni pritisak oko rokova, dokumentacije i pripreme.`;
+  }
+
+  if (input.averageBidders !== null && input.averageBidders >= 3 && input.recentAwards180d > 0) {
+    return `Firma je aktivna u konkurentnim postupcima, pa manji broj proceduralnih propusta i bolja kontrola pripreme imaju direktnu poslovnu vrijednost.`;
+  }
+
+  if (buyingFitVolume) {
+    return `Djeluje kao firma koja ima dovoljno tender volumena da plati alat, ali i dalje dovoljno operativnog pritiska da joj disciplinovan sistem stvarno treba.`;
   }
 
   if (input.authorityPlannedCount90d > 0 && input.totalWinsCount >= 2) {
-    return `Već dobija poslove kod poznatih naručilaca, a ispred sebe ima i novi pipeline gdje vrijedi ući sa ciljanim outreachom.`;
-  }
-
-  if (input.totalWinsCount >= 5) {
-    return `Firma ima dokazanu istoriju pobjeda na javnim nabavkama i dovoljno jak komercijalni trag da vrijedi ući u uži outreach fokus.`;
+    return `Već dobija poslove kod poznatih naručilaca, a ispred sebe ima novi ciklus na kojem postoji jasan povod za pravovremen outreach.`;
   }
 
   if (input.recentAwards180d > 0) {
@@ -292,7 +342,7 @@ function buildLeadRationale(input: {
   }
 
   if (input.totalWinsCount >= 2) {
-    return `Firma ima potvrđenu istoriju pobjeda na javnim nabavkama i vrijedi je držati u užoj outreach projekciji.`;
+    return `Firma ima dovoljno potvrđenog tender volumena da vrijedi ostati u užoj outreach projekciji.`;
   }
 
   return `Firma ima barem jedan jasan komercijalni signal iz javnih podataka i vrijedi je pratiti u ciljanoj outreach projekciji.`;
@@ -300,6 +350,7 @@ function buildLeadRationale(input: {
 
 function buildLeadReasons(input: {
   recentAwards180d: number;
+  recentAuthorityCount180d: number;
   totalWinsCount: number;
   totalWonValue: number;
   averageBidders: number | null;
@@ -309,11 +360,18 @@ function buildLeadReasons(input: {
   lastAwardDate: string | null;
 }): string[] {
   const reasons: string[] = [];
+  const buyingFitVolume = hasBuyingFitVolume(input.totalWinsCount, input.totalWonValue);
 
   if (input.recentAwards180d >= 3) {
-    reasons.push(`Ima ${input.recentAwards180d} dodjele u zadnjih 180 dana, što pokazuje aktivno prisustvo na portalu.`);
+    reasons.push(`Ima ${input.recentAwards180d} potvrđene dodjele u zadnjih 180 dana, što znači da tenderi nisu povremen izlet nego aktivan operativni tok.`);
   } else if (input.recentAwards180d > 0) {
     reasons.push(`Ima ${input.recentAwards180d} svježe dodjele u zadnjih 180 dana.`);
+  }
+
+  if (input.recentAuthorityCount180d >= 3) {
+    reasons.push(`U svježem periodu radi sa ${input.recentAuthorityCount180d} različita naručioca, pa raste koordinacija rokova, dokumentacije i interne pripreme.`);
+  } else if (input.recentAuthorityCount180d === 2) {
+    reasons.push("U svježem periodu radi sa dva različita naručioca, što je dobar signal operativne kompleksnosti.");
   }
 
   if (input.totalWonValue >= 100_000) {
@@ -328,8 +386,12 @@ function buildLeadReasons(input: {
     reasons.push(`Ima bar ${input.totalWinsCount} potvrđenu pobjedu, što znači da nije slučajan ponuđač nego realna tender firma.`);
   }
 
+  if (buyingFitVolume) {
+    reasons.push("Po volumenu djeluje kao dobar fit za plaćeni alat: dovoljno tender aktivnosti da sistem ima ROI, bez signala da je riječ o prevelikom enterprise procesu.");
+  }
+
   if (input.averageBidders !== null && input.averageBidders >= 3) {
-    reasons.push(`Prosjek od ${input.averageBidders} ponuđača po dodjeli znači da djeluju u konkurentnom okruženju gdje risk-control alat ima smisla.`);
+    reasons.push(`Prosjek od ${input.averageBidders} ponuđača po dodjeli znači da djeluju u konkurentnom okruženju gdje manje proceduralnih grešaka i bolja disciplina prijave imaju direktan efekat.`);
   }
 
   if (input.authorityPlannedCount90d > 0) {
@@ -353,25 +415,49 @@ function buildLeadReasons(input: {
 
 function scoreLead(input: {
   recentAwards180d: number;
+  recentAuthorityCount180d: number;
   totalWinsCount: number;
   totalWonValue: number;
   averageBidders: number | null;
   authorityPlannedCount90d: number;
+  authorityPlannedValue90d: number;
   hasLocation: boolean;
   lastAwardDate: string | null;
 }): number {
+  const buyingFitVolume = hasBuyingFitVolume(input.totalWinsCount, input.totalWonValue);
+  const tooSmall = isTooSmallLead({
+    totalWinsCount: input.totalWinsCount,
+    totalWonValue: input.totalWonValue,
+    recentAwards180d: input.recentAwards180d,
+    authorityPlannedCount90d: input.authorityPlannedCount90d,
+  });
+  const enterpriseHeavy = isEnterpriseHeavyLead(input.totalWinsCount, input.totalWonValue);
   let score = 0;
 
-  score += input.totalWinsCount >= 10 ? 28 : input.totalWinsCount >= 5 ? 20 : input.totalWinsCount >= 3 ? 14 : input.totalWinsCount > 0 ? 8 : 0;
-  score += input.totalWonValue >= 500_000 ? 22 : input.totalWonValue >= 100_000 ? 16 : input.totalWonValue >= 25_000 ? 10 : 0;
-  score += input.recentAwards180d >= 3 ? 18 : input.recentAwards180d > 0 ? 10 : 0;
-  score += input.averageBidders !== null && input.averageBidders >= 4 ? 8 : input.averageBidders !== null && input.averageBidders >= 2 ? 4 : 0;
-  score += Math.min(12, input.authorityPlannedCount90d * 3);
-  score += input.hasLocation ? 4 : 0;
-  score += input.lastAwardDate && isWithinDays(input.lastAwardDate, 60) ? 8 : input.lastAwardDate && isWithinDays(input.lastAwardDate, 180) ? 4 : 0;
+  score += input.recentAwards180d >= 4 ? 20 : input.recentAwards180d >= 2 ? 14 : input.recentAwards180d > 0 ? 8 : 0;
+  score += input.recentAuthorityCount180d >= 3 ? 10 : input.recentAuthorityCount180d === 2 ? 6 : input.recentAuthorityCount180d === 1 && input.recentAwards180d >= 2 ? 3 : 0;
+  score += input.authorityPlannedCount90d >= 4 ? 16 : input.authorityPlannedCount90d >= 2 ? 11 : input.authorityPlannedCount90d > 0 ? 6 : 0;
+  score += input.authorityPlannedValue90d >= 500_000 ? 6 : input.authorityPlannedValue90d >= 100_000 ? 4 : input.authorityPlannedCount90d > 0 && input.authorityPlannedValue90d > 0 ? 2 : 0;
+  score += buyingFitVolume ? 14 : input.totalWonValue >= 25_000 ? (enterpriseHeavy ? 4 : 8) : input.totalWonValue > 0 ? 2 : 0;
+  score += input.totalWinsCount >= 2 && input.totalWinsCount <= 8 ? 12 : input.totalWinsCount === 1 ? 5 : input.totalWinsCount <= 14 ? 8 : 4;
+  score += input.averageBidders !== null && input.averageBidders >= 4 ? 10 : input.averageBidders !== null && input.averageBidders >= 3 ? 7 : input.averageBidders !== null && input.averageBidders >= 2 ? 4 : 0;
+  score += input.hasLocation ? 3 : 0;
+  score += input.lastAwardDate && isWithinDays(input.lastAwardDate, 45) ? 10 : input.lastAwardDate && isWithinDays(input.lastAwardDate, 120) ? 6 : input.lastAwardDate && isWithinDays(input.lastAwardDate, 240) ? 2 : 0;
 
-  if (input.totalWinsCount === 1 && input.totalWonValue < 25_000 && input.recentAwards180d === 0) {
-    score -= 6;
+  if (tooSmall) {
+    score -= 18;
+  }
+
+  if (input.recentAwards180d === 0 && input.authorityPlannedCount90d === 0 && input.totalWinsCount >= 8) {
+    score -= 8;
+  }
+
+  if (enterpriseHeavy && input.recentAwards180d <= 1 && input.authorityPlannedCount90d === 0) {
+    score -= 8;
+  }
+
+  if (input.recentAuthorityCount180d === 1 && input.recentAwards180d === 0 && input.authorityPlannedCount90d === 0) {
+    score -= 4;
   }
 
   return clamp(score, 0, 100);
@@ -599,17 +685,20 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
       const recentWins: AdminPortalLeadWin[] = confirmedWins.map((item) => item.win);
       const authorityCounts = new Map<string, number>();
       const authorityNameCounts = new Map<string, number>();
+      const recentAuthorityKeys = new Set<string>();
 
       for (const item of recentAwards180d) {
         const authorityJib = normalizeJib(item.award.contracting_authority_jib);
         if (!authorityJib) {
           const authorityName = item.win.contractingAuthority?.trim();
           if (authorityName) {
+            recentAuthorityKeys.add(`name:${normalizeEntityName(authorityName)}`);
             authorityNameCounts.set(authorityName, (authorityNameCounts.get(authorityName) ?? 0) + 1);
           }
           continue;
         }
 
+        recentAuthorityKeys.add(`jib:${authorityJib}`);
         authorityCounts.set(authorityJib, (authorityCounts.get(authorityJib) ?? 0) + 1);
 
         const authorityName = item.win.contractingAuthority?.trim();
@@ -627,25 +716,31 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         (sum, item) => sum + (Number(item.estimated_value) || 0),
         0
       );
+      const recentAuthorityCount180d = recentAuthorityKeys.size;
       const totalWonValue = confirmedWins.reduce((sum, item) => sum + (item.win.winningPrice ?? 0), 0);
       const rationale = buildLeadRationale({
         totalWinsCount,
         recentAwards180d: recentAwards180d.length,
+        recentAuthorityCount180d,
         authorityPlannedCount90d,
         totalWonValue,
+        averageBidders,
       });
       const score = scoreLead({
         recentAwards180d: recentAwards180d.length,
+        recentAuthorityCount180d,
         totalWinsCount,
         totalWonValue,
         averageBidders,
         authorityPlannedCount90d,
+        authorityPlannedValue90d,
         hasLocation: Boolean(company.city || company.municipality),
         lastAwardDate: lastAward?.win.awardDate ?? null,
       });
       const temperature = getTemperature(score);
       const reasons = buildLeadReasons({
         recentAwards180d: recentAwards180d.length,
+        recentAuthorityCount180d,
         totalWinsCount,
         totalWonValue,
         averageBidders,
@@ -666,6 +761,7 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         totalWinsCount,
         totalWonValue,
         recentAwards180d: recentAwards180d.length,
+        recentAuthorityCount180d,
         recentWonValue180d: recentAwards180d.reduce((sum, item) => sum + (item.win.winningPrice ?? 0), 0),
         lastAwardDate: lastAward?.win.awardDate ?? null,
         lastWinningPrice: lastAward?.win.winningPrice ?? null,
@@ -686,6 +782,9 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
           hasPipeline: authorityPlannedCount90d > 0,
           recentAwards: recentAwards180d.length,
           totalWinsCount,
+          recentAuthorityCount180d,
+          averageBidders,
+          totalWonValue,
         }),
         note: noteRow?.note ?? "",
         outreachStatus,
@@ -708,14 +807,25 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         return scoreDiff;
       }
 
+      const recentDiff = b.recentAwards180d - a.recentAwards180d;
+      if (recentDiff !== 0) {
+        return recentDiff;
+      }
+
       const pipelineDiff = b.authorityPlannedCount90d - a.authorityPlannedCount90d;
       if (pipelineDiff !== 0) {
         return pipelineDiff;
       }
 
-      const recentDiff = b.recentAwards180d - a.recentAwards180d;
-      if (recentDiff !== 0) {
-        return recentDiff;
+      const authorityCoverageDiff = b.recentAuthorityCount180d - a.recentAuthorityCount180d;
+      if (authorityCoverageDiff !== 0) {
+        return authorityCoverageDiff;
+      }
+
+      const bLastAwardTime = b.lastAwardDate ? new Date(b.lastAwardDate).getTime() : 0;
+      const aLastAwardTime = a.lastAwardDate ? new Date(a.lastAwardDate).getTime() : 0;
+      if (bLastAwardTime !== aLastAwardTime) {
+        return bLastAwardTime - aLastAwardTime;
       }
 
       const winsDiff = b.totalWinsCount - a.totalWinsCount;
