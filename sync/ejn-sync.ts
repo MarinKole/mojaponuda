@@ -686,6 +686,72 @@ async function buildTenderIdMap(
   return map;
 }
 
+async function buildContractingAuthorityIdMapByPortalId(
+  supabase: ReturnType<typeof createServiceClient>,
+  portalIds: string[]
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+
+  for (const batch of chunkArray(uniqueNonEmpty(portalIds), 250)) {
+    const { data } = await supabase
+      .from("contracting_authorities")
+      .select("id, portal_id")
+      .in("portal_id", batch);
+
+    for (const row of data ?? []) {
+      if (row.portal_id) {
+        map.set(row.portal_id, row.id);
+      }
+    }
+  }
+
+  return map;
+}
+
+async function buildExistingAwardDecisionIdSet(
+  supabase: ReturnType<typeof createServiceClient>,
+  portalAwardIds: string[]
+): Promise<Set<string>> {
+  const existingIds = new Set<string>();
+
+  for (const batch of chunkArray(uniqueNonEmpty(portalAwardIds), 250)) {
+    const { data } = await supabase
+      .from("award_decisions")
+      .select("portal_award_id")
+      .in("portal_award_id", batch);
+
+    for (const row of data ?? []) {
+      if (row.portal_award_id) {
+        existingIds.add(row.portal_award_id);
+      }
+    }
+  }
+
+  return existingIds;
+}
+
+async function buildExistingPlannedProcurementIdSet(
+  supabase: ReturnType<typeof createServiceClient>,
+  portalIds: string[]
+): Promise<Set<string>> {
+  const existingIds = new Set<string>();
+
+  for (const batch of chunkArray(uniqueNonEmpty(portalIds), 250)) {
+    const { data } = await supabase
+      .from("planned_procurements")
+      .select("portal_id")
+      .in("portal_id", batch);
+
+    for (const row of data ?? []) {
+      if (row.portal_id) {
+        existingIds.add(row.portal_id);
+      }
+    }
+  }
+
+  return existingIds;
+}
+
 async function loadAuthoritySeedCandidatesFromTenderHistory(
   supabase: ReturnType<typeof createServiceClient>,
   targetUpdates: number,
@@ -1159,6 +1225,14 @@ async function backfillMissingSupplierPortalMapEntries(
 
   const missingSuppliers = await fetchSuppliersByIds(missingSupplierPortalIds);
 
+  const rowsToUpsert: Array<{
+    portal_id: string | null;
+    name: string;
+    jib: string;
+    city: string | null;
+    municipality: string | null;
+  }> = [];
+
   for (const supplier of missingSuppliers) {
     if (!supplier.SupplierId || !supplier.Jib) {
       continue;
@@ -1172,21 +1246,18 @@ async function backfillMissingSupplierPortalMapEntries(
       municipality: supplier.Municipality || null,
     };
 
-    const { data: existing } = await supabase
-      .from("market_companies")
-      .select("id")
-      .eq("jib", supplier.Jib)
-      .single();
-
-    if (existing) {
-      await supabase.from("market_companies").update(row).eq("jib", supplier.Jib);
-    } else {
-      await supabase.from("market_companies").insert(row);
-    }
+    rowsToUpsert.push(row);
 
     supplierPortalMap.set(supplier.SupplierId, {
       jib: supplier.Jib,
       name: supplier.Name || "Nepoznato",
+    });
+  }
+
+  for (const batch of chunkArray(rowsToUpsert, 250)) {
+    await supabase.from("market_companies").upsert(batch, {
+      onConflict: "jib",
+      ignoreDuplicates: false,
     });
   }
 
@@ -1404,10 +1475,28 @@ async function syncAwardDecisions(
       supabase,
       uniqueNonEmpty(awards.flatMap((award) => [award.NoticeId, award.ProcedureId]))
     );
+    const existingAwardIds = await buildExistingAwardDecisionIdSet(
+      supabase,
+      awards.map((award) => award.AwardId)
+    );
 
     let added = 0;
     let updated = 0;
     const impactedWinnerJibs = new Set<string>();
+    const rowsToUpsert: Array<{
+      portal_award_id: string;
+      tender_id: string | null;
+      contracting_authority_jib: string | null;
+      procedure_name: string | null;
+      winner_name: string | null;
+      winner_jib: string | null;
+      winning_price: number | null;
+      estimated_value: number | null;
+      total_bidders_count: number | null;
+      procedure_type: string | null;
+      contract_type: string | null;
+      award_date: string | null;
+    }> = [];
 
     for (const a of awards) {
       const tenderId = (a.NoticeId ? tenderIdMap.get(a.NoticeId) : null)
@@ -1422,6 +1511,7 @@ async function syncAwardDecisions(
         portal_award_id: a.AwardId,
         tender_id: tenderId,
         contracting_authority_jib: a.ContractingAuthorityJib || null,
+        procedure_name: a.ProcedureName || null,
         winner_name: winningSupplier?.name ?? a.WinnerName ?? null,
         winner_jib: winningSupplier?.jib ?? a.WinnerJib ?? null,
         winning_price: a.WinningPrice || null,
@@ -1436,22 +1526,20 @@ async function syncAwardDecisions(
         impactedWinnerJibs.add(row.winner_jib);
       }
 
-      const { data: existing } = await supabase
-        .from("award_decisions")
-        .select("id")
-        .eq("portal_award_id", a.AwardId)
-        .single();
-
-      if (existing) {
-        await supabase
-          .from("award_decisions")
-          .update(row)
-          .eq("portal_award_id", a.AwardId);
+      if (existingAwardIds.has(a.AwardId)) {
         updated++;
       } else {
-        await supabase.from("award_decisions").insert(row);
         added++;
       }
+
+      rowsToUpsert.push(row);
+    }
+
+    for (const batch of chunkArray(rowsToUpsert, 250)) {
+      await supabase.from("award_decisions").upsert(batch, {
+        onConflict: "portal_award_id",
+        ignoreDuplicates: false,
+      });
     }
 
     await refreshMarketCompanyAwardStats(supabase, [...impactedWinnerJibs]);
@@ -1560,21 +1648,31 @@ async function syncPlannedProcurements(
   try {
     const lastSync = await getLastSyncAt(supabase, endpoint);
     const plans = await fetchPlannedProcurements(lastSync);
+    const authorityIdMap = await buildContractingAuthorityIdMapByPortalId(
+      supabase,
+      plans.map((plan) => plan.ContractingAuthorityId ?? "")
+    );
+    const existingPlanIds = await buildExistingPlannedProcurementIdSet(
+      supabase,
+      plans.map((plan) => plan.PlanId)
+    );
 
     let added = 0;
     let updated = 0;
+    const rowsToUpsert: Array<{
+      portal_id: string;
+      contracting_authority_id: string | null;
+      description: string | null;
+      estimated_value: number | null;
+      planned_date: string | null;
+      contract_type: string | null;
+      cpv_code: string | null;
+    }> = [];
 
     for (const p of plans) {
-      // Pokušaj naći contracting authority
-      let authorityId: string | null = null;
-      if (p.ContractingAuthorityId) {
-        const { data: ca } = await supabase
-          .from("contracting_authorities")
-          .select("id")
-          .eq("portal_id", p.ContractingAuthorityId)
-          .single();
-        authorityId = ca?.id ?? null;
-      }
+      const authorityId = p.ContractingAuthorityId
+        ? authorityIdMap.get(p.ContractingAuthorityId) ?? null
+        : null;
 
       const row = {
         portal_id: p.PlanId,
@@ -1586,22 +1684,20 @@ async function syncPlannedProcurements(
         cpv_code: p.CpvCode || null,
       };
 
-      const { data: existing } = await supabase
-        .from("planned_procurements")
-        .select("id")
-        .eq("portal_id", p.PlanId)
-        .single();
-
-      if (existing) {
-        await supabase
-          .from("planned_procurements")
-          .update(row)
-          .eq("portal_id", p.PlanId);
+      if (existingPlanIds.has(p.PlanId)) {
         updated++;
       } else {
-        await supabase.from("planned_procurements").insert(row);
         added++;
       }
+
+      rowsToUpsert.push(row);
+    }
+
+    for (const batch of chunkArray(rowsToUpsert, 250)) {
+      await supabase.from("planned_procurements").upsert(batch, {
+        onConflict: "portal_id",
+        ignoreDuplicates: false,
+      });
     }
 
     const syncAt = new Date().toISOString();
