@@ -66,7 +66,8 @@ export interface AdminFinancialsData {
 export interface AdminSystemJob {
   endpoint: string;
   label: string;
-  status: "U redu" | "Treba pažnju" | "Nema podataka";
+  purpose: string;
+  status: "U redu" | "Treba pažnju" | "Bez loga";
   lastRun: string | null;
   recordsAdded: number;
   recordsUpdated: number;
@@ -129,7 +130,7 @@ function getAmountForSubscription(subscription: Pick<Subscription, "lemonsqueezy
 function getSyncEndpointLabel(endpoint: string): string {
   switch (endpoint) {
     case "MorningSync4AM":
-      return "Jutarnji glavni sync";
+      return "Glavni portal sync";
     case "ProcurementNotices":
       return "Tenderi";
     case "ContractingAuthorities":
@@ -146,6 +147,29 @@ function getSyncEndpointLabel(endpoint: string): string {
       return "Dobavljači";
     default:
       return endpoint;
+  }
+}
+
+function getSyncEndpointPurpose(endpoint: string): string {
+  switch (endpoint) {
+    case "MorningSync4AM":
+      return "Pokreće kompletan operativni portal sync i upisuje zbirni rezultat cijelog prolaza.";
+    case "ProcurementNotices":
+      return "Učitava nove i izmijenjene tendere sa EJN portala.";
+    case "ContractingAuthorities":
+      return "Učitava i osvježava podatke o ugovornim organima.";
+    case "ContractingAuthorityMaintenance4AM":
+      return "Dopunjava lokacije i tipove ugovornih organa kada osnovni sync nije imao sve podatke.";
+    case "TenderAreaMaintenance4AM":
+      return "Dopunjava geo podatke tendera za pretragu po lokaciji i tržišne izvještaje.";
+    case "Awards":
+      return "Učitava odluke o dodjeli ugovora i povezuje ih sa firmama koje pobjeđuju.";
+    case "PlannedProcurements":
+      return "Učitava planirane nabavke za rani uvid u buduće prilike.";
+    case "Suppliers":
+      return "Učitava dobavljače i osvježava osnovne podatke firmi sa portala.";
+    default:
+      return "Tehnički sync job bez dodatnog opisa.";
   }
 }
 
@@ -170,13 +194,13 @@ function getSyncFreshness(ranAt: string | null): "healthy" | "warning" | "stale"
 function getSyncPlainMessage(freshness: ReturnType<typeof getSyncFreshness>): string {
   switch (freshness) {
     case "healthy":
-      return "Posljednji prolaz izgleda svježe i ne traži akciju.";
+      return "Zadnji log je svjež i trenutno ne traži akciju.";
     case "warning":
-      return "Prolaz postoji, ali više nije dovoljno svjež za miran jutarnji pregled.";
+      return "Log postoji, ali ovaj job nije prošao dovoljno skoro i vrijedi ga pratiti.";
     case "stale":
-      return "Ovo kasni predugo i treba provjeru što prije.";
+      return "Zadnji log je prestar i ovaj job treba provjeru ili ručno pokretanje.";
     default:
-      return "Za ovaj job još nema zabilježenog prolaza u logu.";
+      return "Za ovaj job sistem još nema nijedan zabilježen prolaz.";
   }
 }
 
@@ -300,11 +324,12 @@ function buildSystemJobs(syncRows: SyncLogRow[]): AdminSystemJob[] {
     return {
       endpoint,
       label: getSyncEndpointLabel(endpoint),
+      purpose: getSyncEndpointPurpose(endpoint),
       status:
         freshness === "healthy"
           ? "U redu"
           : freshness === "unknown"
-            ? "Nema podataka"
+            ? "Bez loga"
             : "Treba pažnju",
       lastRun: row?.ran_at ?? null,
       recordsAdded: row?.records_added ?? 0,
@@ -348,7 +373,7 @@ export async function loadAdminOverviewData(): Promise<AdminOverviewData> {
   const conversionRate = leadsData.leads.length > 0 ? Math.round((convertedLeads / leadsData.leads.length) * 100) : 0;
 
   const jobs = buildSystemJobs(syncRows);
-  const failedJobs = jobs.filter((job) => job.status === "Nema podataka").length;
+  const failedJobs = jobs.filter((job) => job.status === "Bez loga").length;
   const syncErrors = jobs.filter((job) => job.status !== "U redu").length;
   const expiringSubscriptions = subscriptions.filter(
     (subscription) =>
@@ -515,9 +540,9 @@ export async function loadAdminSystemData(): Promise<AdminSystemData> {
     .map<AdminSystemIssue>((job) => ({
       id: job.endpoint,
       title: job.label,
-      description: job.plainMessage,
+      description: `${job.purpose} ${job.plainMessage}`,
       occurredAt: job.lastRun,
-      tone: job.status === "Nema podataka" ? "danger" : "warning",
+      tone: job.status === "Bez loga" ? "danger" : "warning",
     }));
 
   return {
@@ -525,7 +550,7 @@ export async function loadAdminSystemData(): Promise<AdminSystemData> {
     summary: {
       healthyJobs: jobs.filter((job) => job.status === "U redu").length,
       attentionJobs: jobs.filter((job) => job.status === "Treba pažnju").length,
-      failedJobs: jobs.filter((job) => job.status === "Nema podataka").length,
+      failedJobs: jobs.filter((job) => job.status === "Bez loga").length,
       lastSyncAt: jobs
         .map((job) => job.lastRun)
         .filter((value): value is string => Boolean(value))

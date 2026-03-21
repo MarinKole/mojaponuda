@@ -15,12 +15,8 @@ import {
   fetchSupplierGroupSupplierLinks,
   fetchPlannedProcurements,
   type EjnProcurementNotice,
-  type EjnAwardNotice,
   type EjnAwardedSupplierGroup,
-  type EjnContractingAuthority,
-  type EjnSupplier,
   type EjnSupplierGroupSupplierLink,
-  type EjnPlannedProcurement,
 } from "@/lib/ejn-api";
 import {
   getGeoEnrichmentFromAiAnalysis,
@@ -1105,33 +1101,6 @@ async function buildExistingTenderMap(
         map.set(row.portal_id, {
           id: row.id,
           ai_analysis: (row.ai_analysis as Json | null | undefined) ?? null,
-        });
-      }
-    }
-  }
-
-  return map;
-}
-
-async function buildAuthorityGeoMap(
-  supabase: ReturnType<typeof createServiceClient>,
-  authorityJibs: string[]
-): Promise<Map<string, AuthorityGeoRecord>> {
-  const map = new Map<string, AuthorityGeoRecord>();
-
-  for (const batch of chunkArray(uniqueNonEmpty(authorityJibs), 250)) {
-    const { data } = await supabase
-      .from("contracting_authorities")
-      .select("jib, city, municipality, canton, entity")
-      .in("jib", batch);
-
-    for (const row of data ?? []) {
-      if (row.jib) {
-        map.set(row.jib, {
-          city: row.city ?? null,
-          municipality: row.municipality ?? null,
-          canton: row.canton ?? null,
-          entity: row.entity ?? null,
         });
       }
     }

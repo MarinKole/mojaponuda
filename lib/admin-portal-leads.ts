@@ -1,3 +1,4 @@
+import { fetchAwardNoticesByIds, type EjnAwardNotice } from "@/lib/ejn-api";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   AwardDecision,
@@ -36,8 +37,10 @@ export interface AdminPortalLead {
   municipality: string | null;
   totalBidsCount: number;
   totalWinsCount: number;
+  lostTendersCount: number;
   totalWonValue: number;
   winRate: number | null;
+  lossRate: number | null;
   recentAwards180d: number;
   recentWonValue180d: number;
   lastAwardDate: string | null;
@@ -52,6 +55,7 @@ export interface AdminPortalLead {
   authorityPlannedValue90d: number;
   score: number;
   temperature: AdminPortalLeadTemperature;
+  rationale: string;
   reasons: string[];
   recommendedAction: string;
   note: string;
@@ -72,6 +76,8 @@ export interface AdminPortalLeadsData {
   leadsWithNotes: number;
   leads: AdminPortalLead[];
 }
+
+type AwardFallbackNotice = Pick<EjnAwardNotice, "AwardId" | "ProcedureName" | "NoticeUrl" | "ContractingAuthorityName" | "WinningPrice">;
 
 function normalizeJib(value: string | null | undefined): string {
   return (value ?? "").replace(/\D/g, "").trim();
@@ -135,6 +141,25 @@ function hasReliableAwardContext(
   return Boolean(tender || authorityName);
 }
 
+function getAwardDisplayTitle(
+  tender: Pick<Tender, "title"> | null,
+  awardFallback: AwardFallbackNotice | null
+): string {
+  const tenderTitle = tender?.title?.trim();
+
+  if (tenderTitle) {
+    return tenderTitle;
+  }
+
+  const fallbackTitle = awardFallback?.ProcedureName?.trim();
+
+  if (fallbackTitle) {
+    return fallbackTitle;
+  }
+
+  return "Naziv tendera nije dostupan";
+}
+
 function chunkArray<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
 
@@ -181,6 +206,18 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function getLostTendersCount(totalBidsCount: number, totalWinsCount: number): number {
+  return Math.max(totalBidsCount - totalWinsCount, 0);
+}
+
+function getLossRate(totalBidsCount: number, totalWinsCount: number): number | null {
+  if (totalBidsCount <= 0) {
+    return null;
+  }
+
+  return Number(((getLostTendersCount(totalBidsCount, totalWinsCount) / totalBidsCount) * 100).toFixed(1));
+}
+
 function normalizeLeadStatus(value: string | null | undefined): AdminLeadOutreachStatus {
   switch ((value ?? "").trim().toLowerCase()) {
     case "contacted":
@@ -200,34 +237,84 @@ function normalizeLeadStatus(value: string | null | undefined): AdminLeadOutreac
 }
 
 function getTemperature(score: number): AdminPortalLeadTemperature {
-  if (score >= 70) {
+  if (score >= 72) {
     return "Vruć lead";
   }
 
-  if (score >= 45) {
+  if (score >= 48) {
     return "Dobar lead";
   }
 
   return "Pratiti";
 }
 
-function getRecommendedAction(temperature: AdminPortalLeadTemperature, hasPipeline: boolean, recentAwards: number): string {
+function getRecommendedAction(input: {
+  temperature: AdminPortalLeadTemperature;
+  hasPipeline: boolean;
+  recentAwards: number;
+  lostTendersCount: number;
+  lossRate: number | null;
+}): string {
+  const { temperature, hasPipeline, recentAwards, lostTendersCount, lossRate } = input;
+
   if (temperature === "Vruć lead") {
+    if (lostTendersCount >= 4) {
+      return hasPipeline
+        ? "Kontaktirati prioritetno: imaju dokazanu aktivnost, signal učešća bez pobjede u dostupnom portalu i novi pipeline kod poznatih naručilaca."
+        : "Kontaktirati prioritetno uz poruku da alat smanjuje propuste i podiže disciplinu pripreme na narednim postupcima.";
+    }
+
     return hasPipeline
       ? "Kontaktirati prioritetno uz referencu na njihove svježe dodjele i planirane nabavke kod istih naručilaca."
       : "Kontaktirati prioritetno uz referencu na svježe dodjele i potrebu za boljom pripremom narednih ponuda.";
   }
 
   if (temperature === "Dobar lead") {
+    if (lossRate !== null && lossRate >= 40) {
+      return "Poslati personalizovan outreach sa fokusom na kontrolu rizika, kvalitetniju pripremu i manje postupaka bez pobjede.";
+    }
+
     return recentAwards > 0
       ? "Poslati personalizovan outreach sa fokusom na konkurentsku pripremu i kontrolu rizika prijave."
       : "Ubaciti u follow-up listu i javiti se kada dobiju novu svježu aktivnost na portalu.";
   }
 
-  return "Držati na radaru i aktivirati outreach kada se pojavi nova dodjela ili pipeline signal.";
+  return hasPipeline
+    ? "Držati na radaru i aktivirati outreach prije narednog talasa planiranih nabavki kod poznatog naručioca."
+    : "Držati na radaru i aktivirati outreach kada se pojavi nova dodjela ili jači signal učešća bez pobjede.";
+}
+
+function buildLeadRationale(input: {
+  totalBidsCount: number;
+  totalWinsCount: number;
+  lostTendersCount: number;
+  lossRate: number | null;
+  recentAwards180d: number;
+  authorityPlannedCount90d: number;
+  totalWonValue: number;
+}): string {
+  if (input.lostTendersCount >= 6 && input.totalWinsCount >= 2) {
+    return `Aktivan ponuđač sa ${input.totalWinsCount} pobjeda i snažnim signalom učešća bez pobjede u dostupnim portal agregatima — dobar spoj budžeta i potrebe za boljom pripremom.`;
+  }
+
+  if (input.lostTendersCount >= 4 && input.authorityPlannedCount90d > 0) {
+    return `Redovno učestvuje na tenderima, ne zatvara sve postupke i već ima novi pipeline kod naručilaca gdje je aktivan.`;
+  }
+
+  if (input.recentAwards180d >= 2 && input.totalWonValue >= 100_000) {
+    return `Ozbiljan komercijalni igrač sa svježim pobjedama i dovoljno velikim portfeljem da alat za kontrolu rizika ima jasan ROI.`;
+  }
+
+  if (input.lossRate !== null && input.lossRate >= 50 && input.totalBidsCount >= 6) {
+    return `Ima vidljiv intenzitet učešća, ali i visok udio nastupa bez pobjede prema dostupnim portal podacima, što ga čini dobrim kandidatom za pristup zasnovan na smanjenju rizika.`;
+  }
+
+  return `Firma ima dovoljno javnog tender volumena da vrijedi ući u ciljanu outreach listu i pratiti naredni signal za prodaju.`;
 }
 
 function buildLeadReasons(input: {
+  lostTendersCount: number;
+  lossRate: number | null;
   recentAwards180d: number;
   totalWinsCount: number;
   totalWonValue: number;
@@ -240,6 +327,16 @@ function buildLeadReasons(input: {
 }): string[] {
   const reasons: string[] = [];
 
+  if (input.lostTendersCount >= 8) {
+    reasons.push(`Dostupni portal agregati pokazuju najmanje ${input.lostTendersCount} postupaka bez pobjede, što je snažan signal za alat koji smanjuje greške i podiže kvalitet prijave.`);
+  } else if (input.lostTendersCount >= 3) {
+    reasons.push(`Dostupni portal agregati pokazuju signal učešća bez pobjede (${input.lostTendersCount}), pa postoji realan prostor za bolju pripremu narednih ponuda.`);
+  }
+
+  if (input.lossRate !== null && input.lossRate >= 45 && input.totalBidsCount >= 6) {
+    reasons.push(`Oko ${input.lossRate}% dostupnog portal volumena završava bez pobjede (${input.lostTendersCount} od ${input.totalBidsCount}), što je jasan pain signal.`);
+  }
+
   if (input.recentAwards180d >= 3) {
     reasons.push(`Ima ${input.recentAwards180d} dodjele u zadnjih 180 dana, što pokazuje aktivno prisustvo na portalu.`);
   } else if (input.recentAwards180d > 0) {
@@ -250,6 +347,8 @@ function buildLeadReasons(input: {
     reasons.push(`Historijski ima ${input.totalWinsCount} dobijenih postupaka.`);
   } else if (input.totalWinsCount >= 3) {
     reasons.push(`Već ima dokazanu istoriju pobjeda na javnim nabavkama (${input.totalWinsCount}).`);
+  } else if (input.totalWinsCount > 0) {
+    reasons.push(`Ima bar ${input.totalWinsCount} potvrđenu pobjedu, što znači da nije slučajan ponuđač nego realna tender firma.`);
   }
 
   if (input.totalWonValue >= 100_000) {
@@ -284,6 +383,8 @@ function buildLeadReasons(input: {
 }
 
 function scoreLead(input: {
+  lostTendersCount: number;
+  lossRate: number | null;
   recentAwards180d: number;
   totalWinsCount: number;
   totalWonValue: number;
@@ -295,14 +396,32 @@ function scoreLead(input: {
 }): number {
   let score = 0;
 
-  score += Math.min(26, input.recentAwards180d * 8);
-  score += input.totalWinsCount >= 10 ? 18 : input.totalWinsCount >= 5 ? 12 : input.totalWinsCount > 0 ? 6 : 0;
-  score += input.totalWonValue >= 500_000 ? 20 : input.totalWonValue >= 100_000 ? 14 : input.totalWonValue >= 25_000 ? 8 : 0;
-  score += input.totalBidsCount >= 12 ? 10 : input.totalBidsCount >= 6 ? 6 : input.totalBidsCount >= 3 ? 3 : 0;
+  score += input.totalBidsCount >= 18 ? 18 : input.totalBidsCount >= 10 ? 12 : input.totalBidsCount >= 6 ? 8 : input.totalBidsCount >= 4 ? 4 : 0;
+  score += input.lostTendersCount >= 12 ? 22 : input.lostTendersCount >= 6 ? 16 : input.lostTendersCount >= 3 ? 10 : input.lostTendersCount > 0 ? 4 : 0;
+  score += input.lossRate !== null && input.totalBidsCount >= 5
+    ? input.lossRate >= 75
+      ? 10
+      : input.lossRate >= 50
+        ? 8
+        : input.lossRate >= 30
+          ? 5
+          : 0
+    : 0;
+  score += input.totalWinsCount >= 10 ? 12 : input.totalWinsCount >= 5 ? 9 : input.totalWinsCount > 0 ? 4 : 0;
+  score += input.totalWonValue >= 500_000 ? 14 : input.totalWonValue >= 100_000 ? 10 : input.totalWonValue >= 25_000 ? 6 : 0;
+  score += input.recentAwards180d >= 3 ? 10 : input.recentAwards180d > 0 ? 5 : 0;
   score += input.averageBidders !== null && input.averageBidders >= 4 ? 8 : input.averageBidders !== null && input.averageBidders >= 2 ? 4 : 0;
-  score += Math.min(12, input.authorityPlannedCount90d * 3);
+  score += Math.min(10, input.authorityPlannedCount90d * 2.5);
   score += input.hasLocation ? 4 : 0;
-  score += input.lastAwardDate && isWithinDays(input.lastAwardDate, 60) ? 8 : input.lastAwardDate && isWithinDays(input.lastAwardDate, 180) ? 4 : 0;
+  score += input.lastAwardDate && isWithinDays(input.lastAwardDate, 60) ? 6 : input.lastAwardDate && isWithinDays(input.lastAwardDate, 180) ? 3 : 0;
+
+  if (input.lossRate !== null && input.lossRate < 20 && input.totalWinsCount >= 5) {
+    score -= 6;
+  }
+
+  if (input.totalBidsCount < 5 && input.totalWinsCount === 0) {
+    score -= 10;
+  }
 
   return clamp(score, 0, 100);
 }
@@ -440,10 +559,13 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
     awardsByWinnerJib.set(winnerJib, bucket);
   }
 
-  const leads = marketCompanies
-    .filter((company) => {
+  const candidateCompanies = marketCompanies.filter((company) => {
       const jib = normalizeJib(company.jib);
       const normalizedName = normalizeEntityName(company.name);
+      const totalBidsCount = company.total_bids_count ?? 0;
+      const totalWinsCount = company.total_wins_count ?? 0;
+      const lostTendersCount = getLostTendersCount(totalBidsCount, totalWinsCount);
+      const totalWonValue = Number(company.total_won_value) || 0;
 
       if (
         !jib ||
@@ -455,10 +577,40 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         return false;
       }
 
-      return (company.total_wins_count ?? 0) > 0 || (company.total_bids_count ?? 0) >= 3;
-    })
-    .map<AdminPortalLead>((company) => {
+      return (
+        (totalBidsCount >= 5 && (lostTendersCount >= 2 || totalWinsCount >= 2)) ||
+        totalWinsCount >= 3 ||
+        lostTendersCount >= 4 ||
+        (totalWonValue >= 100_000 && totalBidsCount >= 3)
+      );
+    });
+
+  const fallbackAwardIds = [...new Set(candidateCompanies.slice(0, 80).flatMap((company) => {
+    const jib = normalizeJib(company.jib);
+    const companyAwards = (awardsByWinnerJib.get(jib) ?? []).sort(
+      (a, b) => new Date(getAwardBaseDate(b)).getTime() - new Date(getAwardBaseDate(a)).getTime()
+    );
+
+    return companyAwards
+      .filter((award) => {
+        const tender = award.tender_id ? tendersById.get(award.tender_id) ?? null : null;
+        const authorityName = getAuthorityName(authorityByJib, award.contracting_authority_jib);
+
+        return hasReliableAwardContext(award, tender, authorityName) && !tender?.title?.trim();
+      })
+      .slice(0, 4)
+      .map((award) => award.portal_award_id);
+  }))];
+
+  const fallbackAwards = await fetchAwardNoticesByIds(fallbackAwardIds);
+  const fallbackAwardById = new Map(fallbackAwards.map((award) => [award.AwardId, award]));
+
+  const rankedLeads = candidateCompanies.map<AdminPortalLead>((company) => {
       const jib = normalizeJib(company.jib);
+      const totalBidsCount = company.total_bids_count ?? 0;
+      const totalWinsCount = company.total_wins_count ?? 0;
+      const lostTendersCount = getLostTendersCount(totalBidsCount, totalWinsCount);
+      const lossRate = getLossRate(totalBidsCount, totalWinsCount);
       const companyAwards = (awardsByWinnerJib.get(jib) ?? []).sort(
         (a, b) => new Date(getAwardBaseDate(b)).getTime() - new Date(getAwardBaseDate(a)).getTime()
       );
@@ -481,17 +633,18 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
       const recentWins: AdminPortalLeadWin[] = reliableAwards.slice(0, 6).map((award) => {
         const tender = award.tender_id ? tendersById.get(award.tender_id) ?? null : null;
         const authorityName = getAuthorityName(authorityByJib, award.contracting_authority_jib);
+        const awardFallback = fallbackAwardById.get(award.portal_award_id) ?? null;
 
         return {
           id: award.portal_award_id,
           tenderId: award.tender_id,
-          tenderTitle: tender?.title ?? "Naziv tendera nije dostupan",
-          contractingAuthority: tender?.contracting_authority ?? authorityName,
+          tenderTitle: getAwardDisplayTitle(tender, awardFallback),
+          contractingAuthority: tender?.contracting_authority ?? authorityName ?? awardFallback?.ContractingAuthorityName ?? null,
           awardDate: getAwardBaseDate(award),
-          winningPrice: Number(award.winning_price) || null,
+          winningPrice: Number(award.winning_price) || awardFallback?.WinningPrice || null,
           procedureType: award.procedure_type ?? null,
           contractType: award.contract_type ?? null,
-          portalUrl: tender?.portal_url ?? null,
+          portalUrl: tender?.portal_url ?? awardFallback?.NoticeUrl ?? null,
         };
       });
       const authorityCounts = new Map<string, number>();
@@ -514,25 +667,38 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         0
       );
       const totalWonValue = Number(company.total_won_value) || 0;
-      const score = scoreLead({
+      const rationale = buildLeadRationale({
+        totalBidsCount,
+        totalWinsCount,
+        lostTendersCount,
+        lossRate,
         recentAwards180d: recentAwards180d.length,
-        totalWinsCount: company.total_wins_count ?? 0,
+        authorityPlannedCount90d,
+        totalWonValue,
+      });
+      const score = scoreLead({
+        lostTendersCount,
+        lossRate,
+        recentAwards180d: recentAwards180d.length,
+        totalWinsCount,
         totalWonValue,
         averageBidders,
         authorityPlannedCount90d,
-        totalBidsCount: company.total_bids_count ?? 0,
+        totalBidsCount,
         hasLocation: Boolean(company.city || company.municipality),
         lastAwardDate: lastAward ? getAwardBaseDate(lastAward) : null,
       });
       const temperature = getTemperature(score);
       const reasons = buildLeadReasons({
+        lostTendersCount,
+        lossRate,
         recentAwards180d: recentAwards180d.length,
-        totalWinsCount: company.total_wins_count ?? 0,
+        totalWinsCount,
         totalWonValue,
         averageBidders,
         authorityPlannedCount90d,
         authorityPlannedValue90d,
-        totalBidsCount: company.total_bids_count ?? 0,
+        totalBidsCount,
         hasLocation: Boolean(company.city || company.municipality),
         lastAwardDate: lastAward ? getAwardBaseDate(lastAward) : null,
       });
@@ -545,10 +711,12 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         portalCompanyId: company.portal_id ?? null,
         city: company.city ?? null,
         municipality: company.municipality ?? null,
-        totalBidsCount: company.total_bids_count ?? 0,
-        totalWinsCount: company.total_wins_count ?? 0,
+        totalBidsCount,
+        totalWinsCount,
+        lostTendersCount,
         totalWonValue,
         winRate: company.win_rate ?? null,
+        lossRate,
         recentAwards180d: recentAwards180d.length,
         recentWonValue180d: recentAwards180d.reduce((sum, award) => sum + (Number(award.winning_price) || 0), 0),
         lastAwardDate: lastAward ? getAwardBaseDate(lastAward) : null,
@@ -563,8 +731,15 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         authorityPlannedValue90d,
         score,
         temperature,
+        rationale,
         reasons,
-        recommendedAction: getRecommendedAction(temperature, authorityPlannedCount90d > 0, recentAwards180d.length),
+        recommendedAction: getRecommendedAction({
+          temperature,
+          hasPipeline: authorityPlannedCount90d > 0,
+          recentAwards: recentAwards180d.length,
+          lostTendersCount,
+          lossRate,
+        }),
         note: noteRow?.note ?? "",
         outreachStatus,
         lastContactedAt: noteRow?.last_contacted_at ?? null,
@@ -585,6 +760,16 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
         return scoreDiff;
       }
 
+      const lossDiff = b.lostTendersCount - a.lostTendersCount;
+      if (lossDiff !== 0) {
+        return lossDiff;
+      }
+
+      const pipelineDiff = b.authorityPlannedCount90d - a.authorityPlannedCount90d;
+      if (pipelineDiff !== 0) {
+        return pipelineDiff;
+      }
+
       const recentDiff = b.recentAwards180d - a.recentAwards180d;
       if (recentDiff !== 0) {
         return recentDiff;
@@ -592,15 +777,15 @@ export async function loadAdminPortalLeadsData(): Promise<AdminPortalLeadsData> 
 
       return b.totalWonValue - a.totalWonValue;
     })
-    .slice(0, 120);
+  const leads = rankedLeads.slice(0, 100);
 
   return {
     generatedAt: new Date().toISOString(),
-    totalCandidates: leads.length,
-    hotLeads: leads.filter((lead) => lead.temperature === "Vruć lead").length,
-    pipelineLeads: leads.filter((lead) => lead.authorityPlannedCount90d > 0).length,
-    notContactedCount: leads.filter((lead) => lead.outreachStatus === "new").length,
-    leadsWithNotes: leads.filter((lead) => lead.note.trim().length > 0).length,
+    totalCandidates: rankedLeads.length,
+    hotLeads: rankedLeads.filter((lead) => lead.temperature === "Vruć lead").length,
+    pipelineLeads: rankedLeads.filter((lead) => lead.authorityPlannedCount90d > 0).length,
+    notContactedCount: rankedLeads.filter((lead) => lead.outreachStatus === "new").length,
+    leadsWithNotes: rankedLeads.filter((lead) => lead.note.trim().length > 0).length,
     leads,
   };
 }

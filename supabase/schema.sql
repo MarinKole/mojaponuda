@@ -145,6 +145,7 @@ CREATE TABLE award_decisions (
   portal_award_id           text NOT NULL UNIQUE,
   tender_id                 uuid REFERENCES tenders(id) ON DELETE SET NULL,
   contracting_authority_jib text,
+  procedure_name            text,
   winner_name               text,
   winner_jib                text,
   winning_price             numeric(15,2),

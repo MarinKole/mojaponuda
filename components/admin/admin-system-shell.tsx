@@ -26,8 +26,11 @@ function formatDateTime(value: string | null): string {
   }
 
   return new Intl.DateTimeFormat("bs-BA", {
-    dateStyle: "medium",
-    timeStyle: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(value));
 }
 
@@ -83,10 +86,15 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
 
     try {
       const response = await fetch("/api/admin/system/run-sync", { method: "POST" });
-      const payload = (await response.json()) as SyncRunResult;
+      const raw = await response.text();
+      const payload = raw.trim().startsWith("{") ? (JSON.parse(raw) as SyncRunResult) : null;
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Ne mogu pokrenuti sync.");
+        throw new Error(payload?.error ?? (raw.trim() || "Ne mogu pokrenuti sync."));
+      }
+
+      if (!payload) {
+        throw new Error("Sync je vratio neispravan odgovor. Otvori server log i provjeri backend grešku.");
       }
 
       setResult(payload);
@@ -107,10 +115,10 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
             </Badge>
             <div className="space-y-3">
               <h1 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Tehnički pregled koji odmah kaže šta je u redu, a šta nije
+                Tehnički pregled sync sistema
               </h1>
               <p className="max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-                Zadržan je cijeli jutarnji sync blok, ali bez nejasnog jezika. Ovdje vidiš koji job je prošao, šta je dodano, šta je ažurirano i gdje trebaš reagovati.
+                Ovdje vidiš koji dio portala se puni podacima, kada je zadnji put prošao, koliko je stavki dodano ili ažurirano i gdje treba reakcija.
               </p>
             </div>
           </div>
@@ -124,8 +132,25 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard title="Jobovi uredni" value={String(data.summary.healthyJobs)} hint="Broj sync jobova koji trenutno djeluju svježe." icon={CheckCircle2} />
         <SummaryCard title="Treba pažnju" value={String(data.summary.attentionJobs)} hint="Jobovi sa zastarjelim, ali postojećim prolazom." icon={AlertTriangle} />
-        <SummaryCard title="Bez podataka" value={String(data.summary.failedJobs)} hint="Jobovi za koje nema svježeg ili ikakvog loga." icon={ShieldAlert} />
-        <SummaryCard title="Ukupno jobova" value={String(data.jobs.length)} hint="Kompletna jutarnja lista koju želiš imati na jednom mjestu." icon={ServerCog} />
+        <SummaryCard title="Bez loga" value={String(data.summary.failedJobs)} hint="Jobovi za koje sistem nema nijedan zabilježen prolaz." icon={ShieldAlert} />
+        <SummaryCard title="Ukupno jobova" value={String(data.jobs.length)} hint="Kompletna operativna lista sync procesa koji pune podatke u aplikaciju." icon={ServerCog} />
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_24px_50px_-34px_rgba(15,23,42,0.24)]">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <p className="font-semibold">U redu</p>
+            <p className="mt-1">Job ima svjež log i ne traži intervenciju.</p>
+          </div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <p className="font-semibold">Treba pažnju</p>
+            <p className="mt-1">Job jeste radio, ali zadnji prolaz više nije dovoljno svjež.</p>
+          </div>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            <p className="font-semibold">Bez loga</p>
+            <p className="mt-1">Za ovaj job trenutno nema nijednog zabilježenog prolaza u `sync_log`.</p>
+          </div>
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -135,17 +160,17 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
               <Play className="size-4 text-blue-700" />
               <CardTitle className="text-slate-950">Akcije</CardTitle>
             </div>
-            <CardDescription>Ručni sync bez odlaska na cron rute.</CardDescription>
+            <CardDescription>Ručno pokretanje kompletnog portal sync prolaza.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button type="button" onClick={handleRunSync} disabled={running}>
               {running ? <RefreshCw className="size-4 animate-spin" /> : <Play className="size-4" />}
-              {running ? "Pokreće se sync..." : "Pokreni sync sada"}
+              {running ? "Pokreće se sync..." : "Pokreni puni sync"}
             </Button>
 
             {result ? (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                <p className="font-semibold">Sync završen: {result.status}</p>
+                <p className="font-semibold">Sync završen: {result.status === "partial" ? "završen uz upozorenja" : "uspješno"}</p>
                 <p className="mt-1">Dodano: {result.total_added ?? 0} · Ažurirano: {result.total_updated ?? 0}</p>
                 <p className="mt-1">Trajanje: {result.duration_ms ? `${Math.round(result.duration_ms / 1000)}s` : "nije dostupno"}</p>
               </div>
@@ -158,7 +183,7 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
             ) : null}
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-700">
-              Ova akcija pokreće puni sync isti kao operativni job. Koristi je kada vidiš da nešto kasni ili kada želiš odmah osvježiti stanje portala.
+              Ova akcija pokreće isti puni prolaz koji inače puni tendere, ugovorne organe, dobavljače, dodjele i planirane nabavke. Koristi je kada nešto kasni ili kada želiš odmah osvježiti stanje portala.
             </div>
           </CardContent>
         </Card>
@@ -166,7 +191,7 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
         <Card className="border-slate-200/80 bg-white shadow-[0_24px_50px_-34px_rgba(15,23,42,0.24)]">
           <CardHeader>
             <CardTitle className="text-slate-950">Stvari koje traže pažnju</CardTitle>
-            <CardDescription>Bez fancy lingo: ovo je lista tehničkih stvari koje trenutno nisu potpuno uredne.</CardDescription>
+            <CardDescription>Ovdje su samo oni sync procesi koji kasne ili uopće nemaju log.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -195,8 +220,8 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950">Svi jutarnji sync jobovi</h2>
-          <p className="mt-1 text-sm text-slate-600">Kompletna tehnička lista iz starog panela, samo prepisana normalnim jezikom.</p>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-950">Svi sync jobovi</h2>
+          <p className="mt-1 text-sm text-slate-600">Svaka kartica objašnjava šta taj job radi, kada je zadnji put prošao i koliko je podataka obradio.</p>
         </div>
         <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
           {data.jobs.map((job) => (
@@ -211,7 +236,10 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
                     {job.status}
                   </span>
                 </div>
-                <p className="text-sm leading-6 text-slate-600">{job.plainMessage}</p>
+                <div className="space-y-2 text-sm leading-6 text-slate-600">
+                  <p>{job.purpose}</p>
+                  <p>{job.plainMessage}</p>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">

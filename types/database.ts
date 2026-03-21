@@ -407,6 +407,7 @@ export interface Database {
           portal_award_id: string;
           tender_id: string | null;
           contracting_authority_jib: string | null;
+          procedure_name: string | null;
           winner_name: string | null;
           winner_jib: string | null;
           winning_price: number | null;
@@ -423,6 +424,7 @@ export interface Database {
           portal_award_id: string;
           tender_id?: string | null;
           contracting_authority_jib?: string | null;
+          procedure_name?: string | null;
           winner_name?: string | null;
           winner_jib?: string | null;
           winning_price?: number | null;
@@ -438,6 +440,7 @@ export interface Database {
           portal_award_id?: string;
           tender_id?: string | null;
           contracting_authority_jib?: string | null;
+          procedure_name?: string | null;
           winner_name?: string | null;
           winner_jib?: string | null;
           winning_price?: number | null;

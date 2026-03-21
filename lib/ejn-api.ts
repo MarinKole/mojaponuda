@@ -27,6 +27,9 @@ export interface EjnAwardNotice {
   AwardId: string;
   ProcedureId: string | null;
   NoticeId: string | null;
+  ProcedureName: string | null;
+  NoticeUrl: string | null;
+  ContractingAuthorityName: string | null;
   ContractingAuthorityJib: string | null;
   WinnerName: string | null;
   WinnerJib: string | null;
@@ -169,6 +172,61 @@ function joinNonEmpty(parts: Array<string | null | undefined>): string | null {
   return normalized.length > 0 ? normalized.join("\n\n") : null;
 }
 
+function mapAwardNotice(r: Record<string, unknown>): EjnAwardNotice {
+  const procedureOrNoticeId = r.ProcedureId ?? r.NoticeId ?? null;
+  const procedureHref = procedureOrNoticeId ? `https://next.ejn.gov.ba/procedures/${String(procedureOrNoticeId)}/overview` : null;
+
+  return {
+    AwardId: String(r.Id ?? ""),
+    ProcedureId: r.ProcedureId ? String(r.ProcedureId) : null,
+    NoticeId: r.NoticeId ? String(r.NoticeId) : r.ProcedureId ? String(r.ProcedureId) : null,
+    ProcedureName:
+      typeof r.ProcedureName === "string"
+        ? r.ProcedureName
+        : typeof r.ProcedureNumber === "string"
+          ? r.ProcedureNumber
+          : null,
+    NoticeUrl: procedureHref,
+    ContractingAuthorityName: typeof r.ContractingAuthorityName === "string" ? r.ContractingAuthorityName : null,
+    ContractingAuthorityJib: typeof r.ContractingAuthorityTaxNumber === "string" ? r.ContractingAuthorityTaxNumber : null,
+    WinnerName: null,
+    WinnerJib: null,
+    WinningPrice: typeof r.Value === "number" ? r.Value : null,
+    EstimatedValue:
+      typeof r.EstimatedValueTotal === "number"
+        ? r.EstimatedValueTotal
+        : typeof r.HighestAcceptableOfferValue === "number"
+          ? r.HighestAcceptableOfferValue
+          : typeof r.LowestAcceptableOfferValue === "number"
+            ? r.LowestAcceptableOfferValue
+            : null,
+    TotalBiddersCount:
+      typeof r.NumberOfReceivedOffers === "number"
+        ? r.NumberOfReceivedOffers
+        : typeof r.NumberOfAcceptableOffers === "number"
+          ? r.NumberOfAcceptableOffers
+          : null,
+    ProcedureType: PROCEDURE_TYPE_MAP[String(r.ProcedureType ?? "")] || (typeof r.ProcedureType === "string" ? r.ProcedureType : null),
+    ContractType: CONTRACT_TYPE_MAP[String(r.ContractType ?? "")] || (typeof r.ContractType === "string" ? r.ContractType : null),
+    AwardDate:
+      typeof r.ContractDate === "string"
+        ? r.ContractDate
+        : typeof r.AwardDate === "string"
+          ? r.AwardDate
+          : null,
+  };
+}
+
+function buildNumericIdFilter(fieldName: string, ids: string[]): string | undefined {
+  const normalizedIds = ids.filter((id) => /^\d+$/.test(id));
+
+  if (normalizedIds.length === 0) {
+    return undefined;
+  }
+
+  return normalizedIds.map((id) => `${fieldName} eq ${id}`).join(" or ");
+}
+
 // --- Public API functions ---
 
 export async function fetchProcurementNotices(
@@ -213,24 +271,30 @@ export async function fetchAwardNotices(
     buildLastUpdatedFilter(lastSyncAt)
   );
 
-  return raw.map((r) => ({
-    AwardId: String(r.Id ?? ""),
-    ProcedureId: r.ProcedureId ? String(r.ProcedureId) : null,
-    NoticeId: r.NoticeId ? String(r.NoticeId) : r.ProcedureId ? String(r.ProcedureId) : null,
-    ContractingAuthorityJib: r.ContractingAuthorityTaxNumber || null,
-    WinnerName: null,
-    WinnerJib: null,
-    WinningPrice: r.Value ?? null,
-    EstimatedValue:
-      r.EstimatedValueTotal ??
-      r.HighestAcceptableOfferValue ??
-      r.LowestAcceptableOfferValue ??
-      null,
-    TotalBiddersCount: r.NumberOfReceivedOffers ?? r.NumberOfAcceptableOffers ?? null,
-    ProcedureType: PROCEDURE_TYPE_MAP[r.ProcedureType] || r.ProcedureType || null,
-    ContractType: CONTRACT_TYPE_MAP[r.ContractType] || r.ContractType || null,
-    AwardDate: r.ContractDate || r.AwardDate || null,
-  }));
+  return raw.map((row) => mapAwardNotice(row as Record<string, unknown>));
+}
+
+export async function fetchAwardNoticesByIds(awardIds: string[]): Promise<EjnAwardNotice[]> {
+  if (awardIds.length === 0) {
+    return [];
+  }
+
+  const results: EjnAwardNotice[] = [];
+
+  for (let index = 0; index < awardIds.length; index += 20) {
+    const batch = awardIds.slice(index, index + 20);
+    const filter = buildNumericIdFilter("Id", batch);
+
+    if (!filter) {
+      continue;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = await fetchODataPages<any>("/Awards", "Id desc", filter);
+    results.push(...raw.map((row) => mapAwardNotice(row as Record<string, unknown>)));
+  }
+
+  return results;
 }
 
 export async function fetchAwardedSupplierGroups(

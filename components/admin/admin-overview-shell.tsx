@@ -106,7 +106,7 @@ export function AdminOverviewShell({ data, adminEmail }: AdminOverviewShellProps
             </Badge>
             <div className="space-y-3">
               <h1 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Jutarnji pregled bez viška informacija
+                Operativni pregled bez viška informacija
               </h1>
               <p className="max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
                 Ovo je brzi operativni ekran: prihod, rast, leadovi, problemi i zadnja važna dešavanja. Sve što trebaš vidjeti za manje od 10 sekundi je ovdje.
@@ -179,7 +179,7 @@ export function AdminOverviewShell({ data, adminEmail }: AdminOverviewShellProps
               <AlertTriangle className="size-4 text-amber-600" />
               <CardTitle className="text-slate-950">Kritične stvari</CardTitle>
             </div>
-            <CardDescription>Ovo su jedine tri stvari koje traže jutarnju pažnju.</CardDescription>
+            <CardDescription>Ovo su jedine tri stvari koje trenutno traže pažnju.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
