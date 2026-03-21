@@ -143,10 +143,10 @@ function LeadSignalCard({
   };
 
   return (
-    <div className={cn("min-w-0 rounded-2xl border px-3 py-3 text-sm", toneClasses[tone])}>
-      <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{title}</p>
-      <p className="mt-1 break-words text-lg font-semibold leading-tight text-slate-950">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-slate-600">{hint}</p>
+    <div className={cn("min-w-0 rounded-[24px] border px-4 py-4 text-sm sm:px-5 sm:py-5", toneClasses[tone])}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[11px]">{title}</p>
+      <p className="mt-3 break-words text-2xl font-semibold leading-tight text-slate-950 sm:text-[28px]">{value}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{hint}</p>
     </div>
   );
 }
@@ -203,8 +203,8 @@ function LeadRow({ lead, onSaved }: { lead: AdminPortalLead; onSaved: (lead: Adm
             : "border-slate-200/80"
       )}
     >
-      <CardContent className="space-y-4 p-5">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] xl:items-start">
+      <CardContent className="space-y-5 p-5 sm:p-6">
+        <div className="space-y-5">
           <div className="min-w-0 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -253,7 +253,7 @@ function LeadRow({ lead, onSaved }: { lead: AdminPortalLead; onSaved: (lead: Adm
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <LeadSignalCard
               title="Potvrđene pobjede"
               value={String(lead.totalWinsCount)}
@@ -282,8 +282,16 @@ function LeadRow({ lead, onSaved }: { lead: AdminPortalLead; onSaved: (lead: Adm
               }
               tone="blue"
             />
-            <Button type="button" variant="outline" className="h-full min-h-[76px] rounded-2xl border-slate-200 bg-white px-3 py-3 text-sm font-medium sm:col-span-2 xl:col-span-1" onClick={() => setExpanded((current) => !current)}>
-              {expanded ? "Sakrij profil" : "Otvori profil firme"}
+          </div>
+
+          <div className="flex justify-start xl:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 w-full rounded-2xl border-slate-200 bg-white px-5 text-sm font-medium leading-5 sm:w-auto"
+              onClick={() => setExpanded((current) => !current)}
+            >
+              {expanded ? "Sakrij profil firme" : "Otvori profil firme"}
             </Button>
           </div>
         </div>
@@ -390,7 +398,7 @@ function LeadRow({ lead, onSaved }: { lead: AdminPortalLead; onSaved: (lead: Adm
           </div>
         ) : null}
 
-        <div className="grid gap-4 rounded-3xl border border-slate-200 bg-slate-50/70 p-4 xl:grid-cols-[220px_1fr_132px] xl:items-start">
+        <div className="grid gap-4 rounded-3xl border border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start">
           <label className="space-y-2">
             <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Status</span>
             <select
@@ -404,7 +412,7 @@ function LeadRow({ lead, onSaved }: { lead: AdminPortalLead; onSaved: (lead: Adm
             </select>
           </label>
 
-          <label className="space-y-2">
+          <label className="min-w-0 space-y-2">
             <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Bilješke</span>
             <Textarea
               value={note}
@@ -413,16 +421,17 @@ function LeadRow({ lead, onSaved }: { lead: AdminPortalLead; onSaved: (lead: Adm
               placeholder="Kratka bilješka: kako prići, šta reći, šta provjeriti..."
               className="min-h-[120px] rounded-2xl border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm"
             />
+            <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-h-[20px] text-xs font-medium">
+                {message ? <span className="text-emerald-600">{message}</span> : null}
+                {error ? <span className="text-rose-600">{error}</span> : null}
+              </div>
+              <Button type="button" onClick={handleSave} disabled={saving} className="h-12 w-full sm:w-auto sm:min-w-[160px]">
+                <Save className="size-4" />
+                {saving ? "Snima..." : "Sačuvaj"}
+              </Button>
+            </div>
           </label>
-
-          <div className="flex flex-col items-stretch gap-2 xl:self-end">
-            <Button type="button" onClick={handleSave} disabled={saving} className="w-full">
-              <Save className="size-4" />
-              {saving ? "Snima..." : "Sačuvaj"}
-            </Button>
-            {message ? <span className="text-xs font-medium text-emerald-600">{message}</span> : null}
-            {error ? <span className="text-xs font-medium text-rose-600">{error}</span> : null}
-          </div>
         </div>
       </CardContent>
     </Card>
