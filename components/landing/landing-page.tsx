@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   CheckCircle,
   ArrowRight,
@@ -125,6 +126,19 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <p className="text-[14px] font-medium text-slate-600 rounded-full bg-blue-50/50 px-4 py-1.5 border border-blue-100/50 whitespace-nowrap mt-1">
             Postoje aktivni tenderi za vašu firmu — provjerite za <span className="font-bold text-slate-800">30 sekundi</span>
           </p>
+        </div>
+
+        {/* Dashboard Image */}
+        <div className="mx-auto mt-14 max-w-5xl overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white/50 p-2 shadow-2xl shadow-blue-500/10 backdrop-blur-xl sm:p-4">
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2rem] bg-slate-100 ring-1 ring-slate-200">
+            <Image
+              src="/images/hero-mockup.png"
+              alt="MojaPonuda.ba Dashboard Interface"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
         </div>
 
         {/* 3 Metric-driven Cards */}
@@ -297,7 +311,10 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <section className="bg-slate-900 px-4 sm:px-6 py-16 sm:py-24 text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-blue-600/10" />
+      <div className="absolute inset-0 opacity-[0.25] mix-blend-screen -z-20">
+        <Image src="/images/roi-abstract.png" alt="ROI Abstract Background" fill className="object-cover object-center" />
+      </div>
+      <div className="absolute inset-0 bg-blue-600/10 -z-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[600px] rounded-full bg-primary/20 blur-[120px] -z-10" />
 
       <div className="relative z-10 mx-auto max-w-5xl">
