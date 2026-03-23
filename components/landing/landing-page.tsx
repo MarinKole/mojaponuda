@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion, Variants } from "framer-motion";
+import { useState } from "react";
+import { motion, Variants, useScroll, useMotionValueEvent } from "framer-motion";
 import {
   CheckCircle,
   ArrowRight,
@@ -52,7 +53,7 @@ function PrimaryCTA({
   return (
     <Link
       href={isLoggedIn ? "/dashboard" : "/signup"}
-      className={`group inline-flex h-[3.5rem] items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-base font-bold text-white shadow-xl shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-0.5 ${className}`}
+      className={`group inline-flex h-[3.5rem] items-center justify-center gap-2.5 rounded-full bg-primary px-8 text-base font-bold text-white shadow-xl shadow-blue-500/30 transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_0_30px_rgb(59,130,246,0.6)] hover:-translate-y-0.5 active:scale-95 ${className}`}
     >
       {label}
       <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
@@ -62,11 +63,27 @@ function PrimaryCTA({
 
 // ─── NavBar ─────────────────────────────────────────────────────────────────
 function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
+  const { scrollY } = useScroll();
+  const [hidden, setHidden] = useState(false);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = scrollY.getPrevious() ?? 0;
+    if (latest > previous && latest > 150) {
+      setHidden(true);
+    } else {
+      setHidden(false);
+    }
+  });
+
   return (
     <motion.nav 
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      variants={{
+        visible: { y: 0, opacity: 1 },
+        hidden: { y: "-100%", opacity: 0 }
+      }}
+      animate={hidden ? "hidden" : "visible"}
+      initial="visible"
+      transition={{ duration: 0.35, ease: "easeInOut" }}
       className="fixed top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-xl"
     >
       <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6">
@@ -211,7 +228,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
              <motion.div 
                variants={fadeUpItem}
                key={item.title} 
-               className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1"
+               className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-[0_8px_30px_rgb(59,130,246,0.12)] hover:-translate-y-1"
              >
                <div className="flex flex-wrap items-baseline gap-2">
                  <span className="font-heading text-[2.5rem] font-extrabold tracking-tight text-blue-600">{item.metric}</span>
@@ -298,7 +315,7 @@ function HowItWorksSection() {
             <motion.div 
               variants={fadeUpItem}
               key={s.title} 
-              className="relative rounded-2xl border border-white/80 bg-white/90 p-6 shadow-sm shadow-blue-500/5 transition-all hover:shadow-md hover:shadow-blue-500/10 z-10 backdrop-blur-md"
+              className="relative rounded-2xl border border-white/80 bg-white/90 p-6 shadow-sm shadow-blue-500/5 transition-all duration-300 hover:border-blue-200/60 hover:bg-white hover:shadow-[0_8px_30px_rgb(59,130,246,0.15)] z-10 backdrop-blur-md hover:-translate-y-1"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-4 ring-white/50">
@@ -609,7 +626,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
            className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8"
         >
           {/* Osnovni */}
-          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md hover:shadow-md transition-shadow">
+          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-slate-300 hover:bg-white hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Osnovni</h3>
             <p className="mt-2 text-base text-slate-600 min-h-[44px]">Praćenje svih tendera. Plaćate jednokratno ako želite pripremu.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
@@ -630,13 +647,13 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </div>
               ))}
             </div>
-            <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all hover:bg-slate-50 hover:shadow-sm">
+            <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all duration-300 hover:bg-slate-50 hover:border-slate-400 hover:shadow-[0_4px_20px_rgb(15,23,42,0.08)] hover:-translate-y-0.5 active:scale-95">
               Odaberi ovaj paket
             </Link>
           </motion.div>
 
           {/* Puni Paket — highlighted */}
-          <motion.div variants={fadeUpItem} className="relative rounded-[1.5rem] border-2 border-primary bg-white/95 p-6 sm:p-8 shadow-xl shadow-blue-500/15 backdrop-blur-md lg:scale-[1.05] z-10 transition-transform lg:-mt-2 flex flex-col">
+          <motion.div variants={fadeUpItem} className="relative rounded-[1.5rem] border-2 border-primary bg-white/95 p-6 sm:p-8 shadow-xl shadow-blue-500/15 backdrop-blur-md lg:scale-[1.05] z-10 transition-all duration-300 hover:shadow-[0_20px_40px_rgb(59,130,246,0.25)] hover:-translate-y-2 lg:hover:-translate-y-4 hover:border-blue-500 flex flex-col">
             <div className="absolute -top-4 inset-x-0 flex justify-center">
               <span className="rounded-full bg-primary px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-white shadow-sm">
                 Najčešći izbor
@@ -662,13 +679,13 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </div>
               ))}
             </div>
-            <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.5rem] items-center justify-center rounded-xl bg-primary px-6 text-[16px] font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30">
+            <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.5rem] items-center justify-center rounded-xl bg-primary px-6 text-[16px] font-bold text-white transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_0_30px_rgb(59,130,246,0.5)] hover:-translate-y-0.5 active:scale-95">
               Kreni bez limita
             </Link>
           </motion.div>
 
           {/* Agencijski */}
-          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md hover:shadow-md transition-shadow flex flex-col">
+          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-slate-300 hover:bg-white hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Agencijski</h3>
             <p className="mt-2 text-base text-slate-600 min-h-[44px]">Za agencije koje profesionalno vode tender apliciranje za klijente.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
@@ -689,7 +706,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </div>
               ))}
             </div>
-            <Link href="/contact" className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all hover:bg-slate-50 hover:shadow-sm">
+            <Link href="/contact" className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all duration-300 hover:bg-slate-50 hover:border-slate-400 hover:shadow-[0_4px_20px_rgb(15,23,42,0.08)] hover:-translate-y-0.5 active:scale-95">
               Kontakt za agencije
             </Link>
           </motion.div>
