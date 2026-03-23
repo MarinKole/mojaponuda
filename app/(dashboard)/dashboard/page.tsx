@@ -548,6 +548,7 @@ export default async function DashboardPage() {
       competitorSnapshotSource={competitorSnapshotSource}
       displayUpcomingRows={displayUpcomingRows}
       subscriptionActive={subscriptionStatus.isSubscribed}
+      isLocked={subscriptionStatus.plan?.id === "basic"}
     />
   );
 }

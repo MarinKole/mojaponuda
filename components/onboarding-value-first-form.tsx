@@ -43,6 +43,7 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
+  Lock,
 } from "lucide-react";
 
 interface OnboardingValueFirstFormProps {
@@ -731,7 +732,7 @@ export function OnboardingValueFirstForm({
           <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
             <ShieldCheck className="mt-0.5 size-5 text-blue-600" />
             <div>
-              <p className="text-sm font-semibold text-slate-900">Prvi pregled je spreman</p>
+              <p className="text-sm font-semibold text-slate-900">Analiza završena</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">{previewSummary}</p>
             </div>
           </div>
@@ -747,42 +748,50 @@ export function OnboardingValueFirstForm({
               {previewError}
             </div>
           ) : previewTenders.length > 0 ? (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {previewTenders.map((tender) => (
-                <div key={tender.id} className="rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-blue-700">
-                          {tender.match_badge}
-                        </span>
-                        {tender.area_badge ? (
-                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
-                            {tender.area_badge}
-                          </span>
-                        ) : null}
-                      </div>
-                      <h3 className="mt-3 text-base font-bold leading-6 text-slate-950">{tender.title}</h3>
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-6 text-center">
+                <Sparkles className="mx-auto mb-3 size-6 text-blue-600" />
+                <h3 className="text-xl font-bold text-slate-900">
+                  Pronašli smo {previewTenders.length} {previewTenders.length === 1 ? "tender" : previewTenders.length >= 2 && previewTenders.length <= 4 ? "tendera" : "tendera"} za vašu firmu
+                </h3>
+                {previewTenders.reduce((acc, t) => acc + (t.estimated_value || 0), 0) > 0 && (
+                  <p className="mt-2 text-base text-slate-600">
+                    Ukupna procijenjena vrijednost: <span className="font-bold text-slate-900">{formatCompactCurrency(previewTenders.reduce((acc, t) => acc + (t.estimated_value || 0), 0))}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                {previewTenders.map((tender, index) => (
+                  <div key={tender.id} className="relative overflow-hidden rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5">
+                    <div className="absolute inset-0 z-10 flex cursor-not-allowed flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
+                      <span className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm">
+                        <Lock className="size-4 text-slate-400" />
+                        Zaključano
+                      </span>
                     </div>
-                    {tender.estimated_value ? (
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                        {formatCompactCurrency(tender.estimated_value)}
-                      </span>
-                    ) : null}
+                    
+                    <div className="flex items-start justify-between gap-3 opacity-60">
+                      <div className="w-full">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-blue-700">
+                            {tender.match_badge}
+                          </span>
+                          <div className="h-5 w-24 rounded bg-emerald-100 blur-sm" />
+                        </div>
+                        <h3 className="mt-3 text-base font-bold leading-6 text-slate-900 blur-sm select-none">
+                          Tender #{index + 1} - {tender.match_badge.replace("Djelatnost: ", "") || "Javna nabavka"}
+                        </h3>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-600 opacity-60">{tender.match_reason}</p>
+                    <p className="mt-2 text-sm text-slate-500 blur-sm select-none opacity-60">Javna ustanova Naručilac</p>
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 pt-4 text-xs font-medium text-slate-500 opacity-60">
+                      <div className="h-4 w-24 rounded bg-slate-200 blur-sm" />
+                    </div>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{tender.match_reason}</p>
-                  <p className="mt-2 text-sm text-slate-500">{tender.contracting_authority ?? "Nepoznat naručilac"}</p>
-                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 pt-4 text-xs font-medium text-slate-500">
-                    {tender.area_label ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin className="size-3.5 text-slate-400" />
-                        {tender.area_label}
-                      </span>
-                    ) : null}
-                    <span>Rok: {formatDate(tender.deadline)}</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
             <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center">
@@ -1000,7 +1009,7 @@ export function OnboardingValueFirstForm({
             disabled={loading}
             className="h-11 rounded-xl bg-slate-950 px-5 font-semibold text-white hover:bg-blue-700"
           >
-            {step === 1 ? "Želim preciznije preporuke" : "Nastavi"}
+            {step === 1 ? "Dalje: Otključaj tendere za vašu firmu" : "Nastavi"}
             <ArrowRight className="ml-2 size-4" />
           </Button>
         ) : (

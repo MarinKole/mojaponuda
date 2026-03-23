@@ -8,11 +8,13 @@ import {
   Banknote,
   ArrowRight,
   ChevronRight,
-  FileText
+  FileText,
+  Lock
 } from "lucide-react";
 
 interface TenderCardProps {
   tender: Tender;
+  locked?: boolean;
 }
 
 function formatDate(dateStr: string | null): string {
@@ -64,7 +66,7 @@ const TYPE_COLORS: Record<string, string> = {
   Radovi: "border-amber-200 bg-amber-50 text-amber-800",
 };
 
-export function TenderCard({ tender }: TenderCardProps) {
+export function TenderCard({ tender, locked = false }: TenderCardProps) {
   const deadline = getDeadlineStatus(tender.deadline);
   const typeColor = tender.contract_type
     ? TYPE_COLORS[tender.contract_type] ?? "border-slate-200 bg-slate-50 text-slate-700"
@@ -82,19 +84,19 @@ export function TenderCard({ tender }: TenderCardProps) {
               <FileText className="size-5" />
             </div>
 
-            <div className="min-w-0 flex-1 space-y-2">
+            <div className={`min-w-0 flex-1 space-y-2 ${locked ? "opacity-60" : ""}`}>
               {/* Title */}
-              <p className="text-base font-semibold leading-snug text-slate-900 group-hover:text-slate-700 transition-colors line-clamp-2 pr-4">
-                {tender.title}
+              <p className={`text-base font-semibold leading-snug text-slate-900 transition-colors line-clamp-2 pr-4 ${locked ? "blur-sm select-none" : "group-hover:text-slate-700"}`}>
+                {locked ? `Tender #${tender.id.substring(0, 4)} - ${tender.contract_type ?? 'Javna nabavka'}` : tender.title}
               </p>
 
               {/* Meta row */}
               <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2">
                 {tender.contracting_authority && (
-                  <span className="flex items-center gap-1.5 text-xs text-slate-600">
+                  <span className={`flex items-center gap-1.5 text-xs text-slate-600 ${locked ? "blur-sm select-none opacity-80" : ""}`}>
                     <Building2 className="size-3.5 text-slate-400" />
                     <span className="truncate max-w-[280px] font-medium" title={tender.contracting_authority}>
-                      {tender.contracting_authority}
+                      {locked ? "Javno preduzeće Naručilac" : tender.contracting_authority}
                     </span>
                   </span>
                 )}
@@ -103,9 +105,9 @@ export function TenderCard({ tender }: TenderCardProps) {
                   {deadline.text}
                 </span>
                 {tender.estimated_value !== null && (
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-slate-900 font-mono">
-                    <Banknote className="size-3.5 text-emerald-600" />
-                    {formatValue(tender.estimated_value)}
+                  <span className={`flex items-center gap-1.5 text-xs font-bold font-mono ${locked ? "blur-sm select-none text-slate-500" : "text-slate-900"}`}>
+                    <Banknote className={`size-3.5 ${locked ? "text-slate-400" : "text-emerald-600"}`} />
+                    {locked ? "XXX.XXX,XX KM" : formatValue(tender.estimated_value)}
                   </span>
                 )}
               </div>
@@ -123,9 +125,16 @@ export function TenderCard({ tender }: TenderCardProps) {
                 Ostalo
               </span>
             )}
-            <div className="hidden sm:flex size-8 items-center justify-center text-slate-400 group-hover:text-slate-900 transition-colors mt-1">
-              <ArrowRight className="size-4" />
-            </div>
+            
+            {locked ? (
+              <div className="hidden sm:flex size-8 items-center justify-center text-slate-300 transition-colors mt-1">
+                <Lock className="size-4" />
+              </div>
+            ) : (
+              <div className="hidden sm:flex size-8 items-center justify-center text-slate-400 group-hover:text-slate-900 transition-colors mt-1">
+                <ArrowRight className="size-4" />
+              </div>
+            )}
           </div>
         </div>
       </div>

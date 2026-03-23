@@ -14,6 +14,7 @@ import {
   Sparkles,
   Swords,
   TrendingUp,
+  Lock,
 } from "lucide-react";
 import type { BidStatus } from "@/types/database";
 
@@ -90,6 +91,7 @@ interface DashboardHomeOverviewProps {
     contracting_authorities?: { name: string; jib: string } | null;
   }>;
   subscriptionActive: boolean;
+  isLocked: boolean;
 }
 
 const STATUS_CONFIG: Record<
@@ -154,6 +156,7 @@ export function DashboardHomeOverview({
   competitorSnapshotSource,
   displayUpcomingRows,
   subscriptionActive,
+  isLocked,
 }: DashboardHomeOverviewProps) {
   return (
     <div className="space-y-8 lg:space-y-10">
@@ -296,25 +299,48 @@ export function DashboardHomeOverview({
           </div>
 
           <div className="mt-6 space-y-3">
+            {isLocked && recommendedTenders.length > 0 && (
+              <div className="mb-4 rounded-xl bg-[linear-gradient(110deg,#1e1b4b_0%,#0f172a_100%)] p-4 text-white shadow-md relative overflow-hidden">
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+                      <Lock className="size-4 text-blue-400" />
+                      Pregled prilika
+                    </h3>
+                    <p className="text-slate-300 text-xs leading-relaxed">
+                      Kao korisnik Besplatnog naloga vidite samo signale.
+                    </p>
+                  </div>
+                  <Link href="/dashboard/subscription" className="inline-flex h-9 items-center justify-center rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white transition-all hover:bg-blue-500">
+                    Otključaj tendere
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {recommendedTenders.length > 0 ? (
               recommendedTenders.map((tender) => (
                 <Link
                   key={tender.id}
-                  href={`/dashboard/tenders/${tender.id}`}
+                  href={isLocked ? "/dashboard/subscription" : `/dashboard/tenders/${tender.id}`}
                   className="block rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition-all hover:border-blue-200 hover:bg-white"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="line-clamp-2 text-sm font-semibold text-slate-900">{tender.title}</p>
-                      <p className="mt-1 text-xs text-slate-500">{tender.contracting_authority ?? "Nepoznat naručilac"}</p>
+                    <div className={isLocked ? "opacity-60" : ""}>
+                      <p className={`line-clamp-2 text-sm font-semibold text-slate-900 ${isLocked ? "blur-sm select-none" : ""}`}>
+                        {isLocked ? `Tender #${tender.id.substring(0, 4)} - Podaci zaštićeni` : tender.title}
+                      </p>
+                      <p className={`mt-1 text-xs text-slate-500 ${isLocked ? "blur-sm select-none" : ""}`}>
+                        {isLocked ? "Javno preduzeće Naručilac" : (tender.contracting_authority ?? "Nepoznat naručilac")}
+                      </p>
                     </div>
-                    <ArrowUpRight className="size-4 text-slate-300" />
+                    {isLocked ? <Lock className="size-4 text-slate-300" /> : <ArrowUpRight className="size-4 text-slate-300" />}
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                  <div className={`mt-3 flex flex-wrap gap-2 text-xs text-slate-500 ${isLocked ? "opacity-60" : ""}`}>
                     <span className="rounded-full bg-white px-2.5 py-1 font-medium">Rok {formatDate(tender.deadline)}</span>
                     {tender.estimated_value ? (
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">
-                        {formatCompactCurrency(tender.estimated_value)}
+                      <span className={`rounded-full px-2.5 py-1 font-semibold ${isLocked ? "bg-slate-100 text-slate-500 blur-sm select-none" : "bg-emerald-50 text-emerald-700"}`}>
+                        {isLocked ? "XXX.XXX KM" : formatCompactCurrency(tender.estimated_value)}
                       </span>
                     ) : null}
                   </div>

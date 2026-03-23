@@ -115,6 +115,28 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Pay-per-tender: Gating logika za Starter plan
+  if (plan.id === "starter") {
+    const { data: unlockedTender } = await supabase
+      .from("unlocked_tenders")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("tender_id", resolvedTenderId)
+      .eq("status", "paid")
+      .maybeSingle();
+
+    if (!unlockedTender) {
+      return NextResponse.json(
+        {
+          error: "Priprema ponude za ovaj tender nije otključana.",
+          code: "PAYWALL_REQUIRED",
+          tenderId: resolvedTenderId,
+        },
+        { status: 403 }
+      );
+    }
+  }
+
   const { data: tenderData, error: tenderError } = await supabase
     .from("tenders")
     .select("*")
@@ -154,7 +176,7 @@ export async function POST(request: NextRequest) {
       bidId: bid.id,
       companyId: company.id,
       tender,
-      allowAI: isSubscribed && plan.limits.features.advancedAnalysis,
+      allowAI: isSubscribed && (plan.limits.features.advancedAnalysis || plan.id === "starter"),
     });
 
     return NextResponse.json(

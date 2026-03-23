@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, Briefcase, Lock, Sparkles } from "lucide-react";
 import { PaywallModal } from "@/components/subscription/paywall-modal";
+import { PRICING } from "@/lib/plans";
+import { trackEvent } from "@/lib/analytics";
 
 interface StartBidButtonProps {
   tenderId: string;
@@ -21,6 +23,8 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
   const [showPaywall, setShowPaywall] = useState(false);
   const [limitInfo, setLimitInfo] = useState<{ limit: number; current: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showTenderPaywall, setShowTenderPaywall] = useState(false);
+  const [paywallTenderId, setPaywallTenderId] = useState<string | null>(null);
 
   if (existingBidId) {
     return (
@@ -41,6 +45,7 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
   async function handleStart() {
     if (!isSubscribed) {
       setLimitInfo(null);
+      trackEvent("SHOW_PAYWALL_FREE_USER_ACTION", { tenderId });
       setShowPaywall(true);
       return;
     }
@@ -63,6 +68,7 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
       if (!res.ok) {
         if (data.code === "LIMIT_REACHED") {
           setLimitInfo({ limit: data.limit, current: data.current });
+          trackEvent("SHOW_PAYWALL_LIMIT_REACHED", { tenderId, limit: data.limit, current: data.current });
           setShowPaywall(true);
           setLoading(false);
           return;
@@ -74,6 +80,15 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
           setLoading(false);
           return;
         }
+
+        if (data.code === "PAYWALL_REQUIRED") {
+           setPaywallTenderId(data.tenderId);
+           trackEvent("SHOW_PAYWALL_PER_TENDER", { tenderId: data.tenderId || tenderId });
+           setShowTenderPaywall(true);
+           setLoading(false);
+           return;
+        }
+
         throw new Error(data.error || "Greška pri kreiranju ponude.");
       }
 
@@ -115,6 +130,16 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
           ? `Vaš trenutni paket omogućava maksimalno ${limitInfo?.limit} aktivnih tendera. Trenutno imate ${limitInfo?.current}. Nadogradite paket ako želite nastaviti rad bez blokade.`
           : "Uz pretplatu dobijate profesionalnu pripremu ponude, početnu listu onoga što treba prikupiti i jasniji pregled prije slanja."}
         limitType="tenders"
+      />
+
+      <PaywallModal
+        isOpen={showTenderPaywall}
+        onClose={() => setShowTenderPaywall(false)}
+        title={`Otključaj ovaj tender (${PRICING.tenderUnlock} KM)`}
+        description={`Vaš Starter paket vam omogućava pregled, ali AI analiza, obrada dokumentacije i kreiranje zadataka se naplaćuju po tenderu. Otključajte ovaj tender zauvijek za samo ${PRICING.tenderUnlock} KM.`}
+        limitType="tenders"
+        isPerTenderUnlock={true}
+        tenderId={paywallTenderId || tenderId}
       />
     </>
   );

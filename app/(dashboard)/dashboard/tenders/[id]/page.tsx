@@ -5,6 +5,7 @@ import type { Tender, Company } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { StartBidButton } from "@/components/tenders/start-bid-button";
 import { getSubscriptionStatus } from "@/lib/subscription";
+import { UpgradeButton } from "@/components/subscription/upgrade-button";
 import { getOpenAIClient } from "@/lib/openai";
 import {
   ArrowLeft,
@@ -16,6 +17,7 @@ import {
   BarChart3,
   Briefcase,
   Sparkles,
+  Lock,
 } from "lucide-react";
 
 function formatDate(dateStr: string | null): string {
@@ -83,11 +85,14 @@ export default async function TenderDetailPage({
 
   if (!user) redirect("/login");
 
-  const [{ isSubscribed }, { data: tenderData }, { data: companyData }] = await Promise.all([
+  const [subscription, { data: tenderData }, { data: companyData }] = await Promise.all([
     getSubscriptionStatus(user.id, user.email, supabase),
     supabase.from("tenders").select("*").eq("id", id).single(),
     supabase.from("companies").select("id").eq("user_id", user.id).single(),
   ]);
+
+  const { plan, isSubscribed } = subscription;
+  const isLockedForFree = plan.id === "basic";
 
   const tender = tenderData as Tender | null;
   if (!tender) redirect("/dashboard/tenders");
@@ -168,8 +173,35 @@ export default async function TenderDetailPage({
         </Link>
       </div>
 
-      {/* Hero header */}
-      <div className="rounded-[2rem] border border-slate-100 bg-white p-8 shadow-sm">
+      {isLockedForFree && (
+        <div className="rounded-[2.5rem] bg-[linear-gradient(110deg,#1e1b4b_0%,#0f172a_100%)] p-8 text-white shadow-2xl relative overflow-hidden border border-blue-500/20">
+           <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Lock className="size-32 rotate-12" />
+           </div>
+           <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto py-4">
+              <div className="mb-6 flex size-16 items-center justify-center rounded-2xl bg-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+                 <Lock className="size-8 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-4">
+                 Puni detalji su rezervisani za pretplatnike
+              </h2>
+              <p className="text-blue-100 text-lg leading-relaxed mb-8">
+                Kao korisnik Besplatnog naloga dobili ste signal da ovaj tender postoji. Da biste vidjeli sve detalje, CPV kodove, analitiku naručioca i pokrenuli pripremu, potrebno je aktivirati jedan od plaćenih paketa.
+              </p>
+              <UpgradeButton 
+                eventName="CLICK_UPGRADE_TENDER_DETAIL" 
+                metadata={{ tenderId: id }}
+                className="rounded-2xl bg-white text-slate-950 font-bold hover:bg-blue-50 px-10 h-14 text-lg"
+              >
+                Otključaj puni pristup
+              </UpgradeButton>
+           </div>
+        </div>
+      )}
+
+      <div className={isLockedForFree ? "blur-md pointer-events-none select-none opacity-40 transition-all" : ""}>
+        {/* Hero header */}
+        <div className="rounded-[2rem] border border-slate-100 bg-white p-8 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-primary">
             {tender.contract_type || "Tender"}
@@ -328,7 +360,8 @@ export default async function TenderDetailPage({
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 function InfoItem({

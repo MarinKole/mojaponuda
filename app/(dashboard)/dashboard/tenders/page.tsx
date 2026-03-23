@@ -4,6 +4,7 @@ import { isAdminEmail } from "@/lib/admin";
 import type { Tender } from "@/types/database";
 import { buildRegionSearchTerms } from "@/lib/constants/regions";
 import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
+import { getSubscriptionStatus } from "@/lib/subscription";
 import {
   buildRecommendationContext,
   enrichTendersWithAuthorityGeo,
@@ -16,10 +17,11 @@ import {
 import { TenderFilters } from "@/components/tenders/tender-filters";
 import { TenderCard } from "@/components/tenders/tender-card";
 import { Pagination } from "@/components/tenders/pagination";
-import { MapPinned, Search, Sparkles } from "lucide-react";
+import { MapPinned, Search, Sparkles, Lock } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { UpgradeButton } from "@/components/subscription/upgrade-button";
 
 const PAGE_SIZE = 20;
 
@@ -64,6 +66,9 @@ async function TendersContent({ searchParams }: TendersPageProps) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const subscriptionStatus = user ? await getSubscriptionStatus(user.id, user.email, supabase) : null;
+  const isLocked = subscriptionStatus?.plan?.id === "basic";
 
   let recommendationContext: RecommendationContext | null = null;
   let hasProfile = false;
@@ -338,8 +343,31 @@ async function TendersContent({ searchParams }: TendersPageProps) {
         </div>
       ) : (
         <div className="space-y-3">
+          {isLocked && tenders.length > 0 && (
+             <div className="mb-6 rounded-[1.5rem] bg-[linear-gradient(110deg,#1e1b4b_0%,#0f172a_100%)] p-6 text-white shadow-xl relative overflow-hidden">
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                      <Lock className="size-5 text-blue-400" />
+                      Ovo je samo pregled dostupnih prilika
+                    </h3>
+                    <p className="text-slate-300 text-sm leading-relaxed max-w-xl">
+                      Pronašli smo stvarne prilike za vas. Međutim, kao korisnik Besplatnog naloga možete vidjeti samo signale da ponude postoje.
+                    </p>
+                  </div>
+                  <UpgradeButton 
+                    eventName="CLICK_UPGRADE_FEED" 
+                    metadata={{ tab: activeTab }}
+                    className="shrink-0 whitespace-nowrap bg-blue-600 text-white rounded-xl font-semibold h-11 hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+                  >
+                    Otključaj tendere za vašu firmu
+                  </UpgradeButton>
+                </div>
+             </div>
+          )}
+
           {tenders.map((tender) => (
-            <TenderCard key={tender.id} tender={tender} />
+            <TenderCard key={tender.id} tender={tender} locked={isLocked} />
           ))}
         </div>
       )}
@@ -361,7 +389,12 @@ export default async function TendersPage(props: TendersPageProps) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const activeTab = getSingleParam(params.tab) === "all" ? "all" : "recommended";
+
+  const subscriptionStatus = user ? await getSubscriptionStatus(user.id, user.email, supabase) : null;
+  const isLocked = subscriptionStatus?.plan?.id === "basic";
+
+  const activeTabOrigin = getSingleParam(params.tab) === "all" ? "all" : "recommended";
+  const activeTab = isLocked ? "recommended" : activeTabOrigin;
   const showGeoReport = isAdminEmail(user?.email);
 
   return (
@@ -386,7 +419,7 @@ export default async function TendersPage(props: TendersPageProps) {
       </div>
 
       <Tabs defaultValue={activeTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className={`grid w-full lg:w-[400px] ${isLocked ? "grid-cols-1" : "grid-cols-2"}`}>
           <TabsTrigger value="recommended" asChild>
             <Link
               href={{ query: { ...params, tab: "recommended", page: "1" } }}
@@ -396,17 +429,21 @@ export default async function TendersPage(props: TendersPageProps) {
               Preporučeno
             </Link>
           </TabsTrigger>
-          <TabsTrigger value="all" asChild>
-            <Link href={{ query: { ...params, tab: "all", page: "1" } }}>
-              Svi tenderi
-            </Link>
-          </TabsTrigger>
+          {!isLocked && (
+            <TabsTrigger value="all" asChild>
+              <Link href={{ query: { ...params, tab: "all", page: "1" } }}>
+                Svi tenderi
+              </Link>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <div className="mt-6">
-          <Suspense fallback={null}>
-            <TenderFilters />
-          </Suspense>
+          {!isLocked && (
+            <Suspense fallback={null}>
+              <TenderFilters />
+            </Suspense>
+          )}
 
           <Suspense
             key={activeTab + JSON.stringify(params)}

@@ -576,6 +576,37 @@ export interface Database {
         };
         Relationships: [];
       };
+      unlocked_tenders: {
+        Row: {
+          id: string;
+          user_id: string;
+          tender_id: string;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          tender_id: string;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          tender_id?: string;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "unlocked_tenders_tender_id_fkey";
+            columns: ["tender_id"];
+            referencedRelation: "tenders";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       sync_log: {
         Row: {
           id: string;
@@ -600,6 +631,33 @@ export interface Database {
           records_added?: number;
           records_updated?: number;
           ran_at?: string;
+        };
+        Relationships: [];
+      };
+      analytics_events: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          event_name: string;
+          metadata: Json | null;
+          url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          event_name: string;
+          metadata?: Json | null;
+          url?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          event_name?: string;
+          metadata?: Json | null;
+          url?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
