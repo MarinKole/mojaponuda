@@ -159,7 +159,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <Bot className="size-6" />
           </div>
           <p className="text-base leading-snug text-slate-700 mt-0.5">
-            Sistem radi ono što inače gubi sate radnog vremena: prati tendere, filtrira najbolje za vas i vodi vas kroz prijavu bez propuštenih dokumenata.
+            Sistem Vam daje vrijednost zaposlenika koji košta preko <strong className="text-slate-900">1.500 KM mjesečno</strong> — prati tendere, filtrira najbolje prilike i vodi Vas kroz prijavu bez ijednog propuštenog dokumenta.
           </p>
         </motion.div>
 
@@ -204,19 +204,19 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
            className="mt-16 grid gap-5 text-left md:grid-cols-3"
         >
           {[
-            { metric: "3x", title: "više tendera", desc: "Sistem filtrira tržište i izdvaja samo one prilike koje bi vjerovatno propustili ručnim radom." },
+            { metric: "3x", title: "više tendera", desc: "Sistem filtrira tržište i izdvaja samo one prilike koje bi vjerovatno propustili ručnim traženjem." },
             { metric: "10x", title: "brža priprema", desc: "Automatska analiza obimne dokumentacije uklanja desetine sati dosadnog ručnog čitanja." },
-            { metric: "2x", title: "veća potencijalna zarada", desc: "Bez propuštenih prilika i bez odbačenih prijava zbog sitnih birokratskih previda." },
+            { metric: "2x", title: "veća potencijalna zarada", desc: "Bez propuštenih prilika i bez odbačenih prijava zbog sitnih grešaka koje bi napravili da radite sami." },
           ].map((item) => (
              <motion.div 
                variants={fadeUpItem}
                key={item.title} 
                className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1"
              >
-               <div className="flex items-baseline gap-2">
+               <div className="flex flex-wrap items-baseline gap-2">
                  <span className="font-heading text-[2.5rem] font-extrabold tracking-tight text-blue-600">{item.metric}</span>
+                 <span className="text-[1.125rem] font-bold text-slate-900 leading-tight">{item.title}</span>
                </div>
-               <span className="text-[1.125rem] font-bold text-slate-900 leading-tight">{item.title}</span>
                <p className="text-[15px] text-slate-600 leading-relaxed mt-1">{item.desc}</p>
              </motion.div>
           ))}
@@ -350,7 +350,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-3 text-lg text-slate-700"
           >
-            Razlika između iscrpljujućeg ručnog rada i softverske validacije.
+            Razlika između iscrpljujućeg ručnog rada i servisa koji radi za Vas.
           </motion.p>
         </div>
 
@@ -483,7 +483,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <span className="text-[12px] font-bold uppercase tracking-wider text-emerald-400">Sigurnost poslovanja</span>
             </div>
             <h2 className="font-heading text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-              Jedan propušten tender košta vas više od cijele godine aplikacije.
+              Jedan propušten tender košta vas više od cijele godišnje pretplate.
             </h2>
             <p className="mt-5 text-lg text-slate-300 leading-relaxed">
               Firme gube poslove zbog bizarnih administrativnih grešaka. Nevažeća porezna potvrda, zaboravljen aneks... to više nije vaš problem. Gubitak stotina hiljada KM zbog papira je neprihvatljiv.
@@ -497,7 +497,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               variants={fadeUpContainer}
             >
               {[
-                { icon: AlertTriangle, text: "Niste vidjeli tender jer ste taj dan zaboravili provjeriti portale" },
+                { icon: AlertTriangle, text: "Niste vidjeli tender jer taj dan niste stigli provjeriti portale" },
                 { icon: Clock, text: "Ponuda kasni jer vam je ostalo premalo dana za pripremu svega" },
                 { icon: FileText, text: "Ponuda je potpuno odbačena jer je nedostajao jedan jedini papir" },
               ].map((item) => (
@@ -554,7 +554,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </motion.div>
               ))}
             </motion.div>
-            <p className="mt-6 text-[15px] font-medium text-slate-400">Sistem crvenom bojom štiti vašu firmu od formalno neispravnih predaja dokumenata.</p>
+            <p className="mt-6 text-[15px] font-medium text-slate-400">Sistem Vam ne dopušta da napravite grešku i radi za Vas.</p>
           </motion.div>
         </div>
       </div>
@@ -653,8 +653,8 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               {[
                 "Sve iz Osnovnog paketa",
                 "Priprema tendera je besplatna",
-                "Nema transakcija po tenderu",
-                "Validacija i garancija dokumentacije",
+                "Nema naplate po tenderu",
+                "Praćenje i provjera dokumentacije",
                 "Aktivno praćenje konkurencije",
               ].map((f, i) => (
                 <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "text-slate-500 font-semibold" : "text-slate-800 font-bold"}`}>
@@ -789,7 +789,7 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
           Počnite raditi prije nego propustite sljedeći posao.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-[1.125rem] text-slate-300 leading-relaxed font-medium">
-          Dopustite sistemu da obavi teški, dosadni rad umjesto vas, te da vas alarmira sa čistim listama obaveza.
+          Dopustite sistemu da obavi teški, dosadni rad umjesto Vas, te da vas vodi kroz čitav postupak.
         </p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <PrimaryCTA isLoggedIn={isLoggedIn} label="Besplatno osigurajte svoju firmu" className="!bg-white !text-slate-900 hover:!bg-slate-100 !shadow-white/10" />
