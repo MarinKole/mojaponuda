@@ -136,7 +136,7 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
         isOpen={showTenderPaywall}
         onClose={() => setShowTenderPaywall(false)}
         title={`Otključaj ovaj tender (${PRICING.tenderUnlock} KM)`}
-        description={`Vaš Starter paket vam omogućava pregled, ali AI analiza, obrada dokumentacije i kreiranje zadataka se naplaćuju po tenderu. Otključajte ovaj tender zauvijek za samo ${PRICING.tenderUnlock} KM.`}
+        description={`Vaš Osnovni paket vam omogućava pregled tendera, ali priprema ponude se naplaćuje po tenderu. Otključajte ovaj tender za samo ${PRICING.tenderUnlock} KM.`}
         limitType="tenders"
         isPerTenderUnlock={true}
         tenderId={paywallTenderId || tenderId}

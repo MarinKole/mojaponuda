@@ -85,7 +85,7 @@ export function DemoWidget() {
                 Isprobajte analizu besplatno
               </h3>
               <p className="text-slate-500">
-                Zalijepite link tendera s EJN portala da vidite kako sistem radi.
+                Zalijepite link tendera s EJN portala da vidite kako radi.
               </p>
             </div>
 

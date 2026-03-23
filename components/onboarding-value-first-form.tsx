@@ -809,13 +809,13 @@ export function OnboardingValueFirstForm({
           <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
             <p className="text-sm font-semibold text-slate-900">Sada možemo biti još precizniji</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Ovaj korak pojačava kvalitet preporuka. Nije tu da vas zaustavi, nego da sistem tačnije zna koje ugovore stvarno možete isporučiti.
+              Ovaj korak pojačava kvalitet preporuka. Nije tu da vas zaustavi, nego da preporuke tačnije znaju koje ugovore stvarno možete isporučiti.
             </p>
           </div>
 
           <div>
             <p className="text-sm font-semibold text-slate-700">Koje vrste tendera želite pratiti</p>
-            <p className="mt-1 text-sm text-slate-500">Odaberite sve što vam je relevantno. Ako ništa ne odaberete, sistem će koristiti širi pregled.</p>
+            <p className="mt-1 text-sm text-slate-500">Odaberite sve što vam je relevantno. Ako ništa ne odaberete, preporuke će koristiti širi pregled.</p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {TENDER_TYPE_OPTIONS.map((option) => {
@@ -849,7 +849,7 @@ export function OnboardingValueFirstForm({
               <div>
                 <p className="text-sm font-semibold text-slate-900">Preciznije usmjerite preporuke prema onome što zaista nudite</p>
                 <p className="mt-1 text-sm leading-6 text-slate-500">
-                  Ovo je opcionalno. Ovi izbori ne zaključavaju profil na usku nišu, nego pomažu da sistem više naginje tenderima koji su bliži vašem stvarnom poslovnom fokusu.
+                  Ovo je opcionalno. Ovi izbori ne zaključavaju profil na usku nišu, nego pomažu da preporuke više naginju tenderima koji su bliži vašem stvarnom poslovnom fokusu.
                 </p>
               </div>
 
@@ -949,7 +949,7 @@ export function OnboardingValueFirstForm({
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
-            <p className="text-sm font-semibold text-slate-900">Sažetak onoga što će sistem koristiti</p>
+            <p className="text-sm font-semibold text-slate-900">Sažetak onoga što će preporuke koristiti</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {derivedPrimaryIndustry ? (
                 <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">

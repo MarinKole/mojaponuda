@@ -585,17 +585,17 @@ function PricingSection() {
           {/* Osnovni */}
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="font-heading text-xl font-bold text-slate-900">Osnovni</h3>
-            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje žele pratiti prilike i imati osnovnu kontrolu dokumentacije.</p>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje žele pratiti prilike i reagovati na vrijeme.</p>
             <div className="mt-6 flex items-baseline gap-1">
               <span className="font-heading text-4xl font-bold text-slate-900">50</span>
               <span className="text-sm font-medium text-slate-500">KM / mj.</span>
             </div>
             <div className="mt-8 space-y-4">
               {[
-                "Besplatan profil firme",
-                "Vidite signale za nove prilike",
-                "Pronađeni tenderi blizu vas",
-                "Osnovni uvid u tržište",
+                "Vidite sve tendere za vašu firmu",
+                "Dobijate email kad izađe novi tender",
+                "Vidite zašto je tender za vas",
+                "Priprema ponude po potrebi (15 KM po tenderu)",
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-slate-400" />
@@ -607,11 +607,11 @@ function PricingSection() {
               href="/signup"
               className="mt-8 flex w-full items-center justify-center rounded-full border border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
             >
-              Odaberi Osnovni
+              Odaberi paket
             </Link>
           </div>
 
-          {/* Puni - Istaknut */}
+          {/* Puni Paket - Istaknut */}
           <div className="relative rounded-3xl border-2 border-primary bg-white p-8 shadow-2xl shadow-blue-500/10 transform scale-105 z-10">
             <div className="absolute -top-4 inset-x-0 flex justify-center">
               <span className="rounded-full bg-primary px-4 py-1 text-xs font-bold uppercase tracking-wider text-white">
@@ -619,18 +619,18 @@ function PricingSection() {
               </span>
             </div>
             <h3 className="font-heading text-xl font-bold text-slate-900">Puni Paket</h3>
-            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje redovno apliciraju i ne žele izgubiti tender zbog propusta.</p>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za firme koje žele uzimati tendere bez greške.</p>
             <div className="mt-6 flex items-baseline gap-1">
               <span className="font-heading text-5xl font-bold text-slate-900">100</span>
               <span className="text-sm font-medium text-slate-500">KM / mj.</span>
             </div>
             <div className="mt-8 space-y-4">
               {[
-                "Vidite sve tendere za vašu firmu",
-                "Email obavijesti o novim poslovima",
-                "Objašnjenje relevantnosti tendera",
-                "Priprema ponude po potrebi (15 KM)",
-                "Bez rizika propuštenih prilika",
+                "Sve iz Osnovnog paketa +",
+                "Neograničena priprema ponuda (bez dodatnog plaćanja)",
+                "Ne plaćate po tenderu – sve je uključeno",
+                "Vidite šta nedostaje prije predaje",
+                "Pregled tržišta i konkurencije",
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-primary" />
@@ -642,25 +642,25 @@ function PricingSection() {
               href="/signup"
               className="mt-8 flex w-full items-center justify-center rounded-full bg-primary py-3.5 text-sm font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30"
             >
-              Isprobaj besplatno
+              Počni bez ograničenja
             </Link>
           </div>
 
           {/* Agencijski */}
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="font-heading text-xl font-bold text-slate-900">Agencijski</h3>
-            <p className="mt-2 text-sm text-slate-500 h-10">Za konsultante i agencije koje vode više firmi i trebaju odvojenu kontrolu po klijentu.</p>
+            <p className="mt-2 text-sm text-slate-500 h-10">Za agencije koje vode više firmi.</p>
             <div className="mt-6 flex items-baseline gap-1">
               <span className="font-heading text-4xl font-bold text-slate-900">250</span>
               <span className="text-sm font-medium text-slate-500">KM / mj.</span>
             </div>
             <div className="mt-8 space-y-4">
               {[
-                "Sve funkcionalnosti Pro paketa",
-                "Upravljanje s više profilnih firmi",
-                "Napredna analiza tržišta",
-                "Poseban pristup podršci",
-                "Idealno za agencije i konsultante",
+                "Sve iz Punog paketa +",
+                "Vodite više firmi sa jednog mjesta",
+                "Poseban profil za svakog klijenta",
+                "Pregled tržišta i konkurencije",
+                "Brža podrška kad vam treba",
               ].map((f) => (
                 <div key={f} className="flex items-start gap-3">
                   <CheckCircle className="size-5 shrink-0 text-slate-400" />
