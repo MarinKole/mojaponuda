@@ -652,8 +652,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6 flex-grow">
               {[
                 "Sve iz Osnovnog paketa",
-                "Priprema tendera je besplatna",
-                "Nema naplate po tenderu",
+                "Besplatna priprema svake ponude",
                 "Praćenje i provjera dokumentacije",
                 "Aktivno praćenje konkurencije",
               ].map((f, i) => (
