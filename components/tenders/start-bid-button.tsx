@@ -104,11 +104,6 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
             </>
           )}
         </Button>
-        {!isSubscribed ? (
-          <p className="text-sm text-slate-500">
-            Profesionalna priprema ponude otvara početnu listu koraka i dokumenata, tako da ranije vidite šta još nedostaje.
-          </p>
-        ) : null}
         {error && <p className="text-sm font-medium text-red-600">{error}</p>}
       </div>
 

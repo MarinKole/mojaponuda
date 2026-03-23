@@ -207,21 +207,21 @@ export default async function TenderDetailPage({
       {/* CTA banner — dark, prominent */}
       {company && (
         <div className="rounded-[2rem] bg-slate-950 px-8 py-7 shadow-xl shadow-slate-950/20">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-white min-w-0">
-              <p className="text-xl font-heading font-bold text-white leading-snug">
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-white max-w-2xl">
+              <p className="text-2xl font-heading font-bold text-white leading-snug">
                 {existingBidId ? "Nastavite pripremu ponude" : "Pripremite ponudu profesionalno"}
               </p>
-              <p className="mt-1.5 text-sm text-slate-400 leading-relaxed max-w-md">
+              <p className="mt-2 text-base text-slate-400 leading-relaxed">
                 Odmah dobijete početnu listu koraka, dokumenata i zahtjeva — bez ručnog sastavljanja.
               </p>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 sm:pl-8">
               <StartBidButton
                 tenderId={id}
                 existingBidId={existingBidId}
                 isSubscribed={isSubscribed}
-                className="h-14 w-full sm:w-auto rounded-2xl bg-blue-500 px-8 text-base font-bold text-white shadow-lg shadow-blue-500/30 hover:bg-blue-400 transition-all"
+                className="h-14 w-full sm:w-auto rounded-2xl bg-blue-500 px-8 text-base font-bold text-white shadow-xl shadow-blue-500/20 hover:bg-blue-400 hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5"
               />
             </div>
           </div>
