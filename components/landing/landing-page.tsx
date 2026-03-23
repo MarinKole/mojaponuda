@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import {
   CheckCircle,
   ArrowRight,
@@ -23,6 +24,20 @@ import {
 interface LandingPageProps {
   isLoggedIn?: boolean;
 }
+
+// Minimalistic framer-motion variants for premium slide-ins
+const fadeUpContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 }
+  }
+};
+
+const fadeUpItem = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } }
+};
 
 // ─── Shared CTA ────────────────────────────────────────────────────────────
 function PrimaryCTA({
@@ -48,7 +63,12 @@ function PrimaryCTA({
 // ─── NavBar ─────────────────────────────────────────────────────────────────
 function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
+    <motion.nav 
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="fixed top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-xl"
+    >
       <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="size-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
@@ -83,7 +103,7 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
           )}
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
@@ -98,33 +118,58 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full -z-10" />
 
       <div className="relative mx-auto max-w-4xl text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1.5 mb-5">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1.5 mb-5"
+        >
           <span className="flex size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
           <span className="text-[13px] font-bold uppercase tracking-wide text-blue-700">
             Sve javne nabavke u BiH — na jednom mjestu
           </span>
-        </div>
+        </motion.div>
 
-        <h1 className="font-heading text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[4rem] mb-5">
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          className="font-heading text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[4rem] mb-5"
+        >
           Više tendera. Brže prijave.<br className="hidden md:block" /> Manje odbijenica.
-        </h1>
+        </motion.h1>
 
-        <p className="mx-auto max-w-3xl text-[1.1rem] leading-relaxed text-slate-700 sm:text-[1.25rem] mb-7">
+        <motion.p 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+           className="mx-auto max-w-3xl text-[1.1rem] leading-relaxed text-slate-700 sm:text-[1.25rem] mb-7"
+        >
           Automatski <strong>pronalazimo</strong> najbolje tendere za vašu djelatnost, izdvajamo <strong>šta tačno treba predati</strong> i vodimo vas kroz prijavu — bez gubljenja vremena i <strong>bez grešaka</strong>.
-        </p>
+        </motion.p>
 
         {/* Digitalni zaposlenik blok */}
-        <div className="mx-auto max-w-2xl mb-8 flex items-start gap-4 rounded-2xl bg-blue-50/50 border border-blue-100/80 p-5 text-left transition-colors hover:bg-blue-50">
+        <motion.div 
+           initial={{ opacity: 0, scale: 0.95 }}
+           animate={{ opacity: 1, scale: 1 }}
+           transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+           className="mx-auto max-w-2xl mb-8 flex items-start gap-4 rounded-2xl bg-blue-50/50 border border-blue-100/80 p-5 text-left transition-colors hover:bg-blue-50"
+        >
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
             <Bot className="size-6" />
           </div>
           <p className="text-base leading-snug text-slate-700 mt-0.5">
             Sistem radi ono što inače gubi sate radnog vremena: prati tendere, filtrira najbolje za vas i vodi vas kroz prijavu bez propuštenih dokumenata.
           </p>
-        </div>
+        </motion.div>
 
         {/* CTA */}
-        <div className="flex flex-col items-center justify-center gap-3 w-full max-w-sm mx-auto sm:max-w-none mb-16">
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+           className="flex flex-col items-center justify-center gap-3 w-full max-w-sm mx-auto sm:max-w-none mb-16"
+        >
           <PrimaryCTA 
             isLoggedIn={isLoggedIn} 
             className="w-full sm:w-auto h-[3.75rem] sm:px-12 text-lg shadow-2xl shadow-blue-500/40 border border-blue-600" 
@@ -132,10 +177,15 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <p className="text-[14px] font-medium text-slate-600 rounded-full bg-blue-50/50 px-4 py-1.5 border border-blue-100/50 whitespace-nowrap mt-1">
             Postoje aktivni tenderi za vašu firmu — provjerite za <span className="font-bold text-slate-800">30 sekundi</span>
           </p>
-        </div>
+        </motion.div>
 
         {/* Trust & Scale Indicators - Professional SaaS context */}
-        <div className="mx-auto max-w-4xl border-t border-slate-200/60 pt-10">
+        <motion.div 
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           transition={{ duration: 1, delay: 0.6 }}
+           className="mx-auto max-w-4xl border-t border-slate-200/60 pt-10"
+        >
           <p className="text-[14px] font-bold text-slate-500 uppercase tracking-widest mb-6">Pouzdano praćenje sa svih ključnih bh. izvora</p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-600 font-bold text-[15px]">
             <span className="flex items-center gap-2"><Landmark className="size-5 text-slate-400" /> Portal Javnih Nabavki</span>
@@ -143,24 +193,34 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <span className="flex items-center gap-2"><Building className="size-5 text-slate-400" /> Kantonalna ministarstva</span>
             <span className="flex items-center gap-2"><Briefcase className="size-5 text-slate-400" /> Javna preduzeća</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* 3 Metric-driven Cards */}
-        <div className="mt-16 grid gap-5 text-left md:grid-cols-3">
+        <motion.div 
+           initial="hidden"
+           whileInView="visible"
+           viewport={{ once: true, margin: "-50px" }}
+           variants={fadeUpContainer}
+           className="mt-16 grid gap-5 text-left md:grid-cols-3"
+        >
           {[
             { metric: "3x", title: "više tendera", desc: "Sistem filtrira tržište i izdvaja samo one prilike koje bi vjerovatno propustili ručnim radom." },
             { metric: "10x", title: "brža priprema", desc: "Automatska analiza obimne dokumentacije uklanja desetine sati dosadnog ručnog čitanja." },
             { metric: "2x", title: "veća potencijalna zarada", desc: "Bez propuštenih prilika i bez odbačenih prijava zbog sitnih birokratskih previda." },
           ].map((item) => (
-             <div key={item.title} className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
+             <motion.div 
+               variants={fadeUpItem}
+               key={item.title} 
+               className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1"
+             >
                <div className="flex items-baseline gap-2">
                  <span className="font-heading text-[2.5rem] font-extrabold tracking-tight text-blue-600">{item.metric}</span>
                </div>
                <span className="text-[1.125rem] font-bold text-slate-900 leading-tight">{item.title}</span>
                <p className="text-[15px] text-slate-600 leading-relaxed mt-1">{item.desc}</p>
-             </div>
+             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -196,38 +256,73 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="kako-radi" className="bg-slate-50 px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-200">
-      <div className="mx-auto max-w-6xl">
+    <section id="kako-radi" className="relative px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-200 overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.35] -z-20">
+        <Image src="/images/how-it-works-bg.png" alt="Smooth Abstract Wave Background" fill className="object-cover" />
+      </div>
+      <div className="absolute inset-0 bg-white/70 backdrop-blur-sm -z-10" />
+
+      <div className="mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-12">
-          <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+          >
             Sistematiziran proces prijave
-          </h2>
-          <p className="mt-3 text-lg text-slate-700">4 optimizirana koraka od objave tendera do odobrene aplikacije.</p>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mt-3 text-lg text-slate-700"
+          >
+            4 optimizirana koraka od objave tendera do odobrene aplikacije.
+          </motion.p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative">
+        <motion.div 
+           initial="hidden"
+           whileInView="visible"
+           viewport={{ once: true, margin: "-50px" }}
+           variants={fadeUpContainer}
+           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative"
+        >
           {/* Subtle connection line for desktop */}
           <div className="hidden lg:block absolute top-12 left-10 right-10 h-0.5 border-t-2 border-dashed border-slate-200 -z-0" />
 
           {steps.map((s) => (
-            <div key={s.title} className="relative rounded-2xl border border-white/60 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 z-10">
+            <motion.div 
+              variants={fadeUpItem}
+              key={s.title} 
+              className="relative rounded-2xl border border-white/80 bg-white/90 p-6 shadow-sm shadow-blue-500/5 transition-all hover:shadow-md hover:shadow-blue-500/10 z-10 backdrop-blur-md"
+            >
               <div className="flex justify-between items-start mb-4">
-                <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-4 ring-white">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-4 ring-white/50">
                   <s.icon className="size-6" />
                 </div>
-                <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold tracking-wider text-slate-500 uppercase border border-slate-200/60">
+                <span className="rounded-md bg-white px-2 py-1 text-[11px] font-bold tracking-wider text-slate-500 uppercase border border-slate-200/60 shadow-sm">
                   {s.badge}
                 </span>
               </div>
               <h3 className="font-heading text-lg font-bold leading-tight text-slate-900">{s.title}</h3>
               <p className="mt-2 text-base leading-relaxed text-slate-600">{s.desc}</p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        <div className="mt-12 flex justify-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-12 flex justify-center"
+        >
           <PrimaryCTA className="h-[3.25rem] px-10 text-base shadow-md" />
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -236,18 +331,38 @@ function HowItWorksSection() {
 // ─── Prije / Poslije ─────────────────────────────────────────────────────────
 function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
-    <section id="usporedba" className="bg-white px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-100">
+    <section id="usporedba" className="bg-white px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-100 overflow-hidden">
       <div className="mx-auto max-w-5xl">
         <div className="text-center mb-12">
-          <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+          >
             Koliko vremena gubite na jedan tender?
-          </h2>
-          <p className="mt-3 text-lg text-slate-700">Razlika između iscrpljujućeg ručnog rada i softverske validacije.</p>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mt-3 text-lg text-slate-700"
+          >
+            Razlika između iscrpljujućeg ručnog rada i softverske validacije.
+          </motion.p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Bez aplikacije */}
-          <div className="rounded-3xl border border-red-100 bg-red-50/60 p-6 sm:p-8 relative overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-3xl border border-red-100 bg-red-50/60 p-6 sm:p-8 relative overflow-hidden"
+          >
             <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-red-100/50 blur-2xl" />
             <div className="flex items-center gap-4 mb-6 relative">
               <div className="flex size-12 items-center justify-center rounded-xl bg-red-100 text-red-500">
@@ -265,7 +380,12 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <span className="text-red-500">100%</span>
               </div>
               <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
-                <div className="h-full w-full rounded-full bg-red-400" />
+                <motion.div 
+                  initial={{ width: 0 }}
+                  whileInView={{ width: "100%" }}
+                  transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+                  className="h-full rounded-full bg-red-400" 
+                />
               </div>
             </div>
 
@@ -283,10 +403,16 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Sa aplikacijom */}
-          <div className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 sm:p-8 relative overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+            className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 sm:p-8 relative overflow-hidden"
+          >
             <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-emerald-100/50 blur-2xl" />
             <div className="flex items-center gap-4 mb-6 relative">
               <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 shadow-sm shadow-emerald-500/20">
@@ -304,7 +430,12 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <span className="text-emerald-700">-90% kraće (10x brže)</span>
               </div>
               <div className="h-2 w-full rounded-full bg-emerald-200/50 overflow-hidden">
-                <div className="h-full w-[10%] rounded-full bg-emerald-500" />
+                <motion.div 
+                   initial={{ width: 0 }}
+                   whileInView={{ width: "10%" }}
+                   transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+                   className="h-full rounded-full bg-emerald-500" 
+                />
               </div>
             </div>
 
@@ -322,7 +453,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -341,7 +472,12 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
       <div className="relative z-10 mx-auto max-w-5xl">
         <div className="grid gap-12 lg:grid-cols-2 items-center">
-          <div>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 mb-6">
               <ShieldCheck className="size-4 text-emerald-400" />
               <span className="text-[12px] font-bold uppercase tracking-wider text-emerald-400">Sigurnost poslovanja</span>
@@ -353,18 +489,24 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               Firme gube poslove zbog bizarnih administrativnih grešaka. Nevažeća porezna potvrda, zaboravljen aneks... to više nije vaš problem. Gubitak stotina hiljada KM zbog papira je neprihvatljiv.
             </p>
 
-            <div className="mt-8 space-y-4">
+            <motion.div 
+              className="mt-8 space-y-4"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fadeUpContainer}
+            >
               {[
                 { icon: AlertTriangle, text: "Niste vidjeli tender jer ste taj dan zaboravili provjeriti portale" },
                 { icon: Clock, text: "Ponuda kasni jer vam je ostalo premalo dana za pripremu svega" },
                 { icon: FileText, text: "Ponuda je potpuno odbačena jer je nedostajao jedan jedini papir" },
               ].map((item) => (
-                <div key={item.text} className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                <motion.div variants={fadeUpItem} key={item.text} className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
                   <item.icon className="size-6 shrink-0 text-red-400" />
                   <span className="text-base text-slate-200">{item.text}</span>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             <div className="mt-8 rounded-xl border border-blue-500/30 bg-blue-600/20 p-5">
               <p className="text-lg font-bold text-white">Softver dizajniran da sprječava ljudske greške.</p>
@@ -372,11 +514,25 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 Ljudski je pogriješiti u papirologiji. Sistem to ne dozvoljava.
               </p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-8 sm:p-10 backdrop-blur-sm shadow-2xl">
+          <motion.div 
+             initial={{ opacity: 0, scale: 0.95 }}
+             whileInView={{ opacity: 1, scale: 1 }}
+             viewport={{ once: true }}
+             transition={{ duration: 0.7, delay: 0.2 }}
+             className="rounded-[1.5rem] border border-white/10 bg-white/5 p-8 sm:p-10 backdrop-blur-sm shadow-2xl"
+          >
             <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Visualna kontrola svake tačke</p>
-            <div className="space-y-3">
+            <motion.div 
+               initial="hidden"
+               whileInView="visible"
+               viewport={{ once: true }}
+               variants={{
+                 visible: { transition: { staggerChildren: 0.1 } }
+               }}
+               className="space-y-3"
+            >
               {[
                 { done: true, text: "Uvjerenje o izmirenim porezima (PDV)" },
                 { done: true, text: "Popunjena izjava o podobnosti učesnika" },
@@ -385,17 +541,21 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 { done: true, text: "Dokaz o tehničkoj specifikaciji" },
                 { done: false, text: "UJP potvrda (stara potvrda je istekla!)" },
               ].map((item) => (
-                <div key={item.text} className={`flex items-center gap-3.5 rounded-xl p-4 transition-colors ${item.done ? "border border-white/10 bg-white/5" : "border border-red-500/40 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]"}`}>
+                <motion.div 
+                   variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
+                   key={item.text} 
+                   className={`flex items-center gap-3.5 rounded-xl p-4 transition-colors ${item.done ? "border border-white/10 bg-white/5" : "border border-red-500/40 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]"}`}
+                >
                   {item.done
                     ? <CheckCircle className="size-5 shrink-0 text-emerald-400" />
                     : <AlertTriangle className="size-5 shrink-0 text-red-400" />
                   }
                   <span className={`text-[15px] sm:text-base ${item.done ? "text-white" : "text-red-300 font-bold"}`}>{item.text}</span>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
             <p className="mt-6 text-[15px] font-medium text-slate-400">Sistem crvenom bojom štiti vašu firmu od formalno neispravnih predaja dokumenata.</p>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -405,21 +565,51 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 // ─── Pricing Section ─────────────────────────────────────────────────────────
 function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
-    <section id="cijene" className="bg-slate-100 px-4 sm:px-6 py-16 sm:py-24 border-b border-slate-200">
-      <div className="mx-auto max-w-6xl">
+    <section id="cijene" className="relative bg-slate-100 px-4 sm:px-6 py-16 sm:py-24 border-b border-slate-200 overflow-hidden">
+      <div className="absolute inset-0 opacity-60 -z-20 mix-blend-multiply">
+        <Image src="/images/pricing-bg.png" alt="Premium Pricing Abstract Background" fill className="object-cover" />
+      </div>
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] -z-10" />
+
+      <div className="mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 mb-5">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 mb-5 shadow-sm"
+          >
             <span className="text-[13px] font-bold text-slate-600 uppercase tracking-widest">Za profesionalce</span>
-          </div>
-          <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          </motion.div>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+          >
             Jasni paketi. Bez iznenađenja.
-          </h2>
-          <p className="mt-3 text-lg text-slate-700">Odaberite paket prema vašem obimu rada. Nema skrivenih troškova ni ugovornih zamki.</p>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mt-3 text-lg text-slate-700"
+          >
+            Odaberite paket prema vašem obimu rada. Nema skrivenih troškova ni ugovornih zamki.
+          </motion.p>
         </div>
 
-        <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8">
+        <motion.div 
+           initial="hidden"
+           whileInView="visible"
+           viewport={{ once: true, margin: "-50px" }}
+           variants={fadeUpContainer}
+           className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8"
+        >
           {/* Osnovni */}
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
+          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md hover:shadow-md transition-shadow">
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Osnovni</h3>
             <p className="mt-2 text-base text-slate-600 min-h-[44px]">Praćenje svih tendera. Plaćate jednokratno ako želite pripremu.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
@@ -427,7 +617,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
             </div>
             <p className="mt-1.5 text-[14px] text-amber-600 font-bold tracking-tight">+ 15 KM po svakoj pripremi ponude</p>
-            <div className="mt-6 space-y-4 border-t border-slate-100 pt-6">
+            <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6">
               {[
                 "Svi tenderi iz vaše djelatnosti",
                 "Email obavijesti i pregledi",
@@ -443,23 +633,23 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all hover:bg-slate-50 hover:shadow-sm">
               Odaberi ovaj paket
             </Link>
-          </div>
+          </motion.div>
 
           {/* Puni Paket — highlighted */}
-          <div className="relative rounded-[1.5rem] border-2 border-primary bg-white p-6 sm:p-8 shadow-xl shadow-blue-500/10 lg:scale-[1.05] z-10 transition-transform lg:-mt-2 flex flex-col">
+          <motion.div variants={fadeUpItem} className="relative rounded-[1.5rem] border-2 border-primary bg-white/95 p-6 sm:p-8 shadow-xl shadow-blue-500/15 backdrop-blur-md lg:scale-[1.05] z-10 transition-transform lg:-mt-2 flex flex-col">
             <div className="absolute -top-4 inset-x-0 flex justify-center">
               <span className="rounded-full bg-primary px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-white shadow-sm">
                 Najčešći izbor
               </span>
             </div>
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Puni Paket</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Predajete bez greške. Priprema i pregledključena potpuno besplatno.</p>
+            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Predajete bez greške. Priprema i pregled uključena potpuno besplatno.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
               <span className="font-heading text-5xl font-bold text-slate-900">99</span>
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
             </div>
             <p className="mt-1.5 text-[14px] text-emerald-600 font-bold tracking-tight">Konačna cijena, nema doplata</p>
-            <div className="mt-6 space-y-4 border-t border-slate-100 pt-6 flex-grow">
+            <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6 flex-grow">
               {[
                 "Sve iz Osnovnog paketa",
                 "Priprema tendera je besplatna",
@@ -476,10 +666,10 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.5rem] items-center justify-center rounded-xl bg-primary px-6 text-[16px] font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30">
               Kreni bez limita
             </Link>
-          </div>
+          </motion.div>
 
           {/* Agencijski */}
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md hover:shadow-md transition-shadow flex flex-col">
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Agencijski</h3>
             <p className="mt-2 text-base text-slate-600 min-h-[44px]">Za agencije koje profesionalno vode tender apliciranje za klijente.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
@@ -487,7 +677,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
             </div>
             <p className="mt-1.5 text-[14px] text-slate-500 font-bold tracking-tight">+25 KM za svaku dodatnu firmu</p>
-            <div className="mt-6 space-y-4 border-t border-slate-100 pt-6 flex-grow">
+            <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6 flex-grow">
               {[
                 "Sve pogodnosti Punog paketa",
                 "Vođenje više firmi odjednom",
@@ -503,13 +693,19 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <Link href="/contact" className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all hover:bg-slate-50 hover:shadow-sm">
               Kontakt za agencije
             </Link>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         
-        <div className="mt-12 text-center text-[14px] font-medium text-slate-500 flex items-center justify-center gap-2">
+        <motion.div 
+           initial={{ opacity: 0, y: 15 }}
+           whileInView={{ opacity: 1, y: 0 }}
+           viewport={{ once: true }}
+           transition={{ duration: 0.6, delay: 0.5 }}
+           className="mt-12 text-center text-[14px] font-medium text-slate-500 flex items-center justify-center gap-2"
+        >
           <ShieldCheck className="size-5 text-emerald-500" />
           Pretplatu možete otkazati bilo kada. Bez vezivanja dugoročnim ugovorom.
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -539,12 +735,24 @@ function FAQSection() {
   return (
     <section className="bg-white px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-100">
       <div className="mx-auto max-w-3xl">
-        <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center mb-10">
+        <motion.h2 
+           initial={{ opacity: 0, y: 20 }}
+           whileInView={{ opacity: 1, y: 0 }}
+           viewport={{ once: true }}
+           transition={{ duration: 0.6 }}
+           className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center mb-10"
+        >
           Česta pitanja (FAQ)
-        </h2>
-        <div className="space-y-4">
+        </motion.h2>
+        <motion.div 
+           initial="hidden"
+           whileInView="visible"
+           viewport={{ once: true }}
+           variants={fadeUpContainer}
+           className="space-y-4"
+        >
           {FAQ_ITEMS.map((item) => (
-            <details key={item.q} className="group rounded-2xl border border-slate-200 bg-slate-50 transition-colors hover:bg-slate-100">
+            <motion.details variants={fadeUpItem} key={item.q} className="group rounded-2xl border border-slate-200 bg-slate-50 transition-colors hover:bg-slate-100">
               <summary className="flex cursor-pointer items-center justify-between p-5 sm:p-6 text-[1.125rem] font-bold text-slate-900 [&::-webkit-details-marker]:hidden focus:outline-none">
                 {item.q}
                 <ChevronDown className="size-6 text-slate-500 transition-transform group-open:-rotate-180" />
@@ -552,9 +760,9 @@ function FAQSection() {
               <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0">
                 <p className="text-base leading-relaxed text-slate-700">{item.a}</p>
               </div>
-            </details>
+            </motion.details>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -570,7 +778,13 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-slate-900/10 -z-10" />
       <div className="absolute inset-0 bg-primary/10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[800px] rounded-full bg-primary/20 blur-[120px] -z-10 mix-blend-screen" />
-      <div className="relative z-10 mx-auto max-w-3xl">
+      <motion.div 
+         initial={{ opacity: 0, scale: 0.95, y: 20 }}
+         whileInView={{ opacity: 1, scale: 1, y: 0 }}
+         viewport={{ once: true }}
+         transition={{ duration: 0.8, ease: "easeOut" }}
+         className="relative z-10 mx-auto max-w-3xl"
+      >
         <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Počnite raditi prije nego propustite sljedeći posao.
         </h2>
@@ -580,7 +794,7 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <PrimaryCTA isLoggedIn={isLoggedIn} label="Besplatno osigurajte svoju firmu" className="!bg-white !text-slate-900 hover:!bg-slate-100 !shadow-white/10" />
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
