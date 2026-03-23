@@ -9,11 +9,14 @@ import {
   Clock,
   Bell,
   FileText,
-  TrendingUp,
   AlertTriangle,
   DollarSign,
   Zap,
   Bot,
+  ShieldCheck,
+  Building,
+  Landmark,
+  Briefcase
 } from "lucide-react";
 
 interface LandingPageProps {
@@ -94,7 +97,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1.5 mb-5">
           <span className="flex size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
           <span className="text-[13px] font-bold uppercase tracking-wide text-blue-700">
-            Javne nabavke u BiH — u jednom alatu
+            Sve javne nabavke u BiH — na jednom mjestu
           </span>
         </div>
 
@@ -103,7 +106,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         </h1>
 
         <p className="mx-auto max-w-3xl text-[1.1rem] leading-relaxed text-slate-700 sm:text-[1.25rem] mb-7">
-          Automatski <strong>pronalazimo</strong> najbolje tendere za vas, izdvajamo <strong>šta tačno treba predati</strong> i vodimo vas kroz prijavu — bez gubljenja vremena i <strong>bez grešaka</strong>.
+          Automatski <strong>pronalazimo</strong> najbolje tendere za vašu djelatnost, izdvajamo <strong>šta tačno treba predati</strong> i vodimo vas kroz prijavu — bez gubljenja vremena i <strong>bez grešaka</strong>.
         </p>
 
         {/* Digitalni zaposlenik blok */}
@@ -112,12 +115,12 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <Bot className="size-6" />
           </div>
           <p className="text-base leading-snug text-slate-700 mt-0.5">
-            Sistem radi ono što inače radi zaposlenik: prati tendere, filtrira najbolje za vas i vodi vas kroz prijavu bez propuštenih dokumenata.
+            Sistem radi ono što inače gubi sate radnog vremena: prati tendere, filtrira najbolje za vas i vodi vas kroz prijavu bez propuštenih dokumenata.
           </p>
         </div>
 
         {/* CTA */}
-        <div className="flex flex-col items-center justify-center gap-3 w-full max-w-sm mx-auto sm:max-w-none">
+        <div className="flex flex-col items-center justify-center gap-3 w-full max-w-sm mx-auto sm:max-w-none mb-16">
           <PrimaryCTA 
             isLoggedIn={isLoggedIn} 
             className="w-full sm:w-auto h-[3.75rem] sm:px-12 text-lg shadow-2xl shadow-blue-500/40 border border-blue-600" 
@@ -127,50 +130,23 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </p>
         </div>
 
-        {/* Subtle Micro-UI Teaser */}
-        <div className="mx-auto mt-16 max-w-2xl relative select-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-transparent -z-10 rounded-3xl blur-2xl opacity-50" />
-          
-          <div className="relative flex flex-col gap-4 rounded-[1.5rem] border border-slate-200/60 bg-white/60 p-5 shadow-2xl shadow-slate-200/50 backdrop-blur-xl sm:p-6 text-left hover:shadow-blue-500/10 transition-shadow">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-3.5">
-                <div className="relative flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/20">
-                  <div className="absolute -right-1 -top-1 size-3.5 rounded-full border-2 border-white bg-red-500 shadow-sm animate-pulse" />
-                  <Zap className="size-5" />
-                </div>
-                <div>
-                  <p className="text-[15px] font-bold text-slate-900 leading-none">Pronađen tender za vas</p>
-                  <p className="text-[13px] font-medium text-slate-500 mt-1.5 flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-emerald-500" />
-                    Sistem detektovao poklapanje usluga: 98%
-                  </p>
-                </div>
-              </div>
-              <span className="text-[12px] font-bold text-slate-400 hidden sm:block">Upravo sad</span>
-            </div>
-
-            <div className="flex flex-col gap-2.5 px-1 py-1">
-              <div className="h-3 w-3/4 animate-pulse rounded-full bg-slate-100" />
-              <div className="h-3 w-1/2 animate-pulse rounded-full bg-slate-100" />
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="rounded-lg bg-blue-50/80 px-3 py-1.5 text-[12px] font-extrabold text-blue-600 border border-blue-100/50"># IT Oprema i Usluge</span>
-              <span className="rounded-lg bg-amber-50/80 px-3 py-1.5 text-[12px] font-extrabold text-amber-600 border border-amber-100/50">Vrijednost: 120.000 KM</span>
-              <span className="rounded-lg bg-slate-50/80 px-3 py-1.5 text-[12px] font-extrabold text-slate-500 border border-slate-200/50 flex items-center gap-1">
-                <Clock className="size-3.5" />
-                Rok: 14 dana
-              </span>
-            </div>
+        {/* Trust & Scale Indicators - Professional SaaS context */}
+        <div className="mx-auto max-w-4xl border-t border-slate-200/60 pt-10">
+          <p className="text-[14px] font-bold text-slate-500 uppercase tracking-widest mb-6">Pouzdano praćenje sa svih ključnih bh. izvora</p>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-600 font-bold text-[15px]">
+            <span className="flex items-center gap-2"><Landmark className="size-5 text-slate-400" /> Portal Javnih Nabavki</span>
+            <span className="flex items-center gap-2"><Building className="size-5 text-slate-400" /> Vlada FBiH i RS</span>
+            <span className="flex items-center gap-2"><Building className="size-5 text-slate-400" /> Kantonalna ministarstva</span>
+            <span className="flex items-center gap-2"><Briefcase className="size-5 text-slate-400" /> Javna preduzeća</span>
           </div>
         </div>
 
         {/* 3 Metric-driven Cards */}
-        <div className="mt-14 grid gap-5 text-left md:grid-cols-3">
+        <div className="mt-16 grid gap-5 text-left md:grid-cols-3">
           {[
             { metric: "3x", title: "više tendera", desc: "Sistem filtrira tržište i izdvaja samo one prilike koje bi vjerovatno propustili ručnim radom." },
             { metric: "10x", title: "brža priprema", desc: "Automatska analiza obimne dokumentacije uklanja desetine sati dosadnog ručnog čitanja." },
-            { metric: "2x", title: "veća zarada", desc: "Bez propuštenih prilika i bez odbačenih prijava zbog sitnih birokratskih previda." },
+            { metric: "2x", title: "veća potencijalna zarada", desc: "Bez propuštenih prilika i bez odbačenih prijava zbog sitnih birokratskih previda." },
           ].map((item) => (
              <div key={item.title} className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
                <div className="flex items-baseline gap-2">
@@ -191,23 +167,27 @@ function HowItWorksSection() {
   const steps = [
     {
       icon: Zap,
+      badge: "SKENIRANJE",
       title: "Pronalazak tendera",
-      desc: "Skeniramo portale i filtriramo tendere occursano prema vašoj djelatnosti i lokaciji.",
+      desc: "Skeniramo portale i filtriramo tendere precizno prema vašoj djelatnosti i lokaciji.",
     },
     {
       icon: Bell,
+      badge: "OBAVJEŠTAVANJE",
       title: "Obavijest na email",
-      desc: "Čim se pojavi novi tender za vas — odmah dobijate jasan email sažetak.",
+      desc: "Čim se pojavi novi tender za vas — odmah dobijate jasan email sažetak bez logiranja.",
     },
     {
       icon: FileText,
+      badge: "ANALIZA",
       title: "Jasni zahtjevi",
-      desc: "Odmah vidite koje tačno dokumente i uvjerenja trebate skupiti za prijavu.",
+      desc: "Odmah vidite koje tačno dokumente i uvjerenja trebate priložiti za sigurnu prijavu.",
     },
     {
       icon: CheckCircle,
+      badge: "VALIDACIJA",
       title: "Priprema bez greške",
-      desc: "Vodimo vas korak-po-korak do predaje i upozoravamo vas na sve što nedostaje.",
+      desc: "Sistem vas upozorava na sve papire koji nedostaju prije nego što se ponuda pošalje.",
     },
   ];
 
@@ -216,16 +196,24 @@ function HowItWorksSection() {
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-12">
           <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Kako radi
+            Sistematiziran proces prijave
           </h2>
-          <p className="mt-3 text-lg text-slate-700">4 pojednostavljena koraka od objave do pobjede na tenderu.</p>
+          <p className="mt-3 text-lg text-slate-700">4 optimizirana koraka od objave tendera do odobrene aplikacije.</p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative">
+          {/* Subtle connection line for desktop */}
+          <div className="hidden lg:block absolute top-12 left-10 right-10 h-0.5 border-t-2 border-dashed border-slate-200 -z-0" />
+
           {steps.map((s) => (
-            <div key={s.title} className="relative rounded-2xl border border-white/60 bg-white p-6 sm:p-7 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 mb-4">
-                <s.icon className="size-6" />
+            <div key={s.title} className="relative rounded-2xl border border-white/60 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 z-10">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-4 ring-white">
+                  <s.icon className="size-6" />
+                </div>
+                <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold tracking-wider text-slate-500 uppercase border border-slate-200/60">
+                  {s.badge}
+                </span>
               </div>
               <h3 className="font-heading text-lg font-bold leading-tight text-slate-900">{s.title}</h3>
               <p className="mt-2 text-base leading-relaxed text-slate-600">{s.desc}</p>
@@ -233,7 +221,7 @@ function HowItWorksSection() {
           ))}
         </div>
 
-        <div className="mt-10 flex justify-center">
+        <div className="mt-12 flex justify-center">
           <PrimaryCTA className="h-[3.25rem] px-10 text-base shadow-md" />
         </div>
       </div>
@@ -250,13 +238,14 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Koliko vremena gubite na jedan tender?
           </h2>
-          <p className="mt-3 text-lg text-slate-700">Praktična usporedba između ručnog rada i korištenja aplikacije.</p>
+          <p className="mt-3 text-lg text-slate-700">Razlika između iscrpljujućeg ručnog rada i softverske validacije.</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Bez aplikacije */}
-          <div className="rounded-3xl border border-red-100 bg-red-50/60 p-6 sm:p-8">
-            <div className="flex items-center gap-4 mb-6">
+          <div className="rounded-3xl border border-red-100 bg-red-50/60 p-6 sm:p-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-red-100/50 blur-2xl" />
+            <div className="flex items-center gap-4 mb-6 relative">
               <div className="flex size-12 items-center justify-center rounded-xl bg-red-100 text-red-500">
                 <X className="size-6" />
               </div>
@@ -265,13 +254,24 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <p className="font-heading text-2xl font-bold text-slate-900">2–5 sati po tenderu</p>
               </div>
             </div>
-            <ul className="space-y-4">
+            
+            <div className="mb-6 space-y-2 relative">
+              <div className="flex justify-between text-[13px] font-bold text-slate-600">
+                <span>Utrošeno vrijeme procesa</span>
+                <span className="text-red-500">100%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                <div className="h-full w-full rounded-full bg-red-400" />
+              </div>
+            </div>
+
+            <ul className="space-y-4 relative">
               {[
-                "Ručno pretraživanje portala svaki dan",
+                "Ručno pretraživanje portala apsolutno svaki dan",
+                "Pregledanje i čitanje tendera koji nisu za vas",
                 "Čitanje stotina stranica dokumentacije od nule",
-                "Izvlačenje zahtjeva i dokumentacije",
-                "Velika vjerovatnoća greške pri predaji ponude",
-                "Propustit ćete javne nabavke",
+                "Nejasno šta sve tačno prikupiti od papira",
+                "Niste sigurni je li ponuda 100% ispravna za predaju",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-base text-slate-700">
                   <X className="mt-0.5 size-5 shrink-0 text-red-400" />
@@ -282,21 +282,33 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </div>
 
           {/* Sa aplikacijom */}
-          <div className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 sm:p-8">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+          <div className="rounded-3xl border border-emerald-200 bg-emerald-50/60 p-6 sm:p-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-emerald-100/50 blur-2xl" />
+            <div className="flex items-center gap-4 mb-6 relative">
+              <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 shadow-sm shadow-emerald-500/20">
                 <Zap className="size-6" />
               </div>
               <div>
-                <p className="text-[13px] font-bold uppercase tracking-wider text-emerald-700">Sa aplikacijom</p>
+                <p className="text-[13px] font-bold uppercase tracking-wider text-emerald-700">Sa MojaPonuda sistemom</p>
                 <p className="font-heading text-2xl font-bold text-slate-900">20–45 minuta ukupno</p>
               </div>
             </div>
-            <ul className="space-y-4">
+
+            <div className="mb-6 space-y-2 relative">
+              <div className="flex justify-between text-[13px] font-bold text-slate-600">
+                <span>Utrošeno vrijeme procesa</span>
+                <span className="text-emerald-700">-85% brže</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-emerald-200/50 overflow-hidden">
+                <div className="h-full w-[15%] rounded-full bg-emerald-500" />
+              </div>
+            </div>
+
+            <ul className="space-y-4 relative">
               {[
                 "Dobijate tendere izabrane isključivo za vas",
                 "Jasan pregled onoga što je kritično za tender",
-                "Tačan spisak dokumentacije koja vam treba",
+                "Tačan grafički spisak dokumentacije koja vam treba",
                 "Sigurnosne provjere ispravnosti prije predaje",
                 "Vidite tržište, analizu i konkurenciju",
               ].map((item) => (
@@ -307,24 +319,6 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               ))}
             </ul>
           </div>
-        </div>
-
-        {/* Kvantifikacija */}
-        <div className="mt-8 grid gap-5 sm:grid-cols-3">
-          {[
-            { value: "10–20h", label: "ušteda vremena svaki mjesec" },
-            { value: "3×", label: "primijećenih tendera na vrijeme" },
-            { value: "↓", label: "manje odbačenih ponuda zbog grešaka" },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center shadow-sm">
-              <p className="font-heading text-3xl font-extrabold text-primary sm:text-4xl">{stat.value}</p>
-              <p className="mt-2 text-[15px] font-semibold text-slate-700">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-10 flex justify-center">
-          <PrimaryCTA isLoggedIn={isLoggedIn} />
         </div>
       </div>
     </section>
@@ -345,21 +339,21 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         <div className="grid gap-12 lg:grid-cols-2 items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 mb-6">
-              <DollarSign className="size-4 text-blue-300" />
-              <span className="text-[12px] font-bold uppercase tracking-wider text-blue-300">ROI</span>
+              <ShieldCheck className="size-4 text-emerald-400" />
+              <span className="text-[12px] font-bold uppercase tracking-wider text-emerald-400">Sigurnost poslovanja</span>
             </div>
             <h2 className="font-heading text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-              Jedan propušten tender košta više od cijele godine aplikacije.
+              Jedan propušten tender košta vas više od cijele godine aplikacije.
             </h2>
             <p className="mt-5 text-lg text-slate-300 leading-relaxed">
-              Firme gube poslove zbog bizarnih administrativnih grešaka koje se mogu spriječiti. Nevažeća potvrda, zaboravljen aneks... to više nije vaš problem.
+              Firme gube poslove zbog bizarnih administrativnih grešaka. Nevažeća porezna potvrda, zaboravljen aneks... to više nije vaš problem. Gubitak stotina hiljada KM zbog papira je neprihvatljiv.
             </p>
 
             <div className="mt-8 space-y-4">
               {[
-                { icon: AlertTriangle, text: "Niste vidjeli tender jer ste zaboravili provjeriti" },
-                { icon: Clock, text: "Ponuda kasni jer vam je ostalo premalo dana za pripremu" },
-                { icon: FileText, text: "Uklonjeni ste sa tendera zbog jednog papira viška ili manjka" },
+                { icon: AlertTriangle, text: "Niste vidjeli tender jer ste taj dan zaboravili provjeriti portale" },
+                { icon: Clock, text: "Ponuda kasni jer vam je ostalo premalo dana za pripremu svega" },
+                { icon: FileText, text: "Ponuda je potpuno odbačena jer je nedostajao jedan jedini papir" },
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
                   <item.icon className="size-6 shrink-0 text-red-400" />
@@ -369,23 +363,23 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </div>
 
             <div className="mt-8 rounded-xl border border-blue-500/30 bg-blue-600/20 p-5">
-              <p className="text-lg font-bold text-white">MojaPonuda.ba sprječava ljudski faktor greške.</p>
+              <p className="text-lg font-bold text-white">Softver dizajniran da sprječava ljudske greške.</p>
               <p className="mt-1 text-base text-slate-300">
-                Niste prisutni svaki dan? Mi pratimo za vas, neumorno.
+                Ljudski je pogriješiti u papirologiji. Sistem to ne dozvoljava.
               </p>
             </div>
           </div>
 
           <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-8 sm:p-10 backdrop-blur-sm shadow-2xl">
-            <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Uvijek znate šta tačno fali za prijavu</p>
+            <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Visualna kontrola svake tačke</p>
             <div className="space-y-3">
               {[
-                { done: true, text: "Uvjerenje o izmirenim porezima" },
-                { done: true, text: "Popunjena izjava o podobnosti" },
-                { done: true, text: "Referentna lista (min. 3 proc.)" },
-                { done: false, text: "Bankarska garancija ← hitno" },
-                { done: true, text: "Tehnička specifikacija" },
-                { done: false, text: "UJP potvrda (stara istekla)" },
+                { done: true, text: "Uvjerenje o izmirenim porezima (PDV)" },
+                { done: true, text: "Popunjena izjava o podobnosti učesnika" },
+                { done: true, text: "Referentna lista (min. 3 proc.) validirana" },
+                { done: false, text: "Bankarska garancija za ozbiljnost ← HITNO" },
+                { done: true, text: "Dokaz o tehničkoj specifikaciji" },
+                { done: false, text: "UJP potvrda (stara potvrda je istekla!)" },
               ].map((item) => (
                 <div key={item.text} className={`flex items-center gap-3.5 rounded-xl p-4 transition-colors ${item.done ? "border border-white/10 bg-white/5" : "border border-red-500/40 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]"}`}>
                   {item.done
@@ -396,7 +390,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-[14px] font-medium text-slate-400">Vizuelna indikacija rupa u papirologiji spašava zaradu.</p>
+            <p className="mt-6 text-[15px] font-medium text-slate-400">Sistem crvenom bojom štiti vašu firmu od formalno neispravnih predaja dokumenata.</p>
           </div>
         </div>
       </div>
@@ -411,25 +405,25 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <div className="mx-auto max-w-6xl">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 mb-5">
-            <span className="text-[13px] font-bold text-slate-600 uppercase tracking-widest">Od 50 KM mjesečno</span>
+            <span className="text-[13px] font-bold text-slate-600 uppercase tracking-widest">Za profesionalce</span>
           </div>
           <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
             Jasni paketi. Bez iznenađenja.
           </h2>
-          <p className="mt-3 text-lg text-slate-700">Odaberite paket prema vašem obimu rada. Nema skrivenih troškova.</p>
+          <p className="mt-3 text-lg text-slate-700">Odaberite paket prema vašem obimu rada. Nema skrivenih troškova ni ugovornih zamki.</p>
         </div>
 
         <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8">
           {/* Osnovni */}
           <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Osnovni</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Prati sve tendere. Plaćate jednokratno ako želite pripremu.</p>
+            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Praćenje svih tendera. Plaćate jednokratno ako želite pripremu.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
               <span className="font-heading text-4xl font-bold text-slate-900">49</span>
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
             </div>
             <p className="mt-1.5 text-[14px] text-amber-600 font-bold tracking-tight">+ 15 KM po svakoj pripremi ponude</p>
-            <div className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4 border-t border-slate-100 pt-6">
               {[
                 "Svi tenderi iz vaše djelatnosti",
                 "Email obavijesti i pregledi",
@@ -448,56 +442,56 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </div>
 
           {/* Puni Paket — highlighted */}
-          <div className="relative rounded-[1.5rem] border-2 border-primary bg-white p-6 sm:p-8 shadow-xl shadow-blue-500/10 lg:scale-[1.05] z-10 transition-transform lg:-mt-2">
+          <div className="relative rounded-[1.5rem] border-2 border-primary bg-white p-6 sm:p-8 shadow-xl shadow-blue-500/10 lg:scale-[1.05] z-10 transition-transform lg:-mt-2 flex flex-col">
             <div className="absolute -top-4 inset-x-0 flex justify-center">
-              <span className="rounded-full bg-primary px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-white">
+              <span className="rounded-full bg-primary px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-white shadow-sm">
                 Najčešći izbor
               </span>
             </div>
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Puni Paket</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Predajete bez greške. Priprema uključena potpuno besplatno.</p>
+            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Predajete bez greške. Priprema i pregledključena potpuno besplatno.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
               <span className="font-heading text-5xl font-bold text-slate-900">99</span>
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
             </div>
             <p className="mt-1.5 text-[14px] text-emerald-600 font-bold tracking-tight">Konačna cijena, nema doplata</p>
-            <div className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4 border-t border-slate-100 pt-6 flex-grow">
               {[
-                "Sve iz Osnovnog paketa +",
-                "Priprema ponuda je besplatna",
-                "Ne plaćate naknade po tenderu",
-                "Validacija i pronalazak grešaka",
-                "Podrška i pregled konkurencije",
-              ].map((f) => (
-                <div key={f} className={`flex items-start gap-3 text-base ${f.startsWith("Sve iz") ? "text-slate-500 font-semibold" : "text-slate-800 font-bold"}`}>
-                  <CheckCircle className={`mt-0.5 size-5 shrink-0 ${f.startsWith("Sve iz") ? "text-slate-400" : "text-primary"}`} />
+                "Sve iz Osnovnog paketa",
+                "Priprema tendera je besplatna",
+                "Nema transakcija po tenderu",
+                "Validacija i garancija dokumentacije",
+                "Aktivno praćenje konkurencije",
+              ].map((f, i) => (
+                <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "text-slate-500 font-semibold" : "text-slate-800 font-bold"}`}>
+                  <CheckCircle className={`mt-0.5 size-5 shrink-0 ${i === 0 ? "text-slate-400" : "text-primary"}`} />
                   <span className="leading-snug">{f}</span>
                 </div>
               ))}
             </div>
             <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.5rem] items-center justify-center rounded-xl bg-primary px-6 text-[16px] font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30">
-              Počni bez limita
+              Kreni bez limita
             </Link>
           </div>
 
           {/* Agencijski */}
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col">
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Agencijski</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Za preduzeća i agencije koje paralelno vode veći broj firmi.</p>
+            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Za agencije koje profesionalno vode tender apliciranje za klijente.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
               <span className="font-heading text-4xl font-bold text-slate-900">149+</span>
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
             </div>
             <p className="mt-1.5 text-[14px] text-slate-500 font-bold tracking-tight">+25 KM za svaku dodatnu firmu</p>
-            <div className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4 border-t border-slate-100 pt-6 flex-grow">
               {[
                 "Sve pogodnosti Punog paketa",
                 "Vođenje više firmi odjednom",
-                "Zasebni logički profili",
-                "Prioritetna kontrola svake firme",
-              ].map((f) => (
-                <div key={f} className={`flex items-start gap-3 text-base text-slate-700`}>
-                  <CheckCircle className={`mt-0.5 size-5 shrink-0 text-slate-400`} />
+                "Zasebni logički profili klijenata",
+                "Uspostavljanje centralne kontrole",
+              ].map((f, i) => (
+                <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "text-slate-500 font-semibold" : "text-slate-700"}`}>
+                  <CheckCircle className={`mt-0.5 size-5 shrink-0 ${i === 0 ? "text-slate-400" : "text-slate-400"}`} />
                   <span className="leading-snug">{f}</span>
                 </div>
               ))}
@@ -506,6 +500,11 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               Kontakt za agencije
             </Link>
           </div>
+        </div>
+        
+        <div className="mt-12 text-center text-[14px] font-medium text-slate-500 flex items-center justify-center gap-2">
+          <ShieldCheck className="size-5 text-emerald-500" />
+          Pretplatu možete otkazati bilo kada. Bez vezivanja dugoročnim ugovorom.
         </div>
       </div>
     </section>
@@ -520,15 +519,15 @@ const FAQ_ITEMS = [
   },
   {
     q: "Šta ako nisam siguran da aplikacija donosi posao?",
-    a: "Tokom prvog mjeseca aplikaciju možete prekinuti bez ijednog dodatnog pitanja ukoliko zaključite da vas ne ubrzava.",
+    a: "Tokom prvog mjeseca aplikaciju možete prekinuti bez ijednog dodatnog pitanja ukoliko zaključite da vas ne ubrzava u radu i ne pridonosi redu.",
   },
   {
-    q: "Kakva je sigurnost mojih dokumenata?",
-    a: "Koristimo bankovnu zaštitu (AES-256 enkripciju). Tuđa dokumenta su apsolutno obezbijeđena i nitko im ne može pristupiti.",
+    q: "Kakva je sigurnost mojih prenesenih dokumenata?",
+    a: "Svi dokumenti su striktno izolovani kroz AWS enterprise sigurnosne protokole (AES-256). Nitko osim vas nema pristup vašoj bazi.",
   },
   {
     q: "Da li vi pišete i printate moju ponudu?",
-    a: "Ne. Vi kontrolirate svoju firmu i svoje dokumente, mi sluštite kao vodič koji nadzire da li nešto zaboravljate prije nego što papire stavite u kovertu i pošaljete ugovornom organu.",
+    a: "Ne. Mi nudimo softverski nadzor — vi printate papire i odlučujete cijene. Aplikacija služi da vas osigura da niste nešto pogrešno spakovali i da vas alarmira ukoliko papir fali.",
   },
 ] as const;
 
@@ -565,14 +564,13 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[800px] rounded-full bg-primary/20 blur-[120px] -z-10" />
       <div className="relative z-10 mx-auto max-w-3xl">
         <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          Počnite prije nego propustite sljedeći posao.
+          Počnite raditi prije nego propustite sljedeći posao.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-[1.125rem] text-slate-300 leading-relaxed font-medium">
-          Besplatno se registrirajte i provjerite apsolutno sve aktivne tendere za vašu firmu – upravo sad.
+          Dopustite sistemu da obavi teški, dosadni rad umjesto vas, te da vas alarmira sa čistim listama obaveza.
         </p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <PrimaryCTA isLoggedIn={isLoggedIn} label="Pretraži za svoju firmu" className="!bg-white !text-slate-900 hover:!bg-slate-100 !shadow-white/10" />
-          <p className="text-[14px] font-semibold text-slate-400">Bez ikakvih ugovora · Od 49 KM/mj</p>
+          <PrimaryCTA isLoggedIn={isLoggedIn} label="Besplatno osigurajte svoju firmu" className="!bg-white !text-slate-900 hover:!bg-slate-100 !shadow-white/10" />
         </div>
       </div>
     </section>
