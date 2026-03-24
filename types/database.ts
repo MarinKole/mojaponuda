@@ -661,6 +661,87 @@ export interface Database {
         };
         Relationships: [];
       };
+      agency_clients: {
+        Row: {
+          id: string;
+          agency_user_id: string;
+          company_id: string;
+          status: string;
+          crm_stage: string;
+          notes: string | null;
+          contract_start: string | null;
+          contract_end: string | null;
+          monthly_fee: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_user_id: string;
+          company_id: string;
+          status?: string;
+          crm_stage?: string;
+          notes?: string | null;
+          contract_start?: string | null;
+          contract_end?: string | null;
+          monthly_fee?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_user_id?: string;
+          company_id?: string;
+          status?: string;
+          crm_stage?: string;
+          notes?: string | null;
+          contract_start?: string | null;
+          contract_end?: string | null;
+          monthly_fee?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agency_clients_agency_user_id_fkey";
+            columns: ["agency_user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "agency_clients_company_id_fkey";
+            columns: ["company_id"];
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      agency_client_notes: {
+        Row: {
+          id: string;
+          agency_client_id: string;
+          note: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_client_id: string;
+          note: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_client_id?: string;
+          note?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agency_client_notes_agency_client_id_fkey";
+            columns: ["agency_client_id"];
+            referencedRelation: "agency_clients";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       documents_with_expiry: {

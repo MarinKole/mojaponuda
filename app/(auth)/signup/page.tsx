@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { resolveSignupRedirectPath } from "@/lib/agency";
 
 const errorMessages: Record<string, string> = {
   "User already registered": "Korisnik sa ovom email adresom već postoji.",
@@ -101,7 +102,7 @@ export default function SignupPage() {
     }
 
     if (data.session && data.user) {
-      router.push("/onboarding");
+      router.push(resolveSignupRedirectPath(email));
       router.refresh();
       return;
     }

@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createCheckout } from "@/lib/lemonsqueezy";
 import { PLANS, type PlanTier } from "@/lib/plans";
 import { isDemoUser } from "@/lib/demo";
+import { isAgencyPlanId } from "@/lib/agency";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -24,6 +25,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Nevažeći plan." },
         { status: 400 }
+      );
+    }
+
+    if (isAgencyPlanId(planId)) {
+      return NextResponse.json(
+        { error: "Agencijski paket nije dostupan kroz self-serve checkout." },
+        { status: 403 }
       );
     }
 

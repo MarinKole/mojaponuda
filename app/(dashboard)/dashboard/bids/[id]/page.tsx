@@ -15,7 +15,7 @@ import { ChecklistPanel } from "@/components/bids/workspace/checklist-panel";
 import { DocumentsPanel } from "@/components/bids/workspace/documents-panel";
 import { NotesSection } from "@/components/bids/workspace/notes-section";
 import { PaywallOverlay } from "@/components/subscription/paywall-overlay";
-import { getSubscriptionStatus } from "@/lib/subscription";
+import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 
 const MAX_FREE_BIDS = 3;
 
@@ -56,7 +56,11 @@ export default async function BidWorkspacePage({
     .single();
 
   const company = companyData as Company | null;
-  if (!company) redirect("/onboarding");
+  if (!company) {
+    const { plan } = await getSubscriptionStatus(user!.id, user!.email, supabase);
+    if (isAgencyPlan(plan)) redirect("/dashboard/agency");
+    redirect("/onboarding");
+  }
 
   // Dohvati ponudu s tender podacima
   const { data: bidData } = await supabase

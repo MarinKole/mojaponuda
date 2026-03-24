@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { demoBidSummaries, isCompanyProfileComplete, isDemoUser } from "@/lib/demo";
+import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 import type { Company, BidStatus } from "@/types/database";
 import { BidsTable } from "@/components/bids/bids-table";
 import { NewBidModal } from "@/components/bids/new-bid-modal";
@@ -38,6 +39,8 @@ export default async function BidsPage() {
   const company = companyData as Company | null;
 
   if (!isCompanyProfileComplete(company)) {
+    const { plan } = await getSubscriptionStatus(user!.id, user!.email, supabase);
+    if (isAgencyPlan(plan)) redirect("/dashboard/agency");
     redirect("/onboarding");
   }
 

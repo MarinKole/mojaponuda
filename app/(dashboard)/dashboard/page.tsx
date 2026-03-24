@@ -19,7 +19,7 @@ import {
   hasRecommendationSignals,
   selectTenderRecommendations,
 } from "@/lib/tender-recommendations";
-import { getSubscriptionStatus } from "@/lib/subscription";
+import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 
 function formatCompactCurrency(value: number | null | undefined): string {
   if (!value) return "—";
@@ -53,6 +53,10 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Agency users skip onboarding and go directly to agency dashboard
+  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
+  if (isAgencyPlan(plan)) redirect("/dashboard/agency");
 
   const isDemoAccount = isDemoUser(user.email);
   const { data: company } = await supabase

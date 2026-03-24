@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
+import { getSubscriptionStatus } from "@/lib/subscription";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 export default async function DashboardLayout({
@@ -24,6 +25,8 @@ export default async function DashboardLayout({
     .maybeSingle();
 
   const isAdmin = isAdminEmail(user.email);
+  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
+  const isAgency = plan.id === "agency";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#f8fafc_0%,#f8fbff_12%,#f1f5f9_100%)]">
@@ -34,6 +37,7 @@ export default async function DashboardLayout({
         userEmail={user.email ?? ""}
         companyName={company?.name}
         isAdmin={isAdmin}
+        isAgency={isAgency}
       />
       <main className="relative z-10 min-h-screen pl-[244px]">
         <div className="mx-auto min-h-screen w-full max-w-[1680px] px-6 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 xl:px-12 xl:py-12">

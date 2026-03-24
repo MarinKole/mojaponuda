@@ -3,6 +3,7 @@ import { getDemoSubscription, isDemoUser } from "@/lib/demo";
 import type { Subscription } from "@/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_PLAN, getPlanFromVariantId, type Plan, PLANS } from "@/lib/plans";
+import { isAgencyPlan as isAgencyPlanHelper, isComplimentaryAgencyEmail } from "@/lib/agency";
 
 // Configurable via COMPLIMENTARY_PRO_EMAILS env var (comma-separated).
 const FALLBACK_COMPLIMENTARY_PRO_EMAILS = ["marin.kolenda@outlook.com"];
@@ -19,6 +20,13 @@ function getComplimentaryProEmails(): string[] {
 function hasComplimentaryProAccess(email?: string | null): boolean {
   const normalizedEmail = email?.trim().toLowerCase();
   return normalizedEmail ? getComplimentaryProEmails().includes(normalizedEmail) : false;
+}
+
+/**
+ * Returns true if the plan is an agency plan.
+ */
+export function isAgencyPlan(plan: Plan): boolean {
+  return isAgencyPlanHelper(plan);
 }
 
 export type SubscriptionStatus = {
@@ -49,6 +57,15 @@ export async function getSubscriptionStatus(
     .maybeSingle();
 
   const subscription = data as Subscription | null;
+
+  // Complimentary agency access (test accounts)
+  if (isComplimentaryAgencyEmail(email)) {
+    return {
+      isSubscribed: true,
+      subscription,
+      plan: PLANS.agency,
+    };
+  }
 
   if (isDemoUser(email)) {
     if (subscription) {
@@ -89,4 +106,3 @@ export async function getSubscriptionStatus(
 
   return { isSubscribed, subscription, plan };
 }
-

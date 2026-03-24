@@ -7,11 +7,13 @@ import { PricingTable } from "@/components/subscription/pricing-table";
 import { type PlanTier } from "@/lib/plans";
 import { useToast } from "@/components/ui/use-toast";
 import type { SubscriptionStatus } from "@/lib/subscription";
+import { isAgencyPlan } from "@/lib/agency";
 
 export function SubscriptionClientPage({ initialStatus }: { initialStatus: SubscriptionStatus }) {
   const router = useRouter();
   const { toast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<PlanTier | null>(null);
+  const isAgencyAccount = isAgencyPlan(initialStatus.plan);
 
   async function handleSelectPlan(planId: PlanTier) {
     if (planId === "basic") {
@@ -70,16 +72,27 @@ export function SubscriptionClientPage({ initialStatus }: { initialStatus: Subsc
         currentPeriodEnd={initialStatus.subscription?.current_period_end ?? null}
         hasCustomerId={!!initialStatus.subscription?.lemonsqueezy_customer_id}
         plan={initialStatus.plan}
+        showPortal={!isAgencyAccount}
       />
 
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-slate-900 mb-6">Odaberite nivo kontrole koji vam treba</h2>
-        <PricingTable 
-          currentPlanId={initialStatus.plan.id}
-          onSelectPlan={handleSelectPlan}
-          isLoading={loadingPlan !== null}
-        />
-      </div>
+      {isAgencyAccount ? (
+        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-2xl font-heading font-bold text-slate-900">Agencijski pristup se vodi kroz admin provisioning</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            Agencijski paket nije dostupan kao self-serve nadogradnja ili izmjena iz korisničkog dashboarda. Ako treba promjena pristupa, to se radi kroz admin panel.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <h2 className="text-2xl font-heading font-bold text-slate-900 mb-6">Odaberite nivo kontrole koji vam treba</h2>
+          <PricingTable
+            currentPlanId={initialStatus.plan.id}
+            onSelectPlan={handleSelectPlan}
+            isLoading={loadingPlan !== null}
+            visiblePlanIds={["basic", "starter", "pro"]}
+          />
+        </div>
+      )}
     </div>
   );
 }

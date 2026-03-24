@@ -10,14 +10,17 @@ interface PricingTableProps {
   currentPlanId?: PlanTier;
   onSelectPlan: (planId: PlanTier) => Promise<void>;
   isLoading?: boolean;
+  visiblePlanIds?: PlanTier[];
 }
 
 export function PricingTable({
   currentPlanId,
   onSelectPlan,
   isLoading = false,
+  visiblePlanIds,
 }: PricingTableProps) {
   const [loadingPlan, setLoadingPlan] = useState<PlanTier | null>(null);
+  const visiblePlans = (visiblePlanIds ?? (Object.keys(PLANS) as PlanTier[])).map((planId) => PLANS[planId]);
 
   const handleSelect = async (planId: PlanTier) => {
     setLoadingPlan(planId);
@@ -30,7 +33,7 @@ export function PricingTable({
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
-      {(Object.values(PLANS) as Array<typeof PLANS[keyof typeof PLANS]>).map((plan) => {
+      {visiblePlans.map((plan) => {
         const isCurrent = currentPlanId === plan.id;
         const isPopular = plan.id === "pro";
         const loading = isLoading || loadingPlan === plan.id;

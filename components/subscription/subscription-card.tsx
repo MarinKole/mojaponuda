@@ -29,6 +29,7 @@ interface SubscriptionCardProps {
   currentPeriodEnd: string | null;
   hasCustomerId: boolean;
   plan?: Plan;
+  showPortal?: boolean;
 }
 
 export function SubscriptionCard({
@@ -37,6 +38,7 @@ export function SubscriptionCard({
   currentPeriodEnd,
   hasCustomerId,
   plan,
+  showPortal = true,
 }: SubscriptionCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export function SubscriptionCard({
         <p className="mt-4 text-sm font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>
       )}
 
-      {hasCustomerId && (
+      {showPortal && hasCustomerId && (
         <div className="mt-8 pt-6 border-t border-slate-100">
           <Button
             className="w-full sm:w-auto rounded-xl font-bold h-11"
@@ -128,4 +130,3 @@ export function SubscriptionCard({
     </div>
   );
 }
-

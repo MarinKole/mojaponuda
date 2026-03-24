@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getDemoDocuments, isCompanyProfileComplete, isDemoUser } from "@/lib/demo";
+import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 import type { Company, Document } from "@/types/database";
 import { DocumentGrid } from "@/components/vault/document-grid";
 import { AddDocumentModal } from "@/components/vault/add-document-modal";
@@ -26,6 +27,8 @@ export default async function VaultPage() {
   const company = companyData as Company | null;
 
   if (!isCompanyProfileComplete(company)) {
+    const { plan } = await getSubscriptionStatus(user!.id, user!.email, supabase);
+    if (isAgencyPlan(plan)) redirect("/dashboard/agency");
     redirect("/onboarding");
   }
 

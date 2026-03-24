@@ -4,6 +4,7 @@ import { loadAdminPortalLeadsData } from "@/lib/admin-portal-leads";
 import { getPlanFromVariantId } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Company, Database, Subscription } from "@/types/database";
+import { isAgencyPlanId, isComplimentaryAgencyEmail } from "@/lib/agency";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "past_due"]);
@@ -93,6 +94,27 @@ export interface AdminSystemData {
   };
   jobs: AdminSystemJob[];
   issues: AdminSystemIssue[];
+}
+
+export interface AdminAgencyAccount {
+  userId: string;
+  email: string;
+  createdAt: string;
+  subscriptionStatus: string | null;
+  managedClients: number;
+  isActive: boolean;
+  isComplimentary: boolean;
+}
+
+export interface AdminAgenciesData {
+  generatedAt: string;
+  summary: {
+    total: number;
+    active: number;
+    inactive: number;
+    complimentary: number;
+  };
+  agencies: AdminAgencyAccount[];
 }
 
 function normalizeEmail(value: string | null | undefined): string {
@@ -246,6 +268,16 @@ async function listAllUsers(): Promise<User[]> {
   }
 
   return users;
+}
+
+export async function findUserByEmail(email: string): Promise<User | null> {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const users = await listAllUsers();
+  return users.find((user) => normalizeEmail(user.email) === normalizedEmail) ?? null;
 }
 
 async function loadAdminBaseData() {
@@ -558,5 +590,96 @@ export async function loadAdminSystemData(): Promise<AdminSystemData> {
     },
     jobs,
     issues,
+  };
+}
+
+export async function loadAdminAgenciesData(): Promise<AdminAgenciesData> {
+  const admin = createAdminClient();
+  const [users, subscriptionsResult, agencyClientsResult] = await Promise.all([
+    listAllUsers(),
+    admin
+      .from("subscriptions")
+      .select("user_id, lemonsqueezy_variant_id, status, created_at")
+      .order("created_at", { ascending: false }),
+    admin.from("agency_clients").select("agency_user_id"),
+  ]);
+
+  if (subscriptionsResult.error) {
+    throw new Error(`Ne mogu učitati pretplate za agencije: ${subscriptionsResult.error.message}`);
+  }
+
+  if (agencyClientsResult.error) {
+    throw new Error(`Ne mogu učitati agencijske klijente: ${agencyClientsResult.error.message}`);
+  }
+
+  const adminEmailSet = new Set(getAdminEmails().map((email) => normalizeEmail(email)));
+  const customerUsers = users.filter((user) => !adminEmailSet.has(normalizeEmail(user.email)));
+  const subscriptions = (subscriptionsResult.data ?? []) as Pick<
+    Subscription,
+    "user_id" | "lemonsqueezy_variant_id" | "status" | "created_at"
+  >[];
+
+  const subscriptionByUserId = new Map<
+    string,
+    Pick<Subscription, "user_id" | "lemonsqueezy_variant_id" | "status" | "created_at">
+  >();
+  for (const subscription of subscriptions) {
+    if (!subscriptionByUserId.has(subscription.user_id)) {
+      subscriptionByUserId.set(subscription.user_id, subscription);
+    }
+  }
+
+  const managedClientsCount = new Map<string, number>();
+  for (const row of agencyClientsResult.data ?? []) {
+    managedClientsCount.set(
+      row.agency_user_id,
+      (managedClientsCount.get(row.agency_user_id) ?? 0) + 1
+    );
+  }
+
+  const agencies = customerUsers
+    .map<AdminAgencyAccount | null>((user) => {
+      const subscription = subscriptionByUserId.get(user.id) ?? null;
+      const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+      const metadataRole =
+        typeof metadata.account_type === "string" ? metadata.account_type : null;
+      const isComplimentary = isComplimentaryAgencyEmail(user.email);
+      const isAgencyAccount =
+        isComplimentary ||
+        isAgencyPlanId(subscription?.lemonsqueezy_variant_id ?? null) ||
+        metadataRole === "agency";
+
+      if (!isAgencyAccount) {
+        return null;
+      }
+
+      const subscriptionStatus = subscription?.status ?? null;
+      const isActive =
+        isComplimentary ||
+        subscriptionStatus === "active" ||
+        subscriptionStatus === "past_due";
+
+      return {
+        userId: user.id,
+        email: user.email ?? "Korisnik bez emaila",
+        createdAt: user.created_at,
+        subscriptionStatus,
+        managedClients: managedClientsCount.get(user.id) ?? 0,
+        isActive,
+        isComplimentary,
+      };
+    })
+    .filter((agency): agency is AdminAgencyAccount => Boolean(agency))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  return {
+    generatedAt: new Date().toISOString(),
+    summary: {
+      total: agencies.length,
+      active: agencies.filter((agency) => agency.isActive).length,
+      inactive: agencies.filter((agency) => !agency.isActive).length,
+      complimentary: agencies.filter((agency) => agency.isComplimentary).length,
+    },
+    agencies,
   };
 }

@@ -21,6 +21,7 @@ import {
   CircleDollarSign,
   Wrench,
   Target,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -51,18 +52,24 @@ const accountItems: NavItem[] = [
 
 const adminItems: NavItem[] = [
   { href: "/dashboard/admin", label: "Overview", icon: Shield, exact: true },
+  { href: "/dashboard/admin/agencies", label: "Agencije", icon: Users },
   { href: "/dashboard/admin/leads", label: "Leads", icon: Target },
   { href: "/dashboard/admin/financials", label: "Financials", icon: CircleDollarSign },
   { href: "/dashboard/admin/system", label: "System", icon: Wrench },
+];
+
+const agencyItems: NavItem[] = [
+  { href: "/dashboard/agency", label: "Klijenti", icon: Users, exact: true },
 ];
 
 interface DashboardSidebarProps {
   userEmail: string;
   companyName?: string;
   isAdmin?: boolean;
+  isAgency?: boolean;
 }
 
-export function DashboardSidebar({ userEmail, companyName, isAdmin = false }: DashboardSidebarProps) {
+export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAgency = false }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -71,6 +78,7 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false }: Da
     : [
         { label: "Glavno", items: coreItems },
         { label: "Tržište", items: intelligenceItems },
+        ...(isAgency ? [{ label: "Agencija", items: agencyItems }] : []),
         { label: "Račun", items: accountItems },
       ];
 

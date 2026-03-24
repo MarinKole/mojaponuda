@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { Company } from "@/types/database";
 import { getDemoCompanyDefaults, isCompanyProfileComplete, isDemoUser } from "@/lib/demo";
 import { OnboardingValueFirstForm } from "@/components/onboarding-value-first-form";
+import { isAgencyPlan } from "@/lib/agency";
+import { getSubscriptionStatus } from "@/lib/subscription";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -13,6 +15,11 @@ export default async function OnboardingPage() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
+  if (isAgencyPlan(plan)) {
+    redirect("/dashboard/agency");
   }
 
   const { data } = await supabase

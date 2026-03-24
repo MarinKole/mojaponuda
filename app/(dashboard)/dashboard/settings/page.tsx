@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isCompanyProfileComplete } from "@/lib/demo";
+import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettings } from "@/components/settings/profile-settings";
 import { DangerZone } from "@/components/settings/danger-zone";
 import { TeamSettings } from "@/components/settings/team-settings";
 import { Building2, ShieldAlert, Users } from "lucide-react";
 import type { Company } from "@/types/database";
-import { getSubscriptionStatus } from "@/lib/subscription";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -28,6 +28,8 @@ export default async function SettingsPage() {
   const company = data as Company | null;
 
   if (!company) {
+    const { plan } = await getSubscriptionStatus(user!.id, user!.email, supabase);
+    if (isAgencyPlan(plan)) redirect("/dashboard/agency");
     redirect("/onboarding");
   }
 

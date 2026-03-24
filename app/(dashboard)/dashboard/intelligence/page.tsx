@@ -351,7 +351,7 @@ export default async function IntelligencePage() {
                   <Building2 className="size-5" />
                 </div>
                 <div>
-                  <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji naručioci u vašem prostoru</h2>
+                  <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji naručioci u Vašem prostoru</h2>
                   <p className="text-xs font-medium text-slate-500">Po broju tendera i dostupnoj vrijednosti.</p>
                 </div>
               </div>
@@ -442,7 +442,7 @@ export default async function IntelligencePage() {
                 <Trophy className="size-5" />
               </div>
               <div>
-                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji ponuđači u vašem prostoru</h2>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Najaktivniji ponuđači u Vašem prostoru</h2>
                 <p className="text-xs font-medium text-slate-500">Po osvojenim poslovima u prostoru koji pratite.</p>
               </div>
             </div>
@@ -478,18 +478,20 @@ export default async function IntelligencePage() {
           <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
             <div>
               <h2 className="font-heading text-lg font-bold text-slate-900">Nadolazeći tenderi</h2>
-              <p className="mt-1 text-xs text-slate-500">Planirane nabavke u vašem prostoru u narednih 90 dana.</p>
+              <p className="mt-1 text-xs text-slate-500">Planirane nabavke u Vašem prostoru u narednih 90 dana.</p>
             </div>
             <CalendarDays className="size-5 text-violet-600" />
           </div>
           <div className="mt-5 grid gap-3 lg:grid-cols-2">
-            {displayUpcomingPlans.map((plan) => (
+              {displayUpcomingPlans.map((plan) => (
               <div key={plan.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="line-clamp-2 text-sm font-semibold text-slate-900">{plan.description || "Bez opisa"}</p>
-                <p className="mt-1 text-xs text-slate-500">{plan.contracting_authorities?.name ?? "Nepoznat naručilac"}</p>
+                <p className="mt-1 text-xs text-slate-500">{plan.contracting_authorities?.name ?? "—"}</p>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
                   <span className="rounded-full bg-white px-2.5 py-1 font-medium">
-                    {plan.planned_date ? new Date(plan.planned_date).toLocaleDateString("bs-BA") : "—"}
+                    {plan.planned_date
+                      ? new Date(plan.planned_date).toLocaleDateString("bs-Latn-BA", { day: "numeric", month: "long", year: "numeric" })
+                      : "—"}
                   </span>
                   {plan.contract_type ? (
                     <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium">
@@ -511,7 +513,7 @@ export default async function IntelligencePage() {
       <div id="konkurencija" className="scroll-mt-24 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
-            <h2 className="font-heading text-2xl font-bold text-slate-950">Ko vam uzima poslove</h2>
+            <h2 className="font-heading text-2xl font-bold text-slate-950">Ko Vam uzima poslove</h2>
             <p className="mt-1 text-sm text-slate-500">
               Firme koje pobjeđuju u istim kategorijama i kod istih naručilaca u prostoru koji pratite.
             </p>
