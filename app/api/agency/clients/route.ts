@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/lib/subscription";
+import {
+  serializeCompanyProfile,
+  derivePrimaryIndustry,
+  buildProfileKeywordSeeds,
+  buildProfileCpvSeeds,
+  sanitizeSearchKeywords,
+  getProfileOptionLabel,
+  buildProfileContextText,
+  type ParsedCompanyProfile,
+} from "@/lib/company-profile";
+import { getRegionSelectionLabels } from "@/lib/constants/regions";
 
 // GET /api/agency/clients - List all clients
 export async function GET() {
@@ -45,23 +56,96 @@ export async function POST(request: NextRequest) {
     companyAddress,
     companyContactEmail,
     companyContactPhone,
-    industry,
-    keywords,
-    cpvCodes,
-    operatingRegions,
+    offeringCategories = [],
+    specializationIds = [],
+    preferredTenderTypes = [],
+    operatingRegions = [],
+    description,
     notes,
     crmStage,
     contractStart,
     contractEnd,
     monthlyFee,
-    // If linking existing company owned by agency user
     existingCompanyId,
   } = body;
+
+  if (!companyName || !companyJib) {
+    return NextResponse.json({ error: "Company name and JIB are required" }, { status: 400 });
+  }
+
+  // Build structured profile identical to self-onboarding
+  const primaryIndustry = derivePrimaryIndustry(offeringCategories, null);
+  const regionLabels = getRegionSelectionLabels(operatingRegions);
+
+  const descriptionFallback = [
+    primaryIndustry ? `Fokus firme je ${getProfileOptionLabel(primaryIndustry)}.` : null,
+    offeringCategories.length > 0
+      ? `Firma nudi ${offeringCategories.map((id: string) => getProfileOptionLabel(id)).join(", ")}.`
+      : null,
+    preferredTenderTypes.length > 0
+      ? `Najviše prati tendere za ${preferredTenderTypes.map((id: string) => getProfileOptionLabel(id)).join(", ")}.`
+      : null,
+    regionLabels.length > 0
+      ? `Firma posluje u: ${regionLabels.join(", ")}.`
+      : "Firma posluje na nivou cijele BiH.",
+  ].filter(Boolean).join(" ");
+
+  const effectiveDescription = description?.trim() || descriptionFallback;
+
+  const profile: ParsedCompanyProfile = {
+    primaryIndustry,
+    offeringCategories,
+    specializationIds,
+    preferredTenderTypes,
+    companyDescription: effectiveDescription,
+    legacyIndustryText: null,
+    manualKeywords: [],
+  };
+
+  const serializedIndustry = serializeCompanyProfile(profile) ?? buildProfileContextText({
+    description: effectiveDescription,
+    primaryIndustry,
+    offeringCategories,
+    specializationIds,
+    preferredTenderTypes,
+    regions: regionLabels,
+  });
+
+  const profileKeywordSeeds = buildProfileKeywordSeeds(profile);
+  const profileCpvSeeds = buildProfileCpvSeeds(profile);
+
+  // Try AI generation for better keywords/CPV codes
+  let generatedKeywords = profileKeywordSeeds;
+  let generatedCpvCodes = profileCpvSeeds;
+
+  try {
+    const generateRes = await fetch(new URL("/api/onboarding/generate-profile", request.url), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        description: effectiveDescription,
+        primaryIndustry,
+        offeringCategories,
+        specializationIds,
+        preferredTenderTypes,
+        regions: regionLabels,
+      }),
+    });
+
+    if (generateRes.ok) {
+      const generated = await generateRes.json();
+      if (generated.keywords?.length) generatedKeywords = generated.keywords;
+      if (generated.cpv_codes?.length) generatedCpvCodes = generated.cpv_codes;
+    }
+  } catch (e) {
+    console.error("Agency client AI profile generation error:", e);
+  }
+
+  const keywords = sanitizeSearchKeywords([...generatedKeywords, ...profileKeywordSeeds]);
 
   let companyId: string;
 
   if (existingCompanyId) {
-    // Verify agency owns or manages this company
     const { data: existingCompany } = await supabase
       .from("companies")
       .select("id")
@@ -72,12 +156,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
     companyId = existingCompany.id;
-  } else {
-    if (!companyName || !companyJib) {
-      return NextResponse.json({ error: "Company name and JIB are required" }, { status: 400 });
-    }
 
-    // Check if company with this JIB already exists and is already a client
+    // Update company with new profile data
+    await supabase.from("companies").update({
+      industry: serializedIndustry,
+      keywords,
+      cpv_codes: generatedCpvCodes,
+      operating_regions: operatingRegions.length > 0 ? operatingRegions : null,
+    }).eq("id", companyId);
+  } else {
     const { data: existingByJib } = await supabase
       .from("companies")
       .select("id")
@@ -85,10 +172,16 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (existingByJib) {
-      // Company already exists, link it
       companyId = existingByJib.id;
+
+      // Update existing company with the new profile data
+      await supabase.from("companies").update({
+        industry: serializedIndustry,
+        keywords,
+        cpv_codes: generatedCpvCodes,
+        operating_regions: operatingRegions.length > 0 ? operatingRegions : null,
+      }).eq("id", companyId);
     } else {
-      // Create a new company row owned by the agency user
       const { data: newCompany, error: companyError } = await supabase
         .from("companies")
         .insert({
@@ -99,10 +192,10 @@ export async function POST(request: NextRequest) {
           address: companyAddress || null,
           contact_email: companyContactEmail || null,
           contact_phone: companyContactPhone || null,
-          industry: industry || null,
-          keywords: keywords || null,
-          cpv_codes: cpvCodes || null,
-          operating_regions: operatingRegions || null,
+          industry: serializedIndustry,
+          keywords,
+          cpv_codes: generatedCpvCodes,
+          operating_regions: operatingRegions.length > 0 ? operatingRegions : null,
         })
         .select("id")
         .single();

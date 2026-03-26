@@ -125,16 +125,11 @@ export default async function AgencyPage() {
     }
   }
 
-  const totalMonthlyRevenue = clients.reduce((sum, c) => sum + (c.monthly_fee ?? 0), 0);
-  const activeClients = clients.filter((c) => c.crm_stage === "active").length;
-
   return (
     <AgencyCRMDashboard
       clients={clients}
       bidsByCompany={bidsByCompany}
       docsByCompany={docsByCompany}
-      totalMonthlyRevenue={totalMonthlyRevenue}
-      activeClients={activeClients}
     />
   );
 }

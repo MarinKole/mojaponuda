@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -21,6 +21,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { parseCompanyProfile, getProfileOptionLabel } from "@/lib/company-profile";
 
 const CRM_STAGE_CONFIG: Record<string, { label: string; color: string }> = {
   lead: { label: "Potencijalni", color: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -82,6 +83,7 @@ interface NoteRow {
 interface TenderRow {
   id: string; title: string; deadline: string | null; estimated_value: number | null;
   contracting_authority: string | null; contract_type: string | null;
+  score?: number; reasons?: string[];
 }
 
 interface Props {
@@ -113,6 +115,8 @@ export function AgencyClientDetail({
   const [monthlyFee, setMonthlyFee] = useState(client.monthly_fee?.toString() ?? "");
   const [contractStart, setContractStart] = useState(client.contract_start ?? "");
   const [contractEnd, setContractEnd] = useState(client.contract_end ?? "");
+
+  const parsedProfile = useMemo(() => parseCompanyProfile(company.industry), [company.industry]);
 
   const stageConfig = CRM_STAGE_CONFIG[crmStage] ?? CRM_STAGE_CONFIG.active;
 
@@ -258,10 +262,42 @@ export function AgencyClientDetail({
           <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="font-heading text-lg font-bold text-slate-900">Profil firme</h2>
             <div className="mt-4 space-y-3">
-              {company.industry && (
+              {parsedProfile.primaryIndustry && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-500">Fokus</span>
+                  <span className="text-sm font-semibold text-slate-900">{getProfileOptionLabel(parsedProfile.primaryIndustry)}</span>
+                </div>
+              )}
+              {parsedProfile.offeringCategories.length > 0 && (
+                <div>
+                  <p className="text-sm text-slate-500 mb-2">Djelatnosti</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {parsedProfile.offeringCategories.map((id) => (
+                      <span key={id} className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{getProfileOptionLabel(id)}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {parsedProfile.preferredTenderTypes.length > 0 && (
+                <div>
+                  <p className="text-sm text-slate-500 mb-2">Vrste tendera</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {parsedProfile.preferredTenderTypes.map((id) => (
+                      <span key={id} className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">{getProfileOptionLabel(id)}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {parsedProfile.companyDescription && (
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">Opis</p>
+                  <p className="text-sm text-slate-700 leading-6">{parsedProfile.companyDescription}</p>
+                </div>
+              )}
+              {!parsedProfile.companyDescription && parsedProfile.legacyIndustryText && (
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-500">Djelatnost</span>
-                  <span className="text-sm font-semibold text-slate-900">{company.industry}</span>
+                  <span className="text-sm font-semibold text-slate-900">{parsedProfile.legacyIndustryText}</span>
                 </div>
               )}
               {company.keywords && company.keywords.length > 0 && (
@@ -433,8 +469,8 @@ export function AgencyClientDetail({
       {activeTab === "tenders" && (
         <div className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
           <div className="border-b border-slate-100 px-6 py-5">
-            <h2 className="font-heading text-xl font-bold text-slate-900">Otvoreni tenderi</h2>
-            <p className="mt-1 text-sm text-slate-500">Tenderi relevantni za profil ovog klijenta.</p>
+            <h2 className="font-heading text-xl font-bold text-slate-900">Preporučeni tenderi</h2>
+            <p className="mt-1 text-sm text-slate-500">Tenderi rangirani po relevantnosti za profil ovog klijenta — isti sistem preporuka kao za direktne naloge.</p>
           </div>
           <div className="divide-y divide-slate-100">
             {recentTenders.map((t) => (
@@ -449,6 +485,13 @@ export function AgencyClientDetail({
                       <><span>·</span><span className="font-semibold text-blue-700">{formatCurrency(t.estimated_value)}</span></>
                     )}
                   </div>
+                  {t.reasons && t.reasons.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {t.reasons.map((r, i) => (
+                        <span key={i} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">{r}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <Link href={`/dashboard/tenders/${t.id}`} className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50">
                   Otvori <ArrowUpRight className="inline size-3.5" />
@@ -457,7 +500,7 @@ export function AgencyClientDetail({
             ))}
             {recentTenders.length === 0 && (
               <div className="px-6 py-12 text-center text-sm text-slate-500">
-                Nema otvorenih tendera za prikaz.
+                Nema preporučenih tendera. Provjerite da je profil klijenta popunjen s djelatnostima.
               </div>
             )}
           </div>

@@ -8,15 +8,11 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
-  CreditCard,
   FileText,
   Plus,
   Search,
-  Swords,
-  TrendingUp,
   Users,
   Circle,
-  Clock,
 } from "lucide-react";
 import { AddClientModal } from "./add-client-modal";
 
@@ -72,16 +68,12 @@ interface AgencyCRMDashboardProps {
   clients: AgencyClient[];
   bidsByCompany: Record<string, { total: number; won: number; active: number }>;
   docsByCompany: Record<string, number>;
-  totalMonthlyRevenue: number;
-  activeClients: number;
 }
 
 export function AgencyCRMDashboard({
   clients,
   bidsByCompany,
   docsByCompany,
-  totalMonthlyRevenue,
-  activeClients,
 }: AgencyCRMDashboardProps) {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<string | null>(null);
@@ -97,59 +89,16 @@ export function AgencyCRMDashboard({
     return matchesSearch && matchesStage;
   });
 
-  const onboarding = clients.filter((c) => c.crm_stage === "onboarding").length;
-  const leads = clients.filter((c) => c.crm_stage === "lead").length;
-
-  const summaryCards = [
-    {
-      title: "Ukupno klijenata",
-      value: String(clients.length),
-      icon: Users,
-      tone: "bg-blue-50 text-blue-600",
-      sub: `${activeClients} aktivnih`,
-    },
-    {
-      title: "Prihod / mj.",
-      value: formatCurrency(totalMonthlyRevenue),
-      icon: CreditCard,
-      tone: "bg-emerald-50 text-emerald-600",
-      sub: clients.filter((c) => c.monthly_fee).length + " naplaćenih",
-    },
-    {
-      title: "U onboardingu",
-      value: String(onboarding),
-      icon: Clock,
-      tone: "bg-amber-50 text-amber-600",
-      sub: `${leads} potencijalnih`,
-    },
-    {
-      title: "Ponude ukupno",
-      value: String(
-        Object.values(bidsByCompany).reduce((s, b) => s + b.total, 0)
-      ),
-      icon: FileText,
-      tone: "bg-violet-50 text-violet-600",
-      sub:
-        Object.values(bidsByCompany).reduce((s, b) => s + b.won, 0) +
-        " pobijeda",
-    },
-  ];
-
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="flex h-6 items-center rounded-full border border-blue-100 bg-blue-50 px-2 text-[10px] font-bold uppercase tracking-wider text-blue-600">
-              Agencija
-            </span>
-          </div>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
-            Upravljanje klijentima
+            Klijenti
           </h1>
           <p className="mt-1.5 text-sm text-slate-500">
-            CRM pregled svih klijenata koje vodite. Svaki klijent ima potpuni tender profil, analitiku i dokumente.
+            Svaki klijent ima potpuni tender profil, preporuke i dokumente — identično kao direktni nalozi.
           </p>
         </div>
         <button
@@ -159,25 +108,6 @@ export function AgencyCRMDashboard({
           <Plus className="size-4" />
           Dodaj klijenta
         </button>
-      </div>
-
-      {/* KPI Summary */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((card) => (
-          <div
-            key={card.title}
-            className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-500">{card.title}</p>
-              <div className={`flex size-9 items-center justify-center rounded-xl ${card.tone}`}>
-                <card.icon className="size-4" />
-              </div>
-            </div>
-            <p className="mt-4 font-heading text-3xl font-bold text-slate-950">{card.value}</p>
-            <p className="mt-1 text-xs text-slate-500">{card.sub}</p>
-          </div>
-        ))}
       </div>
 
       {/* Search & Filters */}

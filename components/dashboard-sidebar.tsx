@@ -22,6 +22,8 @@ import {
   Wrench,
   Target,
   Users,
+  Building2,
+  Plus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -58,27 +60,44 @@ const adminItems: NavItem[] = [
   { href: "/dashboard/admin/system", label: "System", icon: Wrench },
 ];
 
-const agencyItems: NavItem[] = [
-  { href: "/dashboard/agency", label: "Klijenti", icon: Users, exact: true },
-];
+export interface AgencyClientNavItem {
+  id: string;
+  name: string;
+}
 
 interface DashboardSidebarProps {
   userEmail: string;
   companyName?: string;
   isAdmin?: boolean;
   isAgency?: boolean;
+  agencyClients?: AgencyClientNavItem[];
 }
 
-export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAgency = false }: DashboardSidebarProps) {
+export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAgency = false, agencyClients = [] }: DashboardSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const agencyClientItems: NavItem[] = agencyClients.map((c) => ({
+    href: `/dashboard/agency/clients/${c.id}`,
+    label: c.name,
+    icon: Building2,
+  }));
+
   const sections = isAdmin
     ? [{ label: "Admin", items: adminItems }]
     : [
         { label: "Glavno", items: coreItems },
         { label: "Tržište", items: intelligenceItems },
-        ...(isAgency ? [{ label: "Agencija", items: agencyItems }] : []),
+        ...(isAgency
+          ? [{
+              label: "Klijenti",
+              items: [
+                { href: "/dashboard/agency", label: "Svi klijenti", icon: Users, exact: true },
+                ...agencyClientItems,
+              ],
+            }]
+          : []),
         { label: "Račun", items: accountItems },
       ];
 
