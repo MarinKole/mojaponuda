@@ -406,18 +406,18 @@ function compareScoredRecommendations<TTender extends RecommendationTenderInput>
   a: ScoredTenderRecommendation<TTender>,
   b: ScoredTenderRecommendation<TTender>
 ): number {
-  // Primary: relevance score (no location in score)
+  // Primary: distance (closer first). locationPriority = km when anchor set, else 0-3 tier.
+  if (a.locationPriority !== b.locationPriority) {
+    return a.locationPriority - b.locationPriority;
+  }
+
+  // Within same distance: relevance score descending
   if (a.score !== b.score) {
     return b.score - a.score;
   }
 
   if (a.positiveSignalCount !== b.positiveSignalCount) {
     return b.positiveSignalCount - a.positiveSignalCount;
-  }
-
-  // Secondary: distance (closer first)
-  if (a.locationPriority !== b.locationPriority) {
-    return a.locationPriority - b.locationPriority;
   }
 
   return new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime();
