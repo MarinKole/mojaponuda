@@ -157,10 +157,10 @@ async function TendersContent({ searchParams }: TendersPageProps) {
         }
       }
 
-      // Sort by location priority (local first), then by score within each tier
+      // Sort by relevance score first, then by distance (locationPriority = km)
       const sorted = [...mergedMap.values()].sort((a, b) => {
-        if (a.locationPriority !== b.locationPriority) return a.locationPriority - b.locationPriority;
-        return b.score - a.score;
+        if (a.score !== b.score) return b.score - a.score;
+        return a.locationPriority - b.locationPriority;
       });
 
       // Apply keyword filter if present
