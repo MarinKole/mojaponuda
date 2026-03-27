@@ -14,7 +14,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AgencyClientTendersToggle } from "@/components/agency/agency-client-tenders-toggle";
 
-const TOP_N = 10;
 
 export default async function AgencyClientTendersPage({
   params,
@@ -110,17 +109,20 @@ export default async function AgencyClientTendersPage({
     .filter((s) => !existingBidTenderIds.has(s.tender.id))
     .filter((s) => s.score >= 2 && !s.negativeTitleMatches.length);
 
-  // Sort by location priority (local first), then by score within each tier
-  const sorted = [...allScored].sort((a, b) => {
-    if (!showAllBiH && a.locationPriority !== b.locationPriority) {
-      return a.locationPriority - b.locationPriority;
-    }
+  // Filter by location: when unchecked, only show local/nearby tenders
+  const filtered = showAllBiH
+    ? allScored
+    : allScored.filter((s) => s.locationPriority <= 2);
+
+  // Always sort by location priority first, then score
+  const sorted = [...filtered].sort((a, b) => {
+    if (a.locationPriority !== b.locationPriority) return a.locationPriority - b.locationPriority;
     if (a.score !== b.score) return b.score - a.score;
     if (a.positiveSignalCount !== b.positiveSignalCount) return b.positiveSignalCount - a.positiveSignalCount;
     return new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime();
   });
 
-  const tenders = sorted.slice(0, TOP_N).map((s) => ({
+  const tenders = sorted.map((s) => ({
     ...s.tender,
     score: s.score,
     reasons: s.reasons,
@@ -137,7 +139,7 @@ export default async function AgencyClientTendersPage({
             Tenderi — {company.name}
           </h1>
           <p className="mt-1.5 text-base text-slate-500">
-            Top {TOP_N} preporučenih tendera, sortirani po blizini lokacije klijenta.
+            Preporučeni tenderi za ovog klijenta na osnovu profila firme.
           </p>
         </div>
         {hasRegions && (
@@ -156,7 +158,7 @@ export default async function AgencyClientTendersPage({
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-3">
           {tenders.map((tender) => (
             <TenderCard
               key={tender.id}
