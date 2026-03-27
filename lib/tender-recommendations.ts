@@ -9,11 +9,17 @@ import {
   type ParsedCompanyProfile,
 } from "@/lib/company-profile";
 import {
-  buildNeighboringGroupRegionFallback,
   buildRegionSearchTerms,
   buildSameGroupRegionFallback,
+  buildNeighboringGroupRegionFallback,
   getRegionSelectionLabels,
 } from "@/lib/constants/regions";
+import {
+  getCoordsForPlace,
+  getAnchorCoords,
+  haversineKm,
+  distanceToLocationPriority,
+} from "@/lib/constants/municipality-coordinates";
 import { getGeoEnrichmentFromAiAnalysis } from "@/lib/tender-area";
 import type { Database, Json } from "@/types/database";
 
@@ -35,6 +41,9 @@ export interface RecommendationContext {
   neighboringRegionTerms: string[];
   regionLabels: string[];
   cpvPrefixes: string[];
+  /** Geographic anchor point (average of selected regions). Null if no regions selected. */
+  anchorLat: number | null;
+  anchorLng: number | null;
 }
 
 export type RecommendationLocationScope = "selected" | "same_group" | "neighboring" | "broad";
@@ -335,39 +344,61 @@ export function matchesTenderLocationTerms<TTender extends RecommendationTenderI
 
 export function getTenderLocationScope<TTender extends RecommendationTenderInput>(
   tender: TTender,
-  context: Pick<RecommendationContext, "regionTerms" | "sameGroupRegionTerms" | "neighboringRegionTerms">
+  context: Pick<RecommendationContext, "regionTerms" | "sameGroupRegionTerms" | "neighboringRegionTerms" | "anchorLat" | "anchorLng">
 ): RecommendationLocationScope {
+  // If we have an anchor point, use distance-based scope
+  if (context.anchorLat !== null && context.anchorLng !== null) {
+    const priority = getTenderLocationPriorityByDistance(tender, context.anchorLat, context.anchorLng);
+    if (priority === 0) return "selected";
+    if (priority === 1) return "same_group";
+    if (priority === 2) return "neighboring";
+    return "broad";
+  }
+
+  // Fallback: text-based matching
   if (context.regionTerms.length > 0 && matchesTenderLocationTerms(tender, context.regionTerms)) {
     return "selected";
   }
-
-  if (
-    context.sameGroupRegionTerms.length > 0 &&
-    matchesTenderLocationTerms(tender, context.sameGroupRegionTerms)
-  ) {
+  if (context.sameGroupRegionTerms.length > 0 && matchesTenderLocationTerms(tender, context.sameGroupRegionTerms)) {
     return "same_group";
   }
-
-  if (
-    context.neighboringRegionTerms.length > 0 &&
-    matchesTenderLocationTerms(tender, context.neighboringRegionTerms)
-  ) {
+  if (context.neighboringRegionTerms.length > 0 && matchesTenderLocationTerms(tender, context.neighboringRegionTerms)) {
     return "neighboring";
   }
-
   return "broad";
+}
+
+/**
+ * Compute location priority for a tender using haversine distance from anchor.
+ * Tries authority_municipality → authority_city → authority_canton in order.
+ */
+function getTenderLocationPriorityByDistance<TTender extends RecommendationTenderInput>(
+  tender: TTender,
+  anchorLat: number,
+  anchorLng: number
+): number {
+  const candidates = [
+    tender.authority_municipality,
+    tender.authority_city,
+    tender.authority_canton,
+  ];
+  for (const place of candidates) {
+    const coords = getCoordsForPlace(place);
+    if (coords) {
+      const km = haversineKm(anchorLat, anchorLng, coords.lat, coords.lng);
+      return distanceToLocationPriority(km);
+    }
+  }
+  // No coords found — fallback to text match
+  return 3;
 }
 
 function getLocationPriority(scope: RecommendationLocationScope): number {
   switch (scope) {
-    case "selected":
-      return 0;
-    case "same_group":
-      return 1;
-    case "neighboring":
-      return 2;
-    default:
-      return 3;
+    case "selected": return 0;
+    case "same_group": return 1;
+    case "neighboring": return 2;
+    default: return 3;
   }
 }
 
@@ -459,6 +490,8 @@ export function buildRecommendationContext(
     profile,
   });
 
+  const anchor = getAnchorCoords(selectedRegions);
+
   return {
     profile,
     focusIndustry,
@@ -482,6 +515,8 @@ export function buildRecommendationContext(
     cpvPrefixes: buildCpvPrefixes(
       strictCpvCodes.length > 0 ? strictCpvCodes : (source.cpv_codes ?? [])
     ),
+    anchorLat: anchor?.lat ?? null,
+    anchorLng: anchor?.lng ?? null,
   };
 }
 
@@ -633,7 +668,7 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
   const regionMatch = locationScope === "selected";
   const sameGroupRegionMatch = locationScope === "same_group";
   const neighboringRegionMatch = locationScope === "neighboring";
-  const hasLocationPreference = context.regionTerms.length > 0;
+  const hasLocationPreference = context.anchorLat !== null || context.regionTerms.length > 0;
   const locationPriority = getLocationPriority(locationScope);
 
   let score = 0;
