@@ -214,22 +214,11 @@ export async function maybeRerankTenderRecommendationsWithAI<
       ...ranked.slice(shortlistSize),
     ];
 
-    // After AI reranking for relevance, re-sort by distance (locationPriority = km).
-    // Tenders with unknown location (9999) go last.
-    // Within the same distance bucket (±30km), preserve AI relevance order.
-    const DISTANCE_BUCKET_KM = 30;
-    const withBucket = finalRanked.map((item) => ({
-      item,
-      bucket: Math.floor((item.locationPriority as number) / DISTANCE_BUCKET_KM),
-    }));
-    withBucket.sort((a, b) => {
-      if (a.bucket !== b.bucket) return a.bucket - b.bucket;
-      // Same bucket: preserve AI order (already sorted by index)
-      return 0;
-    });
-    const distanceSorted = withBucket.map(({ item }) => item);
+    // Final sort: distance first (locationPriority = km from anchor, or 9999 if unknown).
+    // Stable sort preserves AI relevance order within the same km distance.
+    finalRanked.sort((a, b) => (a.locationPriority as number) - (b.locationPriority as number));
 
-    return applyLimit(distanceSorted, limit);
+    return applyLimit(finalRanked, limit);
   } catch (error) {
     console.error("Tender recommendation AI rerank error:", error);
     return applyLimit(ranked, limit);

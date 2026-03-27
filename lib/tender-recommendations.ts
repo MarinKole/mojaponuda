@@ -678,10 +678,24 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
       tender.authority_municipality,
       tender.authority_city,
       tender.authority_canton,
+      // Also try extracting city name from contracting_authority string
+      tender.contracting_authority,
     ];
     let distKm: number | null = null;
     for (const place of candidates) {
-      const coords = getCoordsForPlace(place);
+      if (!place) continue;
+      // Try direct lookup first
+      let coords = getCoordsForPlace(place);
+      // If not found, try to extract a known municipality name from the string
+      if (!coords) {
+        const words = place.split(/[\s,\-–]+/);
+        for (const word of words) {
+          if (word.length >= 4) {
+            coords = getCoordsForPlace(word);
+            if (coords) break;
+          }
+        }
+      }
       if (coords) {
         distKm = haversineKm(context.anchorLat, context.anchorLng, coords.lat, coords.lng);
         break;
