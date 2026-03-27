@@ -80,12 +80,13 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
 
-  // Detect if viewing a specific client
+  // Detect if viewing a specific client's sub-pages (tenders/bids/docs)
   const clientMatch = pathname.match(/\/dashboard\/agency\/clients\/([^/]+)/);
   const activeClientId = clientMatch?.[1] ?? null;
-  const activeClient = activeClientId ? agencyClients.find((c) => c.id === activeClientId) : null;
+  const isClientSubPage = activeClientId ? /\/dashboard\/agency\/clients\/[^/]+\/(tenders|bids|documents)/.test(pathname) : false;
+  const activeClient = isClientSubPage && activeClientId ? agencyClients.find((c) => c.id === activeClientId) : null;
 
-  // Build client-specific nav when a client is selected
+  // Build client-specific nav when a client is selected (sub-page mode)
   const clientNavItems: NavItem[] = activeClient
     ? [
         { href: `/dashboard/agency/clients/${activeClient.id}`, label: "Pregled", icon: LayoutDashboard, exact: true },
@@ -95,15 +96,17 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
       ]
     : [];
 
+  const clientIntelligenceItems: NavItem[] = activeClient
+    ? [
+        { href: "/dashboard/intelligence", label: "Analiza tržišta", icon: BarChart3, exact: true },
+        { href: "/dashboard/intelligence/upcoming", label: "Planirano", icon: Calendar },
+      ]
+    : [];
+
   // Agency default nav (no client selected)
   const agencyDefaultItems: NavItem[] = [
     { href: "/dashboard/agency", label: "Svi klijenti", icon: Users, exact: true },
     { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
-  ];
-
-  const agencyIntelligenceItems: NavItem[] = [
-    { href: "/dashboard/intelligence", label: "Analiza tržišta", icon: BarChart3, exact: true },
-    { href: "/dashboard/intelligence/upcoming", label: "Planirano", icon: Calendar },
   ];
 
   const agencyAccountItems: NavItem[] = [
@@ -116,11 +119,11 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
     : isAgency && activeClient
       ? [
           { label: activeClient.name, items: clientNavItems },
+          { label: "Tržište", items: clientIntelligenceItems },
         ]
       : isAgency
         ? [
             { label: "Glavno", items: agencyDefaultItems },
-            { label: "Tržište", items: agencyIntelligenceItems },
             { label: "Račun", items: agencyAccountItems },
           ]
         : [

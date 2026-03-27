@@ -97,7 +97,7 @@ export default async function AgencyClientTendersPage({
       recommendationContext,
       {
         limit: 300,
-        select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code, ai_analysis, authority_city, authority_municipality, authority_canton, authority_entity",
+        select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code, ai_analysis",
       }
     ),
   ]);

@@ -83,7 +83,7 @@ async function TendersContent({ searchParams }: TendersPageProps) {
     operating_regions: string[] | null;
   }
   let agencyClients: AgencyClientCompany[] = [];
-  let agencyTenderClientMap = new Map<string, { tender: Tender; clientNames: string[]; score: number }>();
+  let agencyTenderClientMap = new Map<string, { tender: Tender; clientNames: string[]; score: number; locationPriority: number }>();
   let agencyTotalCount = 0;
 
   let recommendationContext: RecommendationContext | null = null;
@@ -135,8 +135,8 @@ async function TendersContent({ searchParams }: TendersPageProps) {
         })
       );
 
-      // Merge: group by tender ID, collect client names, keep best score
-      const mergedMap = new Map<string, { tender: Tender; clientNames: string[]; score: number }>();
+      // Merge: group by tender ID, collect client names, keep best score & location
+      const mergedMap = new Map<string, { tender: Tender; clientNames: string[]; score: number; locationPriority: number }>();
       for (const { client, scored } of clientResults) {
         for (const s of scored) {
           const existing = mergedMap.get(s.tender.id);
@@ -145,18 +145,23 @@ async function TendersContent({ searchParams }: TendersPageProps) {
               existing.clientNames.push(client.companyName);
             }
             if (s.score > existing.score) existing.score = s.score;
+            if (s.locationPriority < existing.locationPriority) existing.locationPriority = s.locationPriority;
           } else {
             mergedMap.set(s.tender.id, {
               tender: s.tender as unknown as Tender,
               clientNames: [client.companyName],
               score: s.score,
+              locationPriority: s.locationPriority,
             });
           }
         }
       }
 
-      // Sort by score descending
-      const sorted = [...mergedMap.values()].sort((a, b) => b.score - a.score);
+      // Sort by location priority (local first), then by score within each tier
+      const sorted = [...mergedMap.values()].sort((a, b) => {
+        if (a.locationPriority !== b.locationPriority) return a.locationPriority - b.locationPriority;
+        return b.score - a.score;
+      });
 
       // Apply keyword filter if present
       let filtered = sorted;
