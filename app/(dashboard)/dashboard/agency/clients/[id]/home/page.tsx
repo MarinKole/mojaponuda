@@ -194,6 +194,7 @@ export default async function AgencyClientHomePage({
     estimated_value: number | null;
     contracting_authority: string | null;
   }[] = [];
+  let totalRelevantCount = 0;
 
   if (hasRecommendationSignals(recommendationContext)) {
     const relevantRows = await fetchRecommendedTenderCandidates<{
@@ -223,10 +224,11 @@ export default async function AgencyClientHomePage({
       recommendationContext,
       { minimumResults: 4 }
     );
+    totalRelevantCount = rankedRelevantTenders.length;
     relevantTenders = rankedRelevantTenders.slice(0, 12).map(({ tender }) => tender);
   }
 
-  const relevantTenderCount = relevantTenders.length;
+  const relevantTenderCount = totalRelevantCount;
   const relevantTenderValue = relevantTenders.reduce(
     (sum, tender) => sum + (Number(tender.estimated_value) || 0),
     0

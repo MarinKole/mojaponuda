@@ -1,36 +1,31 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/lib/subscription";
+import type { Tender } from "@/types/database";
 import {
   buildRecommendationContext,
   fetchRecommendedTenderCandidates,
   hasRecommendationSignals,
-  scoreTenderRecommendation,
-  type RecommendationTenderInput,
+  selectTenderRecommendations,
 } from "@/lib/tender-recommendations";
 import { TenderCard } from "@/components/tenders/tender-card";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { AgencyClientTendersToggle } from "@/components/agency/agency-client-tenders-toggle";
 
 
 export default async function AgencyClientTendersPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
-  const sp = await searchParams;
-  const showAllBiH = sp.allBiH === "true";
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { plan } = await getSubscriptionStatus(user.id, user.email);
+  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
   if (plan.id !== "agency") redirect("/dashboard");
 
   const { data: agencyClient } = await supabase
@@ -88,64 +83,50 @@ export default async function AgencyClientTendersPage({
     );
   }
 
-  // Fetch existing bids for this company to mark already-bid tenders
+  // Same pipeline as the regular user's tenders page (selectTenderRecommendations)
   const [{ data: existingBids }, candidates] = await Promise.all([
     supabase.from("bids").select("tender_id").eq("company_id", company.id),
-    fetchRecommendedTenderCandidates<RecommendationTenderInput>(
-      supabase,
-      recommendationContext,
-      {
-        limit: 300,
-        select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code, ai_analysis",
+    fetchRecommendedTenderCandidates<
+      Tender & {
+        authority_city: string | null;
+        authority_municipality: string | null;
+        authority_canton: string | null;
+        authority_entity: string | null;
       }
-    ),
+    >(supabase, recommendationContext, {
+      select: "*",
+      limit: 240,
+    }),
   ]);
 
   const existingBidTenderIds = new Set((existingBids ?? []).map((b) => b.tender_id));
 
-  // Score all candidates
-  const allScored = candidates
-    .map((tender) => scoreTenderRecommendation(tender, recommendationContext))
-    .filter((s) => !existingBidTenderIds.has(s.tender.id))
-    .filter((s) => s.score >= 2 && !s.negativeTitleMatches.length);
+  const availableRows = candidates.filter(
+    (tender) => !existingBidTenderIds.has(tender.id)
+  );
 
-  // Filter by location: when unchecked, only show local/nearby tenders
-  const filtered = showAllBiH
-    ? allScored
-    : allScored.filter((s) => s.locationPriority <= 2);
+  const rankedRecommendations = selectTenderRecommendations(
+    availableRows,
+    recommendationContext,
+    { minimumResults: 4 }
+  );
 
-  // Always sort by location priority first, then score
-  const sorted = [...filtered].sort((a, b) => {
-    if (a.locationPriority !== b.locationPriority) return a.locationPriority - b.locationPriority;
-    if (a.score !== b.score) return b.score - a.score;
-    if (a.positiveSignalCount !== b.positiveSignalCount) return b.positiveSignalCount - a.positiveSignalCount;
-    return new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime();
-  });
-
-  const tenders = sorted.map((s) => ({
-    ...s.tender,
-    score: s.score,
-    reasons: s.reasons,
-    locationScope: s.locationScope,
-  }));
-
-  const hasRegions = (company.operating_regions ?? []).length > 0;
+  const tenders = rankedRecommendations.map(({ tender }) => tender as Tender);
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-            Tenderi — {company.name}
-          </h1>
-          <p className="mt-1.5 text-base text-slate-500">
-            Preporučeni tenderi za ovog klijenta na osnovu profila firme.
-          </p>
-        </div>
-        {hasRegions && (
-          <AgencyClientTendersToggle clientId={id} showAllBiH={showAllBiH} />
-        )}
+      <div>
+        <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
+          Tenderi — {company.name}
+        </h1>
+        <p className="mt-1.5 text-base text-slate-500">
+          Preporučeni tenderi za ovog klijenta na osnovu profila firme.
+        </p>
       </div>
+
+      <p className="text-sm font-medium text-slate-500">
+        Preporučeno {tenders.length} {tenders.length === 1 ? "tender" : "tendera"}
+      </p>
 
       {tenders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
