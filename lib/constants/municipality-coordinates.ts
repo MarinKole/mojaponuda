@@ -15,6 +15,24 @@ export interface MunicipalityCoords {
 
 // Primary lookup: exact name → coords
 export const MUNICIPALITY_COORDS: Record<string, MunicipalityCoords> = {
+  // Canton / region centroids (for when operating_regions stores canton names)
+  "Unsko-sanski kanton": { lat: 44.817, lng: 15.870 },
+  "Posavski kanton": { lat: 45.033, lng: 18.500 },
+  "Tuzlanski kanton": { lat: 44.538, lng: 18.673 },
+  "Zeničko-dobojski kanton": { lat: 44.300, lng: 18.050 },
+  "Bosansko-podrinjski kanton": { lat: 43.667, lng: 18.983 },
+  "Srednjobosanski kanton": { lat: 44.100, lng: 17.600 },
+  "Hercegovačko-neretvanski kanton": { lat: 43.400, lng: 17.800 },
+  "Zapadnohercegovački kanton": { lat: 43.350, lng: 17.600 },
+  "Kanton Sarajevo": { lat: 43.848, lng: 18.356 },
+  "Kanton 10": { lat: 43.900, lng: 17.100 },
+  "Brčko distrikt": { lat: 44.867, lng: 18.817 },
+  "Republika Srpska": { lat: 44.500, lng: 17.500 },
+  "Republika Srpska · Krajina i Banja Luka": { lat: 44.775, lng: 17.191 },
+  "Republika Srpska · Doboj, Posavina i Semberija": { lat: 44.800, lng: 18.200 },
+  "Republika Srpska · Romanija i Podrinje": { lat: 44.000, lng: 18.800 },
+  "Republika Srpska · Hercegovina": { lat: 43.100, lng: 18.300 },
+
   // Unsko-sanski kanton
   "Bihać": { lat: 44.817, lng: 15.870 },
   "Bosanska Krupa": { lat: 44.882, lng: 16.152 },
@@ -247,10 +265,36 @@ export function getCoordsForPlace(name: string | null | undefined): Municipality
 /**
  * Given a list of selected region names (municipalities or canton names),
  * return their average center coordinate.
+ * Expands canton names to their municipalities first.
  * Used as the "user location" anchor point.
  */
 export function getAnchorCoords(selectedRegions: string[]): MunicipalityCoords | null {
-  const coords = selectedRegions
+  const expanded: string[] = [];
+  for (const r of selectedRegions) {
+    // Try direct lookup first
+    if (getCoordsForPlace(r)) {
+      expanded.push(r);
+      continue;
+    }
+    // Try to expand canton → municipalities using the region groups
+    // Import is circular so we inline a simple expansion:
+    // If the name contains "kanton" or "republika srpska", try word-by-word
+    const words = r.split(/[\s\-–·]+/).filter((w) => w.length >= 4);
+    let found = false;
+    for (const word of words) {
+      if (getCoordsForPlace(word)) {
+        expanded.push(word);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      // Last resort: add the original, getCoordsForPlace will return null
+      expanded.push(r);
+    }
+  }
+
+  const coords = expanded
     .flatMap((r) => {
       const c = getCoordsForPlace(r);
       return c ? [c] : [];
