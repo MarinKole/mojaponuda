@@ -19,6 +19,10 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
+  // Agency users don't have their own company profile — redirect to CRM
+  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
+  if (isAgencyPlan(plan)) redirect("/dashboard/agency");
+
   const { data } = await supabase
     .from("companies")
     .select("*")
@@ -28,8 +32,6 @@ export default async function SettingsPage() {
   const company = data as Company | null;
 
   if (!company) {
-    const { plan } = await getSubscriptionStatus(user!.id, user!.email, supabase);
-    if (isAgencyPlan(plan)) redirect("/dashboard/agency");
     redirect("/onboarding");
   }
 

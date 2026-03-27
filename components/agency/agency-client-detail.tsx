@@ -106,7 +106,7 @@ export function AgencyClientDetail({
   recentTenders,
 }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"overview" | "bids" | "docs" | "tenders" | "crm">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "crm">("overview");
   const [crmStage, setCrmStage] = useState(client.crm_stage);
   const [notes, setNotes] = useState(initialNotes);
   const [newNote, setNewNote] = useState("");
@@ -163,9 +163,6 @@ export function AgencyClientDetail({
 
   const tabs = [
     { id: "overview", label: "Pregled" },
-    { id: "bids", label: `Ponude (${bids.length})` },
-    { id: "docs", label: `Dokumenti (${docs.length})` },
-    { id: "tenders", label: "Novi tenderi" },
     { id: "crm", label: "CRM" },
   ] as const;
 
@@ -204,14 +201,13 @@ export function AgencyClientDetail({
             </div>
           </div>
           <div className="flex shrink-0 gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab("tenders")}
+            <Link
+              href={`/dashboard/agency/clients/${agencyClientId}/tenders`}
               className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-blue-700"
             >
               <ArrowUpRight className="size-4" />
               Tenderi klijenta
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -356,133 +352,6 @@ export function AgencyClientDetail({
                 + Dodaj bilješku →
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "bids" && (
-        <div className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-slate-100 px-6 py-5 flex items-center justify-between">
-            <h2 className="font-heading text-xl font-bold text-slate-900">Ponude</h2>
-            <Link
-              href={`/dashboard/bids?company=${company.id}`}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800"
-            >
-              Sve ponude <ArrowUpRight className="size-4" />
-            </Link>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {bids.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-slate-500">
-                <Briefcase className="mx-auto mb-3 size-8 text-slate-300" />
-                Još nema ponuda za ovog klijenta.
-              </div>
-            ) : (
-              bids.map((bid) => {
-                const sc = BID_STATUS[bid.status] ?? BID_STATUS.draft;
-                return (
-                  <div key={bid.id} className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 line-clamp-2">
-                        {bid.tenders?.title ?? "Bez naslova"}
-                      </p>
-                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
-                        <span>{bid.tenders?.contracting_authority ?? "—"}</span>
-                        <span>·</span>
-                        <span>Rok {formatDate(bid.tenders?.deadline ?? null)}</span>
-                        {bid.tenders?.estimated_value && (
-                          <><span>·</span><span className="font-semibold text-emerald-700">{formatCurrency(bid.tenders.estimated_value)}</span></>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`rounded-md px-2.5 py-1 text-xs font-semibold ${sc.color}`}>{sc.label}</span>
-                      <Link href={`/dashboard/bids/${bid.id}`} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50">
-                        Otvori
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === "docs" && (
-        <div className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-slate-100 px-6 py-5 flex items-center justify-between">
-            <h2 className="font-heading text-xl font-bold text-slate-900">Dokumenti</h2>
-            <Link href={`/dashboard/vault?company=${company.id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600">
-              Trezor dokumenata <ArrowUpRight className="size-4" />
-            </Link>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {docs.length === 0 ? (
-              <div className="px-6 py-12 text-center text-sm text-slate-500">
-                <FileText className="mx-auto mb-3 size-8 text-slate-300" />
-                Još nema dokumenata za ovog klijenta.
-              </div>
-            ) : (
-              docs.map((d) => {
-                const isExpiringSoon = d.expires_at && new Date(d.expires_at) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
-                return (
-                  <div key={d.id} className="flex items-center gap-4 px-6 py-4">
-                    <FileText className="size-5 shrink-0 text-slate-400" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-slate-900">{d.name}</p>
-                      <p className="text-xs text-slate-500">{d.type ?? "Dokument"} · {(d.size / 1024).toFixed(0)} KB</p>
-                    </div>
-                    {d.expires_at && (
-                      <span className={`text-xs font-semibold ${isExpiringSoon ? "text-amber-700" : "text-slate-400"}`}>
-                        Ističe {formatDate(d.expires_at)}
-                      </span>
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === "tenders" && (
-        <div className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-slate-100 px-6 py-5">
-            <h2 className="font-heading text-xl font-bold text-slate-900">Preporučeni tenderi</h2>
-            <p className="mt-1 text-sm text-slate-500">Tenderi rangirani po relevantnosti za profil ovog klijenta — isti sistem preporuka kao za direktne naloge.</p>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {recentTenders.map((t) => (
-              <div key={t.id} className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 line-clamp-2">{t.title}</p>
-                  <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
-                    <span>{t.contracting_authority ?? "—"}</span>
-                    <span>·</span>
-                    <span>Rok {formatDate(t.deadline)}</span>
-                    {t.estimated_value && (
-                      <><span>·</span><span className="font-semibold text-blue-700">{formatCurrency(t.estimated_value)}</span></>
-                    )}
-                  </div>
-                  {t.reasons && t.reasons.length > 0 && (
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {t.reasons.map((r, i) => (
-                        <span key={i} className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">{r}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <Link href={`/dashboard/tenders/${t.id}`} className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50">
-                  Otvori <ArrowUpRight className="inline size-3.5" />
-                </Link>
-              </div>
-            ))}
-            {recentTenders.length === 0 && (
-              <div className="px-6 py-12 text-center text-sm text-slate-500">
-                Nema preporučenih tendera. Provjerite da je profil klijenta popunjen s djelatnostima.
-              </div>
-            )}
           </div>
         </div>
       )}

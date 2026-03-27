@@ -24,6 +24,7 @@ import {
   Users,
   Building2,
   ChevronsUpDown,
+  ArrowLeft,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -40,12 +41,6 @@ const coreItems: NavItem[] = [
   { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
   { href: "/dashboard/bids", label: "Moje ponude", icon: Briefcase },
   { href: "/dashboard/vault", label: "Dokumenti", icon: FileText },
-];
-
-const agencyCoreItems: NavItem[] = [
-  { href: "/dashboard", label: "Početna", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
-  { href: "/dashboard/agency", label: "Svi klijenti", icon: Users, exact: true },
 ];
 
 const intelligenceItems: NavItem[] = [
@@ -83,21 +78,51 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
+
+  // Detect if viewing a specific client
+  const clientMatch = pathname.match(/\/dashboard\/agency\/clients\/([^/]+)/);
+  const activeClientId = clientMatch?.[1] ?? null;
+  const activeClient = activeClientId ? agencyClients.find((c) => c.id === activeClientId) : null;
+
+  // Build client-specific nav when a client is selected
+  const clientNavItems: NavItem[] = activeClient
+    ? [
+        { href: `/dashboard/agency/clients/${activeClient.id}`, label: "Početna", icon: LayoutDashboard, exact: true },
+        { href: `/dashboard/agency/clients/${activeClient.id}/tenders`, label: "Tenderi", icon: Search },
+        { href: `/dashboard/agency/clients/${activeClient.id}/bids`, label: "Ponude", icon: Briefcase },
+        { href: `/dashboard/agency/clients/${activeClient.id}/documents`, label: "Dokumenti", icon: FileText },
+      ]
+    : [];
+
+  // Agency default nav (no client selected)
+  const agencyDefaultItems: NavItem[] = [
+    { href: "/dashboard/agency", label: "Svi klijenti", icon: Users, exact: true },
+    { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
+  ];
+
+  const agencyAccountItems: NavItem[] = [
+    { href: "/dashboard/subscription", label: "Pretplata", icon: CreditCard },
+  ];
 
   const sections = isAdmin
     ? [{ label: "Admin", items: adminItems }]
-    : isAgency
+    : isAgency && activeClient
       ? [
-          { label: "Glavno", items: agencyCoreItems },
-          { label: "Račun", items: accountItems },
+          { label: activeClient.name, items: clientNavItems },
+          { label: "Agencija", items: agencyDefaultItems },
+          { label: "Račun", items: agencyAccountItems },
         ]
-      : [
-          { label: "Glavno", items: coreItems },
-          { label: "Tržište", items: intelligenceItems },
-          { label: "Račun", items: accountItems },
-        ];
+      : isAgency
+        ? [
+            { label: "Glavno", items: agencyDefaultItems },
+            { label: "Račun", items: agencyAccountItems },
+          ]
+        : [
+            { label: "Glavno", items: coreItems },
+            { label: "Tržište", items: intelligenceItems },
+            { label: "Račun", items: accountItems },
+          ];
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -136,13 +161,13 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex h-screen w-[244px] flex-col border-r border-slate-800/80 bg-[linear-gradient(180deg,#08111f_0%,#0b1730_52%,#102347_100%)] px-4 py-6 text-white shadow-[20px_0_60px_-40px_rgba(2,6,23,0.85)]">
       <div className="mb-10 flex items-center gap-3 px-2">
-        <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
+        <Link href={isAgency ? "/dashboard/agency" : "/"} className="flex items-center gap-3 transition-opacity hover:opacity-90">
           <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
             <Box className="size-5" />
           </div>
           <div>
             <p className="font-heading text-lg font-bold tracking-tight text-white">MojaPonuda.ba</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{isAdmin ? "Admin" : "Početna"}</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{isAdmin ? "Admin" : isAgency ? "Agencija" : "Početna"}</p>
           </div>
         </Link>
       </div>
@@ -161,11 +186,13 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
           </div>
         ))}
 
-        {/* Agency client selector */}
+        {/* Agency client selector dropdown */}
         {isAgency && agencyClients.length > 0 && (
           <div className="mt-7">
             <div className="mb-3 px-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">Klijent</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                {activeClient ? "Promijeni klijenta" : "Klijent"}
+              </p>
             </div>
             <div className="relative">
               <button
@@ -173,14 +200,14 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
                 onClick={() => setClientDropdownOpen((v) => !v)}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-[13px] font-medium transition-all duration-200",
-                  pathname.startsWith("/dashboard/agency/clients")
-                    ? "bg-white/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_10px_25px_-18px_rgba(15,23,42,0.95)]"
+                  activeClient
+                    ? "text-slate-300 hover:bg-white/6 hover:text-white"
                     : "text-slate-300 hover:bg-white/6 hover:text-white"
                 )}
               >
                 <Building2 className="size-4 shrink-0 text-slate-400" />
                 <span className="flex-1 truncate">
-                  {agencyClients.find((c) => pathname.includes(c.id))?.name ?? "Odaberi klijenta"}
+                  {activeClient?.name ?? "Odaberi klijenta"}
                 </span>
                 <ChevronsUpDown className={cn("size-3.5 shrink-0 text-slate-400 transition-transform", clientDropdownOpen && "text-white")} />
               </button>
@@ -197,7 +224,7 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
                         }}
                         className={cn(
                           "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                          pathname.includes(client.id)
+                          client.id === activeClientId
                             ? "bg-blue-50 text-blue-700"
                             : "text-slate-700 hover:bg-slate-50"
                         )}
