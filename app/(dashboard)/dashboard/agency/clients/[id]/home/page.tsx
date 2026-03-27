@@ -4,6 +4,7 @@ import { getSubscriptionStatus } from "@/lib/subscription";
 import { getProfileOptionLabel } from "@/lib/company-profile";
 import { DashboardHomeOverview } from "@/components/dashboard/home-overview";
 import { getCompetitorAnalysis } from "@/lib/market-intelligence";
+import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
 import {
   buildRecommendationContext,
   fetchRecommendedTenderCandidates,
@@ -224,8 +225,15 @@ export default async function AgencyClientHomePage({
       recommendationContext,
       { minimumResults: 4 }
     );
+
+    const rerankedRelevantTenders = await maybeRerankTenderRecommendationsWithAI(
+      rankedRelevantTenders,
+      recommendationContext,
+      { limit: 12, shortlistSize: 8 }
+    );
+
     totalRelevantCount = rankedRelevantTenders.length;
-    relevantTenders = rankedRelevantTenders.slice(0, 12).map(({ tender }) => tender);
+    relevantTenders = rerankedRelevantTenders.map(({ tender }) => tender);
   }
 
   const relevantTenderCount = totalRelevantCount;

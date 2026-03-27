@@ -8,6 +8,7 @@ import {
   hasRecommendationSignals,
   selectTenderRecommendations,
 } from "@/lib/tender-recommendations";
+import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
 import { TenderCard } from "@/components/tenders/tender-card";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -111,7 +112,13 @@ export default async function AgencyClientTendersPage({
     { minimumResults: 4 }
   );
 
-  const tenders = rankedRecommendations.map(({ tender }) => tender as Tender);
+  const reranked = await maybeRerankTenderRecommendationsWithAI(
+    rankedRecommendations,
+    recommendationContext,
+    { limit: rankedRecommendations.length, shortlistSize: 10 }
+  );
+
+  const tenders = reranked.map(({ tender }) => tender as Tender);
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">
