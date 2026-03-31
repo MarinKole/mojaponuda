@@ -26,6 +26,7 @@ import {
   ChevronsUpDown,
   ArrowLeft,
   Sparkles,
+  Database,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -61,6 +62,7 @@ const adminItems: NavItem[] = [
   { href: "/dashboard/admin/leads", label: "Leads", icon: Target },
   { href: "/dashboard/admin/financials", label: "Financials", icon: CircleDollarSign },
   { href: "/dashboard/admin/prilike", label: "Prilike", icon: Sparkles },
+  { href: "/dashboard/admin/scrapers", label: "Scrapers", icon: Database },
   { href: "/dashboard/admin/system", label: "System", icon: Wrench },
 ];
 
