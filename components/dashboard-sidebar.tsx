@@ -28,6 +28,7 @@ import {
   Sparkles,
   Database,
   TrendingUp,
+  Scale,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -65,6 +66,7 @@ const adminItems: NavItem[] = [
   { href: "/dashboard/admin/financials", label: "Financials", icon: CircleDollarSign },
   { href: "/dashboard/admin/prilike", label: "Prilike & Scraperi", icon: Sparkles },
   { href: "/dashboard/admin/posts", label: "Postovi", icon: FileText },
+  { href: "/dashboard/admin/zakon", label: "Zakon", icon: Scale },
   { href: "/dashboard/admin/system", label: "System", icon: Wrench },
 ];
 
@@ -90,7 +92,7 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
   // Detect if viewing a specific client's sub-pages (tenders/bids/docs)
   const clientMatch = pathname.match(/\/dashboard\/agency\/clients\/([^/]+)/);
   const activeClientId = clientMatch?.[1] ?? null;
-  const isClientSubPage = activeClientId ? /\/dashboard\/agency\/clients\/[^/]+\/(home|tenders|bids|documents|intelligence)/.test(pathname) : false;
+  const isClientSubPage = activeClientId ? /\/dashboard\/agency\/clients\/[^/]+\/(home|tenders|bids|documents|intelligence|prilike)/.test(pathname) : false;
   const activeClient = isClientSubPage && activeClientId ? agencyClients.find((c) => c.id === activeClientId) : null;
 
   // Build client-specific nav when a client is selected (sub-page mode)
@@ -100,6 +102,7 @@ export function DashboardSidebar({ userEmail, companyName, isAdmin = false, isAg
         { href: `/dashboard/agency/clients/${activeClient.id}/tenders`, label: "Tenderi", icon: Search },
         { href: `/dashboard/agency/clients/${activeClient.id}/bids`, label: "Ponude", icon: Briefcase },
         { href: `/dashboard/agency/clients/${activeClient.id}/documents`, label: "Dokumenti", icon: FileText },
+        { href: `/dashboard/agency/clients/${activeClient.id}/prilike`, label: "Prilike", icon: Sparkles },
       ]
     : [];
 

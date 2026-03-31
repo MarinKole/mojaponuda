@@ -4,7 +4,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PublicCta } from "@/components/public/public-cta";
 import { OpportunityStructuredData } from "@/components/public/opportunity-structured-data";
-import { ArrowLeft, Calendar, MapPin, Building2, TrendingUp, AlertTriangle, Users } from "lucide-react";
+import { OpportunityActionsWrapper } from "@/components/dashboard/opportunity-actions-wrapper";
+import { ArrowLeft, Calendar, MapPin, Building2, TrendingUp, AlertTriangle, Users, Ban } from "lucide-react";
 import type { Database } from "@/types/database";
 
 type OpportunityRow = Database["public"]["Tables"]["opportunities"]["Row"];
@@ -110,6 +111,13 @@ export default async function OpportunityPage({ params }: PageProps) {
             {opportunity.title}
           </h1>
 
+          {daysLeft !== null && daysLeft <= 0 && (
+            <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-4">
+              <Ban className="size-4 text-red-600 shrink-0" />
+              <p className="text-sm font-semibold text-red-700">ROK ZA PRIJAVU JE ISTEKAO</p>
+            </div>
+          )}
+
           <PublicCta
             text="Provjeri ispunjava li tvoja firma uvjete"
             href={`/signup?ref=opportunity&id=${opportunity.id}`}
@@ -133,11 +141,13 @@ export default async function OpportunityPage({ params }: PageProps) {
                 <Calendar className="size-4 text-slate-400 shrink-0" />
                 <span>
                   Rok: {formatDate(opportunity.deadline)}
-                  {daysLeft !== null && daysLeft > 0 && (
+                  {daysLeft !== null && daysLeft > 0 ? (
                     <span className={`ml-2 font-semibold ${daysLeft <= 7 ? "text-red-600" : "text-slate-700"}`}>
                       ({daysLeft} dana)
                     </span>
-                  )}
+                  ) : daysLeft !== null && daysLeft <= 0 ? (
+                    <span className="ml-2 font-semibold text-red-600">(Istekao)</span>
+                  ) : null}
                 </span>
               </div>
             )}
@@ -203,10 +213,11 @@ export default async function OpportunityPage({ params }: PageProps) {
           <p className="text-sm text-slate-600 mb-4">
             Prijavite se i pratite ovu i slične prilike. Dobijte obavijest kada se pojave novi uvjeti ili rok.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <PublicCta text="Prati ovu priliku" href={`/signup?ref=follow&id=${opportunity.id}`} variant="primary" />
-            <PublicCta text="Generiraj checklistu prijave" href={`/signup?ref=checklist&id=${opportunity.id}`} variant="secondary" />
-          </div>
+          <OpportunityActionsWrapper
+            opportunityId={opportunity.id}
+            signupHrefFollow={`/signup?ref=follow&id=${opportunity.id}`}
+            signupHrefChecklist={`/signup?ref=checklist&id=${opportunity.id}`}
+          />
         </div>
 
         <p className="text-xs text-slate-400 mb-8">

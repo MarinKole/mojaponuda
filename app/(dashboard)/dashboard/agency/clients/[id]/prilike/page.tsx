@@ -1,20 +1,36 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/lib/subscription";
-import { ProGate } from "@/components/subscription/pro-gate";
 import { OpportunityDashboardCard } from "@/components/dashboard/opportunity-dashboard-card";
 import { LegalUpdateCard } from "@/components/dashboard/legal-update-card";
-import { Sparkles, Scale, Heart } from "lucide-react";
+import { Sparkles, Scale } from "lucide-react";
 
-export default async function PrilikeDashboardPage() {
+export default async function AgencyClientPrilikePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id: agencyClientId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { isSubscribed } = await getSubscriptionStatus(user.id, user.email, supabase);
-  if (!isSubscribed) return <ProGate />;
+  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
+  if (plan.id !== "agency") redirect("/dashboard");
 
-  const [{ data: opportunities }, { data: legalUpdates }, { data: followedIds }] = await Promise.all([
+  // Verify agency client belongs to this user
+  const { data: agencyClient } = await supabase
+    .from("agency_clients")
+    .select("id, company_id, companies(name)")
+    .eq("id", agencyClientId)
+    .eq("agency_user_id", user.id)
+    .maybeSingle();
+
+  if (!agencyClient) notFound();
+
+  const companyName = (agencyClient.companies as { name: string } | null)?.name ?? "Klijent";
+
+  const [{ data: opportunities }, { data: legalUpdates }] = await Promise.all([
     supabase
       .from("opportunities")
       .select("id, slug, type, title, issuer, category, value, deadline, location, ai_summary, ai_difficulty")
@@ -26,20 +42,13 @@ export default async function PrilikeDashboardPage() {
       .select("id, type, title, summary, source, source_url, published_date")
       .order("published_date", { ascending: false, nullsFirst: false })
       .limit(5),
-    supabase
-      .from("opportunity_follows")
-      .select("opportunity_id")
-      .eq("user_id", user.id),
   ]);
 
-  const followedSet = new Set((followedIds ?? []).map((f) => (f as { opportunity_id: string }).opportunity_id));
-  const allOpportunities = (opportunities ?? []) as {
+  const poticaji = ((opportunities ?? []) as {
     id: string; slug: string; type: string; title: string; issuer: string;
     category: string | null; value: number | null; deadline: string | null;
     location: string | null; ai_summary: string | null; ai_difficulty: string | null;
-  }[];
-  const poticaji = allOpportunities.filter((o) => o.type === "poticaj");
-  const followed = allOpportunities.filter((o) => followedSet.has(o.id));
+  }[]).filter((o) => o.type === "poticaj");
 
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto">
@@ -48,26 +57,10 @@ export default async function PrilikeDashboardPage() {
           Poticaji i grantovi
         </h1>
         <p className="mt-1.5 text-sm text-slate-500">
-          Aktivni grantovi, subvencije i poticaji relevantni za vaše poslovanje.
+          Aktivni grantovi, subvencije i poticaji za {companyName}.
         </p>
       </div>
 
-      {/* Followed opportunities */}
-      {followed.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2 mb-5">
-            <Heart className="size-5 text-red-500" />
-            <h2 className="font-heading text-xl font-bold text-slate-900">Praćene prilike</h2>
-          </div>
-          <div className="space-y-3">
-            {followed.map((o) => (
-              <OpportunityDashboardCard key={o.id} opportunity={o} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Poticaji */}
       <section>
         <div className="flex items-center gap-2 mb-5">
           <Sparkles className="size-5 text-blue-600" />
@@ -86,7 +79,6 @@ export default async function PrilikeDashboardPage() {
         )}
       </section>
 
-      {/* Legal updates */}
       {(legalUpdates ?? []).length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-5">

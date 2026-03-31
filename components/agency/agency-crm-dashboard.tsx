@@ -13,7 +13,11 @@ import {
   Info,
   Plus,
   Search,
+  Sparkles,
   Users,
+  Calendar,
+  TrendingUp,
+  ArrowUpRight,
 } from "lucide-react";
 import { AddClientModal } from "./add-client-modal";
 
@@ -87,11 +91,22 @@ interface AgencyClient {
   } | null;
 }
 
+interface GrantPreview {
+  id: string;
+  slug: string;
+  type: string;
+  title: string;
+  issuer: string;
+  deadline: string | null;
+  value: number | null;
+}
+
 interface AgencyCRMDashboardProps {
   clients: AgencyClient[];
   bidsByCompany: Record<string, { total: number; won: number; active: number }>;
   docsByCompany: Record<string, number>;
   alertsByCompany: Record<string, AgencyAlert[]>;
+  grants?: GrantPreview[];
 }
 
 export function AgencyCRMDashboard({
@@ -99,6 +114,7 @@ export function AgencyCRMDashboard({
   bidsByCompany,
   docsByCompany,
   alertsByCompany,
+  grants = [],
 }: AgencyCRMDashboardProps) {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<string | null>(null);
@@ -182,6 +198,58 @@ export function AgencyCRMDashboard({
                     <p className="text-xs text-slate-500">{alert.detail}</p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-slate-300" />
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Grants preview */}
+      {grants.length > 0 && (
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-blue-50">
+                <Sparkles className="size-4 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Poticaji i grantovi</h2>
+                <p className="text-xs text-slate-500">Najnovije prilike za vaše klijente</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {grants.map((g) => {
+              const slug = g.slug.split("/").pop() ?? g.slug;
+              const daysLeft = g.deadline
+                ? Math.ceil((new Date(g.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                : null;
+              return (
+                <Link
+                  key={g.id}
+                  href={`/prilike/${slug}`}
+                  className="flex items-center gap-4 rounded-2xl border border-slate-100 p-4 transition-all hover:-translate-y-0.5 hover:shadow-sm hover:border-blue-200"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{g.title}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                      <span>{g.issuer}</span>
+                      {g.deadline && (
+                        <span className={`flex items-center gap-1 ${daysLeft !== null && daysLeft <= 0 ? "text-red-600 font-bold" : daysLeft !== null && daysLeft <= 7 ? "text-red-600 font-semibold" : ""}`}>
+                          <Calendar className="size-3" />
+                          {daysLeft !== null && daysLeft <= 0 ? "ROK ISTEKAO" : daysLeft !== null ? `${daysLeft} dana` : ""}
+                        </span>
+                      )}
+                      {g.value && (
+                        <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                          <TrendingUp className="size-3" />
+                          {formatCurrency(g.value)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <ArrowUpRight className="size-4 shrink-0 text-slate-300" />
                 </Link>
               );
             })}

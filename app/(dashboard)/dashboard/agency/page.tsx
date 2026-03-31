@@ -266,12 +266,27 @@ export default async function AgencyPage() {
     }
   }
 
+  // Fetch latest grants for the agency dashboard
+  const { data: grantsData } = await supabase
+    .from("opportunities")
+    .select("id, slug, type, title, issuer, deadline, value")
+    .eq("published", true)
+    .eq("type", "poticaj")
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  const grants = (grantsData ?? []) as {
+    id: string; slug: string; type: string; title: string;
+    issuer: string; deadline: string | null; value: number | null;
+  }[];
+
   return (
     <AgencyCRMDashboard
       clients={clients}
       bidsByCompany={bidsByCompany}
       docsByCompany={docsByCompany}
       alertsByCompany={alertsByCompany}
+      grants={grants}
     />
   );
 }

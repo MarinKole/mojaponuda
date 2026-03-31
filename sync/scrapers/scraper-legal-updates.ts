@@ -30,6 +30,16 @@ export interface LegalScraperResult {
 const AJN_BASE = "https://www.javnenabavke.gov.ba";
 const AJN_NEWS_URL = `${AJN_BASE}/bs/novosti`;
 const AJN_LAWS_URL = `${AJN_BASE}/bs/zakonodavstvo`;
+// Fallback URLs in case /bs/ prefix causes 404
+const AJN_LAWS_FALLBACKS = [
+  `${AJN_BASE}/legislation`,
+  `${AJN_BASE}/bs/legislation`,
+  `${AJN_BASE}/zakonodavstvo`,
+];
+const AJN_NEWS_FALLBACKS = [
+  `${AJN_BASE}/news`,
+  `${AJN_BASE}/bs/news`,
+];
 const GLASNIK_BASE = "http://www.sluzbenenovine.ba";
 const PARLAMENT_BASE = "https://www.parlament.ba";
 const VIJECE_BASE = "https://www.vijeceministara.gov.ba";
@@ -72,7 +82,7 @@ const SEED_LAWS: ScrapedLegalUpdate[] = [
     title: "Zakon o javnim nabavkama BiH (Službeni glasnik BiH, br. 39/14)",
     summary: "Osnovni zakon koji regulira postupke javnih nabavki u Bosni i Hercegovini. Primjenjuje se na sve ugovorne organe na državnom, entitetskom, kantonalnom i općinskom nivou.",
     source: "Agencija za javne nabavke BiH",
-    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    source_url: "https://www.javnenabavke.gov.ba/legislation",
     published_date: "2014-05-19",
     relevance_tags: ["zakon", "javne-nabavke", "osnovni-zakon"],
   },
@@ -82,7 +92,7 @@ const SEED_LAWS: ScrapedLegalUpdate[] = [
     title: "Zakon o izmjenama i dopunama Zakona o javnim nabavkama (Službeni glasnik BiH, br. 59/22)",
     summary: "Izmjene i dopune Zakona o javnim nabavkama iz 2022. godine. Donosi promjene u postupcima nabavki i pragovima.",
     source: "Agencija za javne nabavke BiH",
-    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    source_url: "https://www.javnenabavke.gov.ba/legislation",
     published_date: "2022-09-09",
     relevance_tags: ["izmjena", "javne-nabavke", "zakon"],
   },
@@ -92,7 +102,7 @@ const SEED_LAWS: ScrapedLegalUpdate[] = [
     title: "Pravilnik o postupku dodjele ugovora o javnim nabavkama (Službeni glasnik BiH, br. 90/14)",
     summary: "Podzakonski akt koji detaljno regulira postupke dodjele ugovora, uključujući otvoreni, ograničeni, pregovarački postupak i konkurentski zahtjev za dostavljanje ponuda.",
     source: "Agencija za javne nabavke BiH",
-    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    source_url: "https://www.javnenabavke.gov.ba/legislation",
     published_date: "2014-11-10",
     relevance_tags: ["pravilnik", "javne-nabavke", "postupak"],
   },
@@ -102,7 +112,7 @@ const SEED_LAWS: ScrapedLegalUpdate[] = [
     title: "Uputstvo o načinu vođenja postupka žalbe (Službeni glasnik BiH, br. 90/14)",
     summary: "Regulira postupak žalbe u vezi sa postupcima javnih nabavki pred Uredom za razmatranje žalbi BiH.",
     source: "Agencija za javne nabavke BiH",
-    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    source_url: "https://www.javnenabavke.gov.ba/legislation",
     published_date: "2014-11-10",
     relevance_tags: ["uputstvo", "javne-nabavke", "žalba"],
   },

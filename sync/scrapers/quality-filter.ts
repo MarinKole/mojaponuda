@@ -82,6 +82,8 @@ function isGarbageDescription(desc: string | null): boolean {
   if (/pratite nas|društvenim mrežama/i.test(text)) signals++;
   if (/politika privatnosti|uslovi poslovanja/i.test(text)) signals++;
   if (/preuzmite.*aplikacij/i.test(text)) signals++;
+  if (/kolačić|cookie/i.test(text)) signals++;
+  if (/slažem se|accept|saznaj više/i.test(text)) signals++;
   // If the "description" is mostly a site footer
   if (signals >= 2) return true;
 

@@ -11,10 +11,10 @@ import {
   X,
   Save,
   Loader2,
-  Plus,
   Eye,
   EyeOff,
   Filter,
+  AlertTriangle,
 } from "lucide-react";
 
 interface Opportunity {
@@ -60,6 +60,7 @@ export function AdminPostsManager() {
   const [editForm, setEditForm] = useState<Partial<Opportunity>>({});
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [purging, setPurging] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const limit = 25;
 
@@ -172,6 +173,26 @@ export function AdminPostsManager() {
     }
   };
 
+  const handlePurgeAll = async () => {
+    if (!confirm("OPREZ: Ovo će obrisati SVE postove, zakone i logove. Jeste li sigurni?")) return;
+    if (!confirm("Potvrdite još jednom: Brisanje SVIH podataka za čisti re-scrape?")) return;
+    setPurging(true);
+    try {
+      const res = await fetch("/api/admin/purge-posts", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`Obrisano: ${data.deleted?.opportunities ?? 0} postova, ${data.deleted?.legal_updates ?? 0} zakona`, "success");
+        fetchOpportunities();
+      } else {
+        showToast(data.error || "Greška pri brisanju", "error");
+      }
+    } catch {
+      showToast("Greška pri brisanju", "error");
+    } finally {
+      setPurging(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -190,13 +211,23 @@ export function AdminPostsManager() {
       )}
 
       {/* Header */}
-      <div>
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
-          Upravljanje postovima
-        </h1>
-        <p className="mt-1.5 text-sm text-slate-500">
-          Pregledajte, uređujte i brišite sve prilike i poticaje. Ukupno: {total}
-        </p>
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+            Upravljanje postovima
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-500">
+            Pregledajte, uređujte i brišite sve prilike i poticaje. Ukupno: {total}
+          </p>
+        </div>
+        <button
+          onClick={handlePurgeAll}
+          disabled={purging}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-colors disabled:opacity-50"
+        >
+          {purging ? <Loader2 className="size-4 animate-spin" /> : <AlertTriangle className="size-4" />}
+          Obriši sve za re-scrape
+        </button>
       </div>
 
       {/* Search + Filters */}

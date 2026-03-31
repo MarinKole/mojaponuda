@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Calendar, MapPin, TrendingUp, ArrowUpRight } from "lucide-react";
+import { FollowButton, ChecklistButton } from "./opportunity-actions";
 
-interface OpportunityCardProps {
+interface Props {
   opportunity: {
     id: string;
     slug: string;
@@ -23,7 +26,7 @@ const difficultyColor: Record<string, string> = {
   tesko: "text-red-700 bg-red-50",
 };
 
-export function OpportunityCard({ opportunity: o }: OpportunityCardProps) {
+export function OpportunityDashboardCard({ opportunity: o }: Props) {
   const slug = o.slug.split("/").pop() ?? o.slug;
   const daysLeft = o.deadline
     ? Math.ceil((new Date(o.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
@@ -37,10 +40,7 @@ export function OpportunityCard({ opportunity: o }: OpportunityCardProps) {
   };
 
   return (
-    <Link
-      href={`/prilike/${slug}`}
-      className="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
-    >
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap gap-2 mb-2">
@@ -52,10 +52,17 @@ export function OpportunityCard({ opportunity: o }: OpportunityCardProps) {
                 {o.ai_difficulty === "lako" ? "Lako" : o.ai_difficulty === "srednje" ? "Srednje" : "Teško"}
               </span>
             )}
+            {daysLeft !== null && daysLeft <= 0 && (
+              <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-bold text-red-700">
+                ROK ISTEKAO
+              </span>
+            )}
           </div>
-          <h3 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors line-clamp-2">
-            {o.title}
-          </h3>
+          <Link href={`/prilike/${slug}`} className="group">
+            <h3 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors line-clamp-2">
+              {o.title}
+            </h3>
+          </Link>
           <p className="text-sm text-slate-500 mt-1">{o.issuer}</p>
           {o.ai_summary && (
             <p className="text-sm text-slate-600 mt-2 line-clamp-2">{o.ai_summary}</p>
@@ -70,7 +77,7 @@ export function OpportunityCard({ opportunity: o }: OpportunityCardProps) {
             {o.deadline && (
               <span className={`flex items-center gap-1 ${daysLeft !== null && daysLeft <= 0 ? "text-red-600 font-bold" : daysLeft !== null && daysLeft <= 7 ? "text-red-600 font-semibold" : ""}`}>
                 <Calendar className="size-3" />
-                {daysLeft !== null && daysLeft <= 0 ? "ROK ISTEKAO" : daysLeft !== null && daysLeft > 0 ? `${daysLeft} dana` : "Uskoro ističe"}
+                {daysLeft !== null && daysLeft <= 0 ? "Istekao" : daysLeft !== null && daysLeft > 0 ? `${daysLeft} dana` : "Uskoro"}
               </span>
             )}
             {o.value && (
@@ -80,9 +87,16 @@ export function OpportunityCard({ opportunity: o }: OpportunityCardProps) {
               </span>
             )}
           </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <FollowButton opportunityId={o.id} />
+            <ChecklistButton opportunityId={o.id} />
+          </div>
         </div>
-        <ArrowUpRight className="size-4 text-slate-300 group-hover:text-blue-500 shrink-0 mt-1 transition-colors" />
+        <Link href={`/prilike/${slug}`}>
+          <ArrowUpRight className="size-4 text-slate-300 hover:text-blue-500 shrink-0 mt-1 transition-colors" />
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
