@@ -265,7 +265,7 @@
     - Confirm all tests still pass after fix (no regressions)
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
 
-- [~] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Run all bug condition exploration tests - should PASS
   - Run all preservation property tests - should PASS
   - Run all unit tests for new scrapers - should PASS
