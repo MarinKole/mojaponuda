@@ -27,6 +27,7 @@ import {
   ArrowLeft,
   Sparkles,
   Database,
+  TrendingUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -43,7 +44,8 @@ const coreItems: NavItem[] = [
   { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
   { href: "/dashboard/bids", label: "Moje ponude", icon: Briefcase },
   { href: "/dashboard/vault", label: "Dokumenti", icon: FileText },
-  { href: "/dashboard/prilike", label: "Prilike i poticaji", icon: Sparkles, pro: true },
+  { href: "/dashboard/prilike", label: "Poticaji", icon: Sparkles, pro: true },
+  { href: "/dashboard/tenderi-novi", label: "Novi tenderi", icon: TrendingUp, pro: true },
 ];
 
 const intelligenceItems: NavItem[] = [

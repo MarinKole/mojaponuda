@@ -74,16 +74,33 @@ export function parseDate(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const cleaned = raw.trim().replace(/\s+/g, " ");
 
-  // DD.MM.YYYY or DD/MM/YYYY
-  const dmy = cleaned.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
+  // DD.MM.YYYY or DD/MM/YYYY — most common in BiH government sites
+  const dmy = cleaned.match(/\b(\d{1,2})[./](\d{1,2})[./](\d{4})\b/);
   if (dmy) {
-    const [, d, m, y] = dmy;
-    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    const d = dmy[1].padStart(2, "0");
+    const m = dmy[2].padStart(2, "0");
+    const y = dmy[3];
+    // Validate: day 1-31, month 1-12, year reasonable
+    if (parseInt(d) >= 1 && parseInt(d) <= 31 && parseInt(m) >= 1 && parseInt(m) <= 12) {
+      const year = parseInt(y);
+      if (year >= 2020 && year <= 2035) {
+        return `${y}-${m}-${d}`;
+      }
+    }
+    return null;
   }
 
   // YYYY-MM-DD
-  const ymd = cleaned.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (ymd) return ymd[0];
+  const ymd = cleaned.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+  if (ymd) {
+    const year = parseInt(ymd[1]);
+    const month = parseInt(ymd[2]);
+    const day = parseInt(ymd[3]);
+    if (year >= 2020 && year <= 2035 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return ymd[0];
+    }
+    return null;
+  }
 
   return null;
 }

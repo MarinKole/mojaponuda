@@ -35,10 +35,10 @@ export default async function PrilikeDashboardPage() {
     <div className="space-y-8 max-w-[1200px] mx-auto">
       <div>
         <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
-          Prilike i poticaji
+          Poticaji i grantovi
         </h1>
         <p className="mt-1.5 text-sm text-slate-500">
-          Aktivni grantovi, poticaji i pravne izmjene relevantne za vaše poslovanje.
+          Aktivni grantovi, subvencije i poticaji relevantni za vaše poslovanje.
         </p>
       </div>
 
