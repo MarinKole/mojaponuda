@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    await supabase.from("page_analytics").insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from("page_analytics") as any).insert({
       event: body.event,
       path: body.path,
       opportunity_id: body.opportunity_id ?? null,
