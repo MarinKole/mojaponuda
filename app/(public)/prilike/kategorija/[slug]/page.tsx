@@ -1,0 +1,157 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { OpportunityCard } from "@/components/public/opportunity-card";
+import { PublicCta } from "@/components/public/public-cta";
+import { getCategoryBySlug, getAllCategorySlugs, OPPORTUNITY_CATEGORIES } from "@/lib/opportunity-categories";
+import { ArrowLeft, Tag } from "lucide-react";
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+  return getAllCategorySlugs().map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const category = getCategoryBySlug(slug);
+  if (!category) return { title: "Kategorija | MojaPonuda.ba" };
+
+  return {
+    title: category.metaTitle,
+    description: category.metaDescription,
+    alternates: { canonical: `https://mojaponuda.ba/prilike/kategorija/${slug}` },
+    openGraph: {
+      title: category.metaTitle,
+      description: category.metaDescription,
+      url: `https://mojaponuda.ba/prilike/kategorija/${slug}`,
+    },
+  };
+}
+
+export const revalidate = 3600;
+
+export default async function KategorijaPage({ params }: PageProps) {
+  const { slug } = await params;
+  const category = getCategoryBySlug(slug);
+  if (!category) notFound();
+
+  const supabase = await createClient();
+
+  // Build query based on category config
+  let query = supabase
+    .from("opportunities")
+    .select("id, slug, type, title, issuer, category, value, deadline, location, ai_summary, ai_difficulty, eligibility_signals")
+    .eq("published", true)
+    .eq("status", "active")
+    .order("deadline", { ascending: true, nullsFirst: false })
+    .limit(30);
+
+  // Filter by type if specified
+  if (category.type) {
+    query = query.eq("type", category.type);
+  }
+
+  // Filter by DB categories
+  if (category.dbCategories.length > 0) {
+    query = query.in("category", category.dbCategories);
+  }
+
+  const { data: opportunities } = await query;
+
+  // Further filter by eligibility signal if specified
+  const filtered = category.eligibilitySignal
+    ? (opportunities ?? []).filter((o) =>
+        Array.isArray(o.eligibility_signals) &&
+        o.eligibility_signals.includes(category.eligibilitySignal!)
+      )
+    : (opportunities ?? []);
+
+  // Related categories (exclude current)
+  const relatedCategories = OPPORTUNITY_CATEGORIES.filter((c) => c.slug !== slug).slice(0, 4);
+
+  return (
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
+        {/* Breadcrumb */}
+        <nav className="mb-8 flex items-center gap-2 text-sm text-slate-500">
+          <Link href="/prilike" className="hover:text-slate-900 flex items-center gap-1">
+            <ArrowLeft className="size-3.5" />
+            Sve prilike
+          </Link>
+          <span>/</span>
+          <span className="text-slate-900 font-medium">{category.title}</span>
+        </nav>
+
+        {/* Header */}
+        <div className="mb-12">
+          <div className="flex items-center gap-2 mb-3">
+            <Tag className="size-5 text-blue-600" />
+            <span className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
+              {category.type === "poticaj" ? "Poticaji i grantovi" : category.type === "tender" ? "Javne nabavke" : "Prilike"}
+            </span>
+          </div>
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl mb-4">
+            {category.h1}
+          </h1>
+          <p className="text-lg text-slate-600 max-w-2xl">
+            {category.description}
+          </p>
+          <PublicCta
+            text="Pratite prilike prilagođene vašoj firmi"
+            href="/signup"
+            className="mt-6"
+          />
+        </div>
+
+        {/* Results */}
+        {filtered.length > 0 ? (
+          <section className="mb-16">
+            <p className="text-sm text-slate-500 mb-6">
+              {filtered.length} {filtered.length === 1 ? "aktivna prilika" : filtered.length < 5 ? "aktivne prilike" : "aktivnih prilike"}
+            </p>
+            <div className="space-y-4">
+              {filtered.map((o) => (
+                <OpportunityCard key={o.id} opportunity={o} />
+              ))}
+            </div>
+          </section>
+        ) : (
+          <div className="mb-16 rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center">
+            <p className="text-slate-500 mb-2">Trenutno nema aktivnih prilike u ovoj kategoriji.</p>
+            <p className="text-sm text-slate-400">Prilike se ažuriraju svakodnevno. Prijavite se za obavijesti.</p>
+            <PublicCta
+              text="Primajte obavijesti o novim prilikama"
+              href="/signup"
+              className="mt-6 inline-block"
+            />
+          </div>
+        )}
+
+        {/* Related categories */}
+        <section>
+          <h2 className="font-heading text-2xl font-bold text-slate-900 mb-6">
+            Ostale kategorije
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {relatedCategories.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/prilike/kategorija/${cat.slug}`}
+                className="group rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+              >
+                <p className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+                  {cat.title}
+                </p>
+                <p className="text-sm text-slate-500 mt-1 line-clamp-1">{cat.description}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

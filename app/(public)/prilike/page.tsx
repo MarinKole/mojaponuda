@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { OpportunityCard } from "@/components/public/opportunity-card";
 import { PublicCta } from "@/components/public/public-cta";
+import { OPPORTUNITY_CATEGORIES } from "@/lib/opportunity-categories";
+import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Javne prilike u BiH — Tenderi i poticaji | MojaPonuda.ba",
@@ -43,6 +45,27 @@ export default async function PrilikePage() {
             className="mt-6"
           />
         </div>
+
+        {/* Category navigation */}
+        <section className="mb-12">
+          <h2 className="font-heading text-xl font-bold text-slate-900 mb-4">
+            Pretraži po kategoriji
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {OPPORTUNITY_CATEGORIES.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/prilike/kategorija/${cat.slug}`}
+                className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+              >
+                <span className="text-sm font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">
+                  {cat.title}
+                </span>
+                <ArrowRight className="size-3.5 text-slate-300 group-hover:text-blue-500 transition-colors shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {poticaji.length > 0 && (
           <section className="mb-12">
