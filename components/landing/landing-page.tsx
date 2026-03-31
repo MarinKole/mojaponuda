@@ -19,11 +19,39 @@ import {
   ShieldCheck,
   Building,
   Landmark,
-  Briefcase
+  Briefcase,
+  TrendingUp,
+  Calendar,
+  MapPin,
+  ExternalLink
 } from "lucide-react";
+import { OpportunityCard } from "@/components/public/opportunity-card";
 
 interface LandingPageProps {
   isLoggedIn?: boolean;
+  recentOpportunities?: Array<{
+    id: string;
+    slug: string;
+    type: string;
+    title: string;
+    issuer: string;
+    category: string | null;
+    value: number | null;
+    deadline: string | null;
+    location: string | null;
+    ai_summary: string | null;
+    ai_difficulty: string | null;
+  }>;
+  recentLegalUpdates?: Array<{
+    id: string;
+    type: string;
+    title: string;
+    summary: string | null;
+    source: string;
+    source_url: string | null;
+    published_date: string | null;
+    relevance_tags: string[] | null;
+  }>;
 }
 
 // Minimalistic framer-motion variants for premium slide-ins
@@ -101,6 +129,8 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <a href="#kako-radi" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Kako radi</a>
           <a href="#usporedba" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Poređenje</a>
           <a href="#cijene" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Cijene</a>
+          <Link href="/prilike" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Prilike</Link>
+          <Link href="/zakon" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Zakon</Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -340,6 +370,144 @@ function HowItWorksSection() {
         >
           <PrimaryCTA className="h-[3.25rem] px-10 text-base shadow-md" />
         </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Opportunities Preview ───────────────────────────────────────────────────
+function OpportunitiesPreviewSection({ 
+  recentOpportunities, 
+  recentLegalUpdates 
+}: { 
+  recentOpportunities?: LandingPageProps['recentOpportunities'];
+  recentLegalUpdates?: LandingPageProps['recentLegalUpdates'];
+}) {
+  // Only render if we have data
+  if (!recentOpportunities?.length && !recentLegalUpdates?.length) {
+    return null;
+  }
+
+  return (
+    <section className="bg-slate-50 px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-200 overflow-hidden">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center mb-12">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+          >
+            Aktivne prilike i pravne izmjene
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mt-3 text-lg text-slate-700"
+          >
+            Najnovije prilike i pravne izmjene koje mogu uticati na vaše poslovanje.
+          </motion.p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Opportunities Column */}
+          {recentOpportunities && recentOpportunities.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <h3 className="font-heading text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="size-5 text-primary" />
+                Aktivne prilike
+              </h3>
+              <div className="space-y-4">
+                {recentOpportunities.slice(0, 3).map((opportunity) => (
+                  <OpportunityCard key={opportunity.id} opportunity={opportunity} />
+                ))}
+              </div>
+              <Link 
+                href="/prilike" 
+                className="mt-6 inline-flex items-center gap-2 text-base font-bold text-primary hover:text-blue-700 transition-colors group"
+              >
+                Vidi sve prilike
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </motion.div>
+          )}
+
+          {/* Legal Updates Column */}
+          {recentLegalUpdates && recentLegalUpdates.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+            >
+              <h3 className="font-heading text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <FileText className="size-5 text-primary" />
+                Pravne izmjene
+              </h3>
+              <div className="space-y-4">
+                {recentLegalUpdates.slice(0, 3).map((update) => (
+                  <div 
+                    key={update.id}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                            {update.type === "zakon" ? "Zakon" : update.type === "propis" ? "Propis" : "Izmjena"}
+                          </span>
+                          {update.published_date && (
+                            <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                              <Calendar className="size-3" />
+                              {new Date(update.published_date).toLocaleDateString('bs-BA', { 
+                                day: 'numeric', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              })}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-semibold text-slate-900 line-clamp-2 mb-2">
+                          {update.title}
+                        </h4>
+                        {update.summary && (
+                          <p className="text-sm text-slate-600 line-clamp-2">{update.summary}</p>
+                        )}
+                        <p className="text-xs text-slate-500 mt-2">{update.source}</p>
+                        {update.source_url && (
+                          <a 
+                            href={update.source_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:text-blue-700 mt-2 font-semibold"
+                          >
+                            Izvor
+                            <ExternalLink className="size-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link 
+                href="/zakon" 
+                className="mt-6 inline-flex items-center gap-2 text-base font-bold text-primary hover:text-blue-700 transition-colors group"
+              >
+                Prati pravne izmjene
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </motion.div>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -829,6 +997,8 @@ function Footer() {
             <p className="mt-1 text-[14px] font-semibold text-slate-500 text-center sm:text-left">© 2026 Sva prava zadržana.</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-[15px] font-bold text-slate-600">
+            <Link href="/prilike" className="hover:text-primary transition-colors">Prilike i poticaji</Link>
+            <Link href="/zakon" className="hover:text-primary transition-colors">Zakon o nabavkama</Link>
             <Link href="/privacy" className="hover:text-primary transition-colors">Politika privatnosti</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">Uslovi korištenja</Link>
             <Link href="/contact" className="hover:text-primary transition-colors">Kontakt</Link>
@@ -840,12 +1010,16 @@ function Footer() {
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
-export function LandingPage({ isLoggedIn }: LandingPageProps) {
+export function LandingPage({ isLoggedIn, recentOpportunities, recentLegalUpdates }: LandingPageProps) {
   return (
     <div className="min-h-screen">
       <NavBar isLoggedIn={isLoggedIn} />
       <HeroSection isLoggedIn={isLoggedIn} />
       <HowItWorksSection />
+      <OpportunitiesPreviewSection 
+        recentOpportunities={recentOpportunities} 
+        recentLegalUpdates={recentLegalUpdates} 
+      />
       <BeforeAfterSection isLoggedIn={isLoggedIn} />
       <MoneySection isLoggedIn={isLoggedIn} />
       <PricingSection isLoggedIn={isLoggedIn} />

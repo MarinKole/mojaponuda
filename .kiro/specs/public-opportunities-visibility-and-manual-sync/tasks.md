@@ -1,0 +1,143 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Bug Condition** - Homepage Missing Opportunities and Admin Missing Sync Button
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate the bugs exist
+  - **Scoped PBT Approach**: Test concrete failing cases: (1) homepage visitor sees no opportunities section, (2) admin user encounters missing RunPostSyncButton component
+  - Test implementation details from Bug Condition in design:
+    - Navigate to homepage and verify no opportunities preview section exists
+    - Attempt to import RunPostSyncButton component and verify it fails
+    - Navigate to admin prilike page and verify component error occurs
+    - Inspect HomePage component and verify no data fetching for opportunities
+  - The test assertions should match the Expected Behavior Properties from design:
+    - Homepage SHOULD display prominent opportunities section (Property 1)
+    - Admin dashboard SHOULD have functional manual sync button (Property 2)
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct - it proves the bugs exist)
+  - Document counterexamples found:
+    - Homepage renders without opportunities preview section
+    - Build fails with "Module not found: Can't resolve '@/components/admin/run-post-sync-button'"
+    - Admin page shows error or fails to render
+    - HomePage component only fetches user auth, no opportunities data
+  - Mark task complete when test is written, run, and failures are documented
+  - _Requirements: 1.1, 1.2, 1.3, 1.4_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Existing Navigation, Pages, and Sync Functionality
+  - **IMPORTANT**: Follow observation-first methodology
+  - Observe behavior on UNFIXED code for non-buggy inputs:
+    - Navigate to `/prilike` and observe full page rendering with filters and cards
+    - Navigate to `/zakon` and observe legal updates display
+    - Click navigation links "Prilike" and "Zakon" and observe routing
+    - Check scraper_log table for automatic cron sync entries
+    - Navigate to other admin pages and observe unchanged rendering
+    - Verify hero, how-it-works, pricing, FAQ sections on homepage
+  - Write property-based tests capturing observed behavior patterns from Preservation Requirements:
+    - Navigation links to "Prilike" and "Zakon" continue to work (3.1)
+    - Dedicated pages `/prilike` and `/zakon` display full content with filtering (3.1, 3.3)
+    - Automatic cron job continues to run on schedule (3.2)
+    - Existing admin dashboard pages remain unchanged (3.5)
+    - All other landing page sections remain unchanged (3.5)
+    - OpportunityCard component display logic remains unchanged (3.3)
+  - Property-based testing generates many test cases for stronger guarantees
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [ ] 3. Fix for homepage opportunities visibility and admin manual sync button
+
+  - [x] 3.1 Create RunPostSyncButton component
+    - Create new file `components/admin/run-post-sync-button.tsx`
+    - Mark as client component with "use client" directive
+    - Implement state management: isLoading, result, error
+    - Create API call function to POST to `/api/admin/trigger-sync`
+    - Handle loading, success, and error states
+    - Render button with "Pokreni scraper" label
+    - Show loading spinner when active
+    - Display success message with opportunities processed/published
+    - Display error message if sync fails
+    - _Bug_Condition: isBugCondition(input) where input.page === "admin-prilike" AND input.userRole === "admin" AND NOT componentExists("RunPostSyncButton")_
+    - _Expected_Behavior: Admin dashboard displays functional manual sync button that triggers post-sync pipeline with loading states and results display_
+    - _Preservation: Existing admin dashboard KPIs, scraper logs, and opportunities list remain unchanged_
+    - _Requirements: 1.2, 2.2, 2.3_
+
+  - [x] 3.2 Create admin trigger-sync API endpoint
+    - Create new file `app/api/admin/trigger-sync/route.ts`
+    - Implement POST handler for admin-authenticated requests
+    - Verify user is authenticated via Supabase session
+    - Check user has admin role using requireAdminUser() helper
+    - Call runPostSyncPipeline() from sync/post-sync-pipeline.ts
+    - Return JSON response with opportunities_processed, opportunities_published, duration_ms
+    - Handle errors with proper error messages and 500 status
+    - _Bug_Condition: Admin needs manual control to trigger sync pipeline_
+    - _Expected_Behavior: Admin-authenticated endpoint executes sync and returns results_
+    - _Preservation: Automatic cron job continues to run independently_
+    - _Requirements: 2.2, 2.3, 3.2_
+
+  - [x] 3.3 Add opportunities data fetching to HomePage
+    - Modify `app/page.tsx` server component
+    - Add Supabase query for recent opportunities (limit 6)
+      - Filter: published = true, status = 'active'
+      - Order: deadline ASC
+      - Select minimal fields for preview cards
+    - Add Supabase query for recent legal updates (limit 3)
+      - Order: published_date DESC
+      - Select minimal fields for preview cards
+    - Pass data as props to LandingPage component: recentOpportunities, recentLegalUpdates
+    - _Bug_Condition: isBugCondition(input) where input.page === "homepage" AND NOT hasOpportunitiesSection()_
+    - _Expected_Behavior: Homepage fetches and displays recent opportunities and laws_
+    - _Preservation: All other landing page sections remain unchanged_
+    - _Requirements: 1.1, 2.1, 2.4_
+
+  - [x] 3.4 Add OpportunitiesPreviewSection to LandingPage
+    - Modify `components/landing/landing-page.tsx` client component
+    - Update interface to accept optional recentOpportunities and recentLegalUpdates props
+    - Create new OpportunitiesPreviewSection component
+      - Display heading: "Aktivne prilike i pravne izmjene"
+      - Show 2 columns: opportunities on left, legal updates on right
+      - Use existing OpportunityCard component for opportunities
+      - Create simple card layout for legal updates
+      - Add CTAs: "Vidi sve prilike →" and "Prati pravne izmjene →"
+      - Use framer-motion animations consistent with other sections
+    - Insert section between HowItWorksSection and BeforeAfterSection
+    - Implement conditional rendering (only show if data exists)
+    - _Bug_Condition: Homepage lacks prominent display of opportunities content_
+    - _Expected_Behavior: Homepage prominently features recent opportunities and laws with CTAs_
+    - _Preservation: Hero, how-it-works, pricing, FAQ sections remain unchanged_
+    - _Requirements: 1.1, 1.4, 2.1, 2.4, 3.5_
+
+  - [x] 3.5 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - Homepage Displays Opportunities and Admin Has Sync Button
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1
+    - Verify homepage displays opportunities preview section
+    - Verify RunPostSyncButton component exists and renders
+    - Verify admin prilike page renders without errors
+    - Verify HomePage component fetches opportunities data
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bugs are fixed)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+
+  - [x] 3.6 Verify preservation tests still pass
+    - **Property 2: Preservation** - Existing Navigation, Pages, and Sync Functionality
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2
+    - Verify navigation links still work
+    - Verify dedicated pages still display correctly
+    - Verify automatic cron sync still runs
+    - Verify other admin pages unchanged
+    - Verify other landing sections unchanged
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Verify all bug condition tests pass (homepage has opportunities, admin has sync button)
+  - Verify all preservation tests pass (existing functionality unchanged)
+  - Test manual sync button functionality end-to-end
+  - Test homepage opportunities section displays correctly with real data
+  - Verify SEO improvements with opportunities content on homepage
+  - Ask the user if questions arise
