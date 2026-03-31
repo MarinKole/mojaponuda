@@ -6,6 +6,16 @@ export const metadata: Metadata = {
   title: "Scraper izvori | Admin",
 };
 
+interface ScraperLog {
+  id: string;
+  source: string;
+  items_found: number;
+  items_new: number;
+  items_skipped: number;
+  error: string | null;
+  ran_at: string;
+}
+
 export default async function ScrapersPage() {
   const supabase = await createClient();
 
@@ -25,7 +35,7 @@ export default async function ScrapersPage() {
         </p>
       </div>
 
-      <ScraperSourcesList initialLogs={logs ?? []} />
+      <ScraperSourcesList initialLogs={(logs as ScraperLog[]) ?? []} />
     </div>
   );
 }
