@@ -25,7 +25,9 @@ interface ScraperStatus {
     itemsNew: number;
     itemsSkipped: number;
     itemsFiltered?: number;
+    itemsRejectedByAi?: number;
     filterReasons?: Record<string, number>;
+    aiRejectReasons?: string[];
     duration_ms: number;
     errors?: string[];
   };
@@ -89,7 +91,9 @@ export function ScraperSourcesList({ initialLogs }: ScraperSourcesListProps) {
             itemsNew: data.itemsNew,
             itemsSkipped: data.itemsSkipped,
             itemsFiltered: data.itemsFiltered,
+            itemsRejectedByAi: data.itemsRejectedByAi,
             filterReasons: data.filterReasons,
+            aiRejectReasons: data.aiRejectReasons,
             duration_ms: data.duration_ms,
             errors: data.errors,
           },
@@ -360,6 +364,18 @@ export function ScraperSourcesList({ initialLogs }: ScraperSourcesListProps) {
                       {status.result.filterReasons && Object.keys(status.result.filterReasons).length > 0 && (
                         <div className="mt-2 text-xs text-amber-700">
                           Razlozi filtriranja: {Object.entries(status.result.filterReasons).map(([r, n]) => `${r} (${n})`).join(", ")}
+                        </div>
+                      )}
+                      {status.result.itemsRejectedByAi !== undefined && status.result.itemsRejectedByAi > 0 && (
+                        <div className="mt-2 text-xs text-purple-700">
+                          AI odbio: {status.result.itemsRejectedByAi} stavki
+                          {status.result.aiRejectReasons && status.result.aiRejectReasons.length > 0 && (
+                            <ul className="mt-1 ml-3 list-disc text-purple-600">
+                              {status.result.aiRejectReasons.map((r, i) => (
+                                <li key={i}>{r}</li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       )}
                     </div>

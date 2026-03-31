@@ -10,7 +10,7 @@ import type { ExecutionLayer } from "./scrapers/scraper-orchestrator";
 import { processOpportunitiesWithHashing } from "./scrapers/content-hasher";
 import { filterOpportunities } from "./scrapers/quality-filter";
 import { scoreOpportunity, generateSlug, PUBLISH_THRESHOLD } from "./opportunity-scorer";
-import { generateOpportunityContent, generateLegalSummary } from "./ai-content-generator";
+import { generateOpportunityContent, generateLegalSummary, aiReviewOpportunity } from "./ai-content-generator";
 import type { ScrapedOpportunity } from "./scrapers/types";
 
 function createServiceClient() {
@@ -183,6 +183,19 @@ export async function runPostSyncPipeline(layer: ExecutionLayer = "layer1"): Pro
           
           console.log(`[PostSync] Updated: ${item.title.slice(0, 50)}... (status: ${item.change_status})`);
         }
+        continue;
+      }
+
+      // ── AI Review Gate: verify this is a real business opportunity ──
+      const review = await aiReviewOpportunity(
+        item.title,
+        item.issuer,
+        item.description,
+        item.requirements,
+      );
+
+      if (!review.approved) {
+        console.log(`[PostSync] AI REJECTED: ${item.title.slice(0, 50)} — ${review.reason}`);
         continue;
       }
 

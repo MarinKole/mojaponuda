@@ -6,7 +6,7 @@ import { SCRAPER_SOURCES } from "@/sync/scrapers/scraper-registry";
 import { filterOpportunities } from "@/sync/scrapers/quality-filter";
 import { processOpportunitiesWithHashing } from "@/sync/scrapers/content-hasher";
 import { scoreOpportunity, generateSlug, PUBLISH_THRESHOLD } from "@/sync/opportunity-scorer";
-import { generateOpportunityContent, generateLegalSummary } from "@/sync/ai-content-generator";
+import { generateOpportunityContent, generateLegalSummary, aiReviewOpportunity } from "@/sync/ai-content-generator";
 import { scrapeFmrpo } from "@/sync/scrapers/scraper-fbih-ministarstvo";
 import { scrapeRazvojneAgencije } from "@/sync/scrapers/scraper-razvojne-agencije";
 import { scrapeSingleFederalSource } from "@/sync/scrapers/scraper-federal-sources";
@@ -89,6 +89,8 @@ export async function POST(request: NextRequest) {
     let itemsNew = 0;
     let itemsSkipped = 0;
     let itemsFiltered = 0;
+    let itemsRejectedByAi = 0;
+    let aiRejectReasons: string[] = [];
     let filterReasons: Record<string, number> = {};
 
     if (source.category === "opportunities") {
@@ -155,6 +157,24 @@ export async function POST(request: NextRequest) {
             itemsSkipped++;
             continue;
           }
+
+          // ── AI Review Gate: verify this is a real business opportunity ──
+          const review = await aiReviewOpportunity(
+            item.title,
+            item.issuer,
+            item.description,
+            item.requirements,
+          );
+
+          if (!review.approved) {
+            itemsRejectedByAi++;
+            aiRejectReasons.push(`${item.title.slice(0, 60)}: ${review.reason}`);
+            console.log(`[AI Review] REJECTED: ${item.title.slice(0, 50)} — ${review.reason}`);
+            itemsFiltered++;
+            continue;
+          }
+
+          console.log(`[AI Review] APPROVED: ${item.title.slice(0, 50)}`);
 
           const aiContent = await generateOpportunityContent(
             item.title,
@@ -265,7 +285,9 @@ export async function POST(request: NextRequest) {
       itemsNew,
       itemsSkipped,
       itemsFiltered,
+      itemsRejectedByAi,
       filterReasons: Object.keys(filterReasons).length > 0 ? filterReasons : undefined,
+      aiRejectReasons: aiRejectReasons.length > 0 ? aiRejectReasons : undefined,
       errors: errors.length > 0 ? errors : undefined,
       duration_ms: Date.now() - start,
     });

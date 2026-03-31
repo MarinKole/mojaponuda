@@ -63,6 +63,45 @@ const IRRELEVANT_TITLE_PATTERNS = [
   /komisij[aeu]\s+za\s+(izbor|imenovanje)/i,
   /nadzorn[io]\s+odbor/i,
   /upravn[io]\s+odbor/i,
+  // Personal certifications / licenses — not business grants
+  /sticanje zvanja/i,
+  /instruktor[a-z]*\s+vožnje/i,
+  /polaganje.*ispita/i,
+  /stručni ispit/i,
+  /vozačk[aeiou]/i,
+  /licenc[aeiou]\s+(za|o)\s+(lov|ribolov|pecar)/i,
+  // Internal government / administrative notices
+  /sistematizacij/i,
+  /pravilnik\s+o\s+unutrašnj/i,
+  /interni oglas/i,
+  /prijem.*državn.*služb/i,
+];
+
+/**
+ * Titles that are clearly scraped HTML artifacts / navigation elements.
+ * These are NOT opportunity titles.
+ */
+const GARBAGE_TITLE_PATTERNS = [
+  /^glavna navigacija$/i,
+  /^navigacija$/i,
+  /^pretraga$/i,
+  /^meni$/i,
+  /^menu$/i,
+  /^footer$/i,
+  /^podnožje$/i,
+  /^kontakt$/i,
+  /^linkovi$/i,
+  /^korisni linkovi$/i,
+  /^brzi linkovi$/i,
+  /^sadržaj$/i,
+  /^breadcrumb/i,
+  /^copyright/i,
+  /^\s*$/,
+  // HTML entities / fragments
+  /^&[a-z]+;/i,
+  /^<[a-z]/i,
+  // Just a site/ministry name with no specific call
+  /^ministarstvo\s+\w+\s+kantons?k?o?g?a?\s+\w+$/i,
 ];
 
 /**
@@ -78,14 +117,20 @@ function isGarbageDescription(desc: string | null): boolean {
   let signals = 0;
   if (/\+387/.test(text)) signals++;
   if (/@/.test(text) && /\.ba/.test(text)) signals++;
-  if (/copyright|©|sva prava/i.test(text)) signals++;
+  if (/copyright|©|&copy;|sva prava/i.test(text)) signals++;
   if (/pratite nas|društvenim mrežama/i.test(text)) signals++;
   if (/politika privatnosti|uslovi poslovanja/i.test(text)) signals++;
   if (/preuzmite.*aplikacij/i.test(text)) signals++;
   if (/kolačić|cookie/i.test(text)) signals++;
   if (/slažem se|accept|saznaj više/i.test(text)) signals++;
+  if (/izrada:\s/i.test(text)) signals++;
+  if (/zavod za informatiku/i.test(text)) signals++;
+  if (/web:\s|fax:\s/i.test(text)) signals++;
+  if (/designed by|powered by/i.test(text)) signals++;
   // If the "description" is mostly a site footer
   if (signals >= 2) return true;
+  // Single strong signal: description is just copyright line
+  if (/^&copy;/i.test(text) || /^©/i.test(text)) return true;
 
   // If it's just the page title repeated as description
   if (text.split(/\s+/).length < 4) return true;
@@ -140,15 +185,27 @@ export function applyQualityFilter(item: ScrapedOpportunity): QualityFilterResul
     item.description = null;
   }
 
-  // Rule 4: If title is too generic (e.g. just "Javni pozivi"), reject
-  const genericTitles = [/^javni pozivi?$/i, /^obavijest$/i, /^novosti$/i, /^aktuelno$/i, /^početna$/i];
+  // Rule 4: Reject garbage titles (HTML artifacts, nav elements, footer)
+  for (const pattern of GARBAGE_TITLE_PATTERNS) {
+    if (pattern.test(item.title.trim())) {
+      return { passed: false, reason: `Garbage title: '${item.title}' (HTML artifact or navigation element)` };
+    }
+  }
+
+  // Rule 5: If title is too generic (e.g. just "Javni pozivi"), reject
+  const genericTitles = [/^javni pozivi?$/i, /^obavijest$/i, /^novosti$/i, /^aktuelno$/i, /^početna$/i, /^pregled$/i, /^arhiva$/i, /^dokumenti$/i];
   for (const pattern of genericTitles) {
     if (pattern.test(item.title.trim())) {
       return { passed: false, reason: `Generic title: '${item.title}' (not a specific opportunity)` };
     }
   }
 
-  // Rule 5: Deadline must not be expired (only if deadline exists)
+  // Rule 6: Reject if both title AND description look like garbage
+  if (isGarbageDescription(item.description) && item.title.split(/\s+/).length <= 3) {
+    return { passed: false, reason: `Garbage item: short title '${item.title}' + garbage description` };
+  }
+
+  // Rule 7: Deadline must not be expired (only if deadline exists)
   if (item.deadline) {
     const deadlineDate = new Date(item.deadline);
     const now = new Date();
