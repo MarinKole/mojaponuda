@@ -742,6 +742,217 @@ export interface Database {
           }
         ];
       };
+      opportunities: {
+        Row: {
+          id: string;
+          type: "tender" | "poticaj";
+          slug: string;
+          title: string;
+          issuer: string;
+          category: string | null;
+          subcategory: string | null;
+          industry: string | null;
+          value: number | null;
+          deadline: string | null;
+          location: string | null;
+          requirements: string | null;
+          eligibility_signals: string[] | null;
+          description: string | null;
+          source_url: string;
+          status: "active" | "expired" | "draft";
+          seo_title: string | null;
+          seo_description: string | null;
+          ai_summary: string | null;
+          ai_who_should_apply: string | null;
+          ai_difficulty: "lako" | "srednje" | "tesko" | null;
+          ai_risks: string | null;
+          ai_competition: string | null;
+          ai_generated_at: string | null;
+          quality_score: number;
+          published: boolean;
+          external_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          type: "tender" | "poticaj";
+          slug: string;
+          title: string;
+          issuer: string;
+          category?: string | null;
+          subcategory?: string | null;
+          industry?: string | null;
+          value?: number | null;
+          deadline?: string | null;
+          location?: string | null;
+          requirements?: string | null;
+          eligibility_signals?: string[] | null;
+          description?: string | null;
+          source_url: string;
+          status?: "active" | "expired" | "draft";
+          seo_title?: string | null;
+          seo_description?: string | null;
+          ai_summary?: string | null;
+          ai_who_should_apply?: string | null;
+          ai_difficulty?: "lako" | "srednje" | "tesko" | null;
+          ai_risks?: string | null;
+          ai_competition?: string | null;
+          ai_generated_at?: string | null;
+          quality_score?: number;
+          published?: boolean;
+          external_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          type?: "tender" | "poticaj";
+          slug?: string;
+          title?: string;
+          issuer?: string;
+          category?: string | null;
+          subcategory?: string | null;
+          industry?: string | null;
+          value?: number | null;
+          deadline?: string | null;
+          location?: string | null;
+          requirements?: string | null;
+          eligibility_signals?: string[] | null;
+          description?: string | null;
+          source_url?: string;
+          status?: "active" | "expired" | "draft";
+          seo_title?: string | null;
+          seo_description?: string | null;
+          ai_summary?: string | null;
+          ai_who_should_apply?: string | null;
+          ai_difficulty?: "lako" | "srednje" | "tesko" | null;
+          ai_risks?: string | null;
+          ai_competition?: string | null;
+          ai_generated_at?: string | null;
+          quality_score?: number;
+          published?: boolean;
+          external_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      legal_updates: {
+        Row: {
+          id: string;
+          type: "zakon" | "izmjena" | "vijest";
+          title: string;
+          summary: string | null;
+          source: string;
+          source_url: string | null;
+          published_date: string | null;
+          relevance_tags: string[] | null;
+          external_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          type: "zakon" | "izmjena" | "vijest";
+          title: string;
+          summary?: string | null;
+          source: string;
+          source_url?: string | null;
+          published_date?: string | null;
+          relevance_tags?: string[] | null;
+          external_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          type?: "zakon" | "izmjena" | "vijest";
+          title?: string;
+          summary?: string | null;
+          source?: string;
+          source_url?: string | null;
+          published_date?: string | null;
+          relevance_tags?: string[] | null;
+          external_id?: string | null;
+        };
+        Relationships: [];
+      };
+      scraper_log: {
+        Row: {
+          id: string;
+          source: string;
+          items_found: number;
+          items_new: number;
+          items_skipped: number;
+          error: string | null;
+          ran_at: string;
+        };
+        Insert: {
+          id?: string;
+          source: string;
+          items_found?: number;
+          items_new?: number;
+          items_skipped?: number;
+          error?: string | null;
+          ran_at?: string;
+        };
+        Update: {
+          id?: string;
+          source?: string;
+          items_found?: number;
+          items_new?: number;
+          items_skipped?: number;
+          error?: string | null;
+        };
+        Relationships: [];
+      };
+      opportunity_follows: {
+        Row: {
+          id: string;
+          user_id: string;
+          opportunity_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          opportunity_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          opportunity_id?: string;
+        };
+        Relationships: [];
+      };
+      page_analytics: {
+        Row: {
+          id: string;
+          path: string;
+          event: "view" | "cta_click" | "signup" | "follow";
+          opportunity_id: string | null;
+          user_id: string | null;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          path: string;
+          event: "view" | "cta_click" | "signup" | "follow";
+          opportunity_id?: string | null;
+          user_id?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          path?: string;
+          event?: "view" | "cta_click" | "signup" | "follow";
+          opportunity_id?: string | null;
+          user_id?: string | null;
+          metadata?: Json | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       documents_with_expiry: {
