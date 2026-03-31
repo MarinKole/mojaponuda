@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { PublicCta } from "@/components/public/public-cta";
 import { OpportunityStructuredData } from "@/components/public/opportunity-structured-data";
 import { ArrowLeft, Calendar, MapPin, Building2, TrendingUp, AlertTriangle, Users } from "lucide-react";
+import type { Database } from "@/types/database";
+
+type OpportunityRow = Database["public"]["Tables"]["opportunities"]["Row"];
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -17,9 +20,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { data } = await supabase
     .from("opportunities")
     .select("seo_title, seo_description, title, issuer")
-    .eq("slug", `poticaj/${slug}`)
-    .or(`slug.eq.tender/${slug}`)
-    .maybeSingle();
+    .or(`slug.eq.poticaj/${slug},slug.eq.tender/${slug}`)
+    .maybeSingle() as { data: Pick<OpportunityRow, "seo_title" | "seo_description" | "title" | "issuer"> | null };
 
   if (!data) return { title: "Prilika | MojaPonuda.ba" };
 
@@ -36,17 +38,15 @@ export default async function OpportunityPage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Try both slug formats
   const { data: opportunity } = await supabase
     .from("opportunities")
     .select("*")
     .or(`slug.eq.poticaj/${slug},slug.eq.tender/${slug}`)
     .eq("published", true)
-    .maybeSingle();
+    .maybeSingle() as { data: OpportunityRow | null };
 
   if (!opportunity) notFound();
 
-  // Related opportunities
   const { data: related } = await supabase
     .from("opportunities")
     .select("id, slug, title, issuer, deadline, type")
@@ -72,8 +72,12 @@ export default async function OpportunityPage({ params }: PageProps) {
     ? Math.ceil((new Date(opportunity.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
 
-  const difficultyLabel = { lako: "Lako", srednje: "Srednje", tesko: "Teško" };
-  const difficultyColor = { lako: "text-emerald-700 bg-emerald-50", srednje: "text-amber-700 bg-amber-50", tesko: "text-red-700 bg-red-50" };
+  const difficultyLabel: Record<string, string> = { lako: "Lako", srednje: "Srednje", tesko: "Teško" };
+  const difficultyColor: Record<string, string> = {
+    lako: "text-emerald-700 bg-emerald-50",
+    srednje: "text-amber-700 bg-amber-50",
+    tesko: "text-red-700 bg-red-50",
+  };
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -85,7 +89,6 @@ export default async function OpportunityPage({ params }: PageProps) {
           Sve prilike
         </Link>
 
-        {/* Header */}
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm mb-6">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -97,8 +100,8 @@ export default async function OpportunityPage({ params }: PageProps) {
               </span>
             )}
             {opportunity.ai_difficulty && (
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${difficultyColor[opportunity.ai_difficulty as keyof typeof difficultyColor] ?? ""}`}>
-                {difficultyLabel[opportunity.ai_difficulty as keyof typeof difficultyLabel]}
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${difficultyColor[opportunity.ai_difficulty] ?? ""}`}>
+                {difficultyLabel[opportunity.ai_difficulty] ?? opportunity.ai_difficulty}
               </span>
             )}
           </div>
@@ -107,7 +110,6 @@ export default async function OpportunityPage({ params }: PageProps) {
             {opportunity.title}
           </h1>
 
-          {/* CTA above fold */}
           <PublicCta
             text="Provjeri ispunjava li tvoja firma uvjete"
             href={`/signup?ref=opportunity&id=${opportunity.id}`}
@@ -115,7 +117,6 @@ export default async function OpportunityPage({ params }: PageProps) {
             className="mb-6"
           />
 
-          {/* Meta */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <Building2 className="size-4 text-slate-400 shrink-0" />
@@ -149,23 +150,19 @@ export default async function OpportunityPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* AI Analysis */}
         {opportunity.ai_summary && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6 space-y-5">
             <h2 className="font-heading text-lg font-bold text-slate-900">Analiza prilike</h2>
-
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Sažetak</p>
               <p className="text-sm leading-6 text-slate-700">{opportunity.ai_summary}</p>
             </div>
-
             {opportunity.ai_who_should_apply && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kome je namijenjeno</p>
                 <p className="text-sm leading-6 text-slate-700">{opportunity.ai_who_should_apply}</p>
               </div>
             )}
-
             {opportunity.ai_risks && (
               <div className="flex gap-3">
                 <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
@@ -175,7 +172,6 @@ export default async function OpportunityPage({ params }: PageProps) {
                 </div>
               </div>
             )}
-
             {opportunity.ai_competition && (
               <div className="flex gap-3">
                 <Users className="size-4 text-blue-500 shrink-0 mt-0.5" />
@@ -188,7 +184,6 @@ export default async function OpportunityPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Description */}
         {opportunity.description && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
             <h2 className="font-heading text-lg font-bold text-slate-900 mb-3">Opis</h2>
@@ -196,7 +191,6 @@ export default async function OpportunityPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Requirements */}
         {opportunity.requirements && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
             <h2 className="font-heading text-lg font-bold text-slate-900 mb-3">Uvjeti prijave</h2>
@@ -204,7 +198,6 @@ export default async function OpportunityPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* CTA after analysis */}
         <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6 mb-6">
           <h3 className="font-heading text-lg font-bold text-slate-900 mb-2">Pratite ovu priliku</h3>
           <p className="text-sm text-slate-600 mb-4">
@@ -216,12 +209,13 @@ export default async function OpportunityPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Source */}
         <p className="text-xs text-slate-400 mb-8">
-          Izvor: <a href={opportunity.source_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">{opportunity.source_url}</a>
+          Izvor:{" "}
+          <a href={opportunity.source_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+            {opportunity.source_url}
+          </a>
         </p>
 
-        {/* Related */}
         {(related ?? []).length > 0 && (
           <div>
             <h2 className="font-heading text-xl font-bold text-slate-900 mb-4">Slične prilike</h2>
@@ -229,7 +223,7 @@ export default async function OpportunityPage({ params }: PageProps) {
               {(related ?? []).map((r) => (
                 <Link
                   key={r.id}
-                  href={`/prilike/${r.slug.split("/").pop()}`}
+                  href={`/prilike/${(r.slug as string).split("/").pop()}`}
                   className="block rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-200 hover:bg-blue-50 transition-colors"
                 >
                   <p className="text-sm font-semibold text-slate-900">{r.title}</p>
