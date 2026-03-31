@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Loader2, CheckCircle2, XCircle, Clock, ExternalLink } from "lucide-react";
+import { Play, Loader2, CheckCircle2, XCircle, Clock, ExternalLink, PlayCircle } from "lucide-react";
 import { SCRAPER_SOURCES, type ScraperSource } from "@/sync/scrapers/scraper-registry";
 
 interface ScraperLog {
@@ -37,12 +37,29 @@ export function ScraperSourcesList({ initialLogs }: ScraperSourcesListProps) {
   const [scraperStatus, setScraperStatus] = useState<Record<string, ScraperStatus>>({});
   const [selectedLayer, setSelectedLayer] = useState<"all" | "layer1" | "layer2" | "layer3">("all");
   const [selectedCategory, setSelectedCategory] = useState<"all" | "opportunities" | "legal">("all");
+  const [runningAll, setRunningAll] = useState(false);
+  const [runAllProgress, setRunAllProgress] = useState({ done: 0, total: 0 });
 
   const filteredSources = SCRAPER_SOURCES.filter((source) => {
     if (selectedLayer !== "all" && source.layer !== selectedLayer) return false;
     if (selectedCategory !== "all" && source.category !== selectedCategory) return false;
     return true;
   });
+
+  const handleRunAll = async () => {
+    const enabledSources = SCRAPER_SOURCES.filter((s) => s.enabled);
+    setRunningAll(true);
+    setRunAllProgress({ done: 0, total: enabledSources.length });
+
+    for (let i = 0; i < enabledSources.length; i++) {
+      const source = enabledSources[i];
+      setRunAllProgress({ done: i, total: enabledSources.length });
+      await handleScrape(source.id);
+    }
+
+    setRunAllProgress({ done: enabledSources.length, total: enabledSources.length });
+    setRunningAll(false);
+  };
 
   const handleScrape = async (sourceId: string) => {
     setScraperStatus((prev) => ({
@@ -156,8 +173,29 @@ export function ScraperSourcesList({ initialLogs }: ScraperSourcesListProps) {
 
   return (
     <div className="space-y-6">
+      {/* Run All + Filters */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <button
+          onClick={handleRunAll}
+          disabled={runningAll}
+          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors text-sm font-semibold shadow-sm"
+        >
+          {runningAll ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Pokrećem sve ({runAllProgress.done}/{runAllProgress.total})...
+            </>
+          ) : (
+            <>
+              <PlayCircle className="w-4 h-4" />
+              Pokreni sve scrapere
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Filters */}
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-4 items-center flex-wrap">
         <div className="flex gap-2">
           <button
             onClick={() => setSelectedLayer("all")}

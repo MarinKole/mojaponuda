@@ -47,9 +47,49 @@ const NEGATIVE_KEYWORDS = [
   "zaposlen",
   "obavijest",
   "obavještenje",
-  "oglas",
   "natječaj",
 ];
+
+/**
+ * Items with these keywords in the TITLE are NOT business opportunities.
+ * They're appointment notices, board member selections, etc.
+ */
+const IRRELEVANT_TITLE_PATTERNS = [
+  /imenovanje/i,
+  /izbor\s+(članova|predsjedavajućeg|direktora|zamjenika|člana)/i,
+  /skupštin[aei]\s+(turisti|zajednic|općin)/i,
+  /razrješenj/i,
+  /postavljenj/i,
+  /komisij[aeu]\s+za\s+(izbor|imenovanje)/i,
+  /nadzorn[io]\s+odbor/i,
+  /upravn[io]\s+odbor/i,
+];
+
+/**
+ * Detect garbage descriptions (footer/contact info scraped instead of content).
+ * If description is mostly phone numbers, emails, copyright, social media links.
+ */
+function isGarbageDescription(desc: string | null): boolean {
+  if (!desc) return false;
+  const text = desc.trim();
+  if (text.length < 20) return false;
+
+  // Count garbage signals
+  let signals = 0;
+  if (/\+387/.test(text)) signals++;
+  if (/@/.test(text) && /\.ba/.test(text)) signals++;
+  if (/copyright|©|sva prava/i.test(text)) signals++;
+  if (/pratite nas|društvenim mrežama/i.test(text)) signals++;
+  if (/politika privatnosti|uslovi poslovanja/i.test(text)) signals++;
+  if (/preuzmite.*aplikacij/i.test(text)) signals++;
+  // If the "description" is mostly a site footer
+  if (signals >= 2) return true;
+
+  // If it's just the page title repeated as description
+  if (text.split(/\s+/).length < 4) return true;
+
+  return false;
+}
 
 /**
  * Employment-related positive keywords
@@ -85,11 +125,28 @@ export function applyQualityFilter(item: ScrapedOpportunity): QualityFilterResul
     return { passed: false, reason: "Title too short or missing (< 10 chars)" };
   }
 
-  // Rule 2: Description is preferred but NOT required.
-  // Many government sites list grants with just a title + PDF link.
-  // Missing description reduces relevance score but doesn't disqualify.
+  // Rule 2: Reject items that are NOT business opportunities (appointments, board nominations)
+  for (const pattern of IRRELEVANT_TITLE_PATTERNS) {
+    if (pattern.test(item.title)) {
+      return { passed: false, reason: `Irrelevant: title matches '${pattern.source}' (appointment/nomination, not a grant)` };
+    }
+  }
 
-  // Rule 3: Deadline must not be expired (only if deadline exists)
+  // Rule 3: Reject garbage descriptions (footer/contact info)
+  if (isGarbageDescription(item.description)) {
+    // Clear garbage description so it doesn't pollute DB if item passes other checks
+    item.description = null;
+  }
+
+  // Rule 4: If title is too generic (e.g. just "Javni pozivi"), reject
+  const genericTitles = [/^javni pozivi?$/i, /^obavijest$/i, /^novosti$/i, /^aktuelno$/i, /^početna$/i];
+  for (const pattern of genericTitles) {
+    if (pattern.test(item.title.trim())) {
+      return { passed: false, reason: `Generic title: '${item.title}' (not a specific opportunity)` };
+    }
+  }
+
+  // Rule 5: Deadline must not be expired (only if deadline exists)
   if (item.deadline) {
     const deadlineDate = new Date(item.deadline);
     const now = new Date();
@@ -98,7 +155,7 @@ export function applyQualityFilter(item: ScrapedOpportunity): QualityFilterResul
     }
   }
 
-  // Rule 4: Must be relevant (keyword matching) - lowered threshold
+  // Rule 6: Must be relevant (keyword matching) - lowered threshold
   const relevanceScore = calculateRelevanceScore(item);
   if (relevanceScore < 0.1) {
     return { passed: false, reason: "Not relevant (low keyword match)", relevanceScore };

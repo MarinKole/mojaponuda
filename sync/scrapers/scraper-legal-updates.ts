@@ -8,7 +8,7 @@
  * Legal: Official government sources, publicly available.
  */
 
-import { fetchHtml, extractLinks, stripTags, parseDate } from "./fetch-html";
+import { fetchHtml, extractLinks, extractLinksWithText, stripTags, parseDate } from "./fetch-html";
 
 export interface ScrapedLegalUpdate {
   external_id: string;
@@ -60,6 +60,54 @@ export async function scrapeLegalUpdates(): Promise<LegalScraperResult[]> {
   );
 }
 
+/**
+ * Seed entries: The base Zakon o javnim nabavkama BiH and known amendments.
+ * These are always returned so they get inserted on first run.
+ * Subsequent runs skip them via external_id deduplication.
+ */
+const SEED_LAWS: ScrapedLegalUpdate[] = [
+  {
+    external_id: "zjn-bih-39-14",
+    type: "zakon",
+    title: "Zakon o javnim nabavkama BiH (Službeni glasnik BiH, br. 39/14)",
+    summary: "Osnovni zakon koji regulira postupke javnih nabavki u Bosni i Hercegovini. Primjenjuje se na sve ugovorne organe na državnom, entitetskom, kantonalnom i općinskom nivou.",
+    source: "Agencija za javne nabavke BiH",
+    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    published_date: "2014-05-19",
+    relevance_tags: ["zakon", "javne-nabavke", "osnovni-zakon"],
+  },
+  {
+    external_id: "zjn-bih-izmjena-59-22",
+    type: "izmjena",
+    title: "Zakon o izmjenama i dopunama Zakona o javnim nabavkama (Službeni glasnik BiH, br. 59/22)",
+    summary: "Izmjene i dopune Zakona o javnim nabavkama iz 2022. godine. Donosi promjene u postupcima nabavki i pragovima.",
+    source: "Agencija za javne nabavke BiH",
+    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    published_date: "2022-09-09",
+    relevance_tags: ["izmjena", "javne-nabavke", "zakon"],
+  },
+  {
+    external_id: "zjn-bih-pravilnik-90-14",
+    type: "zakon",
+    title: "Pravilnik o postupku dodjele ugovora o javnim nabavkama (Službeni glasnik BiH, br. 90/14)",
+    summary: "Podzakonski akt koji detaljno regulira postupke dodjele ugovora, uključujući otvoreni, ograničeni, pregovarački postupak i konkurentski zahtjev za dostavljanje ponuda.",
+    source: "Agencija za javne nabavke BiH",
+    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    published_date: "2014-11-10",
+    relevance_tags: ["pravilnik", "javne-nabavke", "postupak"],
+  },
+  {
+    external_id: "zjn-bih-uputstvo-zalbe",
+    type: "zakon",
+    title: "Uputstvo o načinu vođenja postupka žalbe (Službeni glasnik BiH, br. 90/14)",
+    summary: "Regulira postupak žalbe u vezi sa postupcima javnih nabavki pred Uredom za razmatranje žalbi BiH.",
+    source: "Agencija za javne nabavke BiH",
+    source_url: "https://www.javnenabavke.gov.ba/bs/zakonodavstvo",
+    published_date: "2014-11-10",
+    relevance_tags: ["uputstvo", "javne-nabavke", "žalba"],
+  },
+];
+
 async function scrapeAjnNews(): Promise<LegalScraperResult> {
   const items: ScrapedLegalUpdate[] = [];
   const source = "javnenabavke.gov.ba";
@@ -68,7 +116,11 @@ async function scrapeAjnNews(): Promise<LegalScraperResult> {
     const html = await fetchHtml(AJN_NEWS_URL);
     if (!html) return { source, items: [], error: "Nedostupno" };
 
-    const links = extractLinks(html, AJN_BASE, /novost|vijest|obavijest/i).slice(0, 10);
+    // Try URL pattern first, then anchor text matching
+    let links = extractLinks(html, AJN_BASE, /novost|vijest|obavijest/i).slice(0, 10);
+    if (links.length === 0) {
+      links = extractLinksWithText(html, AJN_BASE, /novost|vijest|obavijest|nabavk|zakon/i).slice(0, 10);
+    }
 
     for (const link of links) {
       try {
@@ -81,10 +133,10 @@ async function scrapeAjnNews(): Promise<LegalScraperResult> {
         const dateMatch = pageHtml.match(/(\d{1,2}[./]\d{1,2}[./]\d{4})/);
         const published_date = dateMatch ? parseDate(dateMatch[1]) : null;
 
-        // Only include if recent (within 90 days)
+        // Only include if recent (within 180 days)
         if (published_date) {
           const age = Date.now() - new Date(published_date).getTime();
-          if (age > 90 * 24 * 60 * 60 * 1000) continue;
+          if (age > 180 * 24 * 60 * 60 * 1000) continue;
         }
 
         items.push({
@@ -109,14 +161,19 @@ async function scrapeAjnNews(): Promise<LegalScraperResult> {
 }
 
 async function scrapeAjnLaws(): Promise<LegalScraperResult> {
-  const items: ScrapedLegalUpdate[] = [];
   const source = "javnenabavke.gov.ba/zakonodavstvo";
+  // Always include seed laws (deduplication happens at DB level via external_id)
+  const items: ScrapedLegalUpdate[] = [...SEED_LAWS];
 
   try {
     const html = await fetchHtml(AJN_LAWS_URL);
-    if (!html) return { source, items: [], error: "Nedostupno" };
+    if (!html) return { source, items, error: "Stranica nedostupna, ali sjeme zakona je uključeno" };
 
-    const links = extractLinks(html, AJN_BASE, /zakon|pravilnik|uputstvo|odluka/i).slice(0, 15);
+    // Try URL pattern first, then anchor text matching
+    let links = extractLinks(html, AJN_BASE, /zakon|pravilnik|uputstvo|odluka/i).slice(0, 15);
+    if (links.length === 0) {
+      links = extractLinksWithText(html, AJN_BASE, /zakon|pravilnik|uputstvo|odluka|nabavk|izmjen/i).slice(0, 15);
+    }
 
     for (const link of links) {
       try {
@@ -126,10 +183,8 @@ async function scrapeAjnLaws(): Promise<LegalScraperResult> {
         const title = extractTitle(pageHtml);
         if (!title || title.length < 10) continue;
 
-        // Improved law vs amendment detection
         const type = /izmjena|dopuna|amandman|novelacija|revizija/i.test(title) ? "izmjena" : "zakon";
 
-        // Try to extract date from page
         const dateMatch = pageHtml.match(/(\d{1,2}[./]\d{1,2}[./]\d{4})/);
         const published_date = dateMatch ? parseDate(dateMatch[1]) : null;
 
@@ -225,8 +280,11 @@ async function scrapeParlament(): Promise<LegalScraperResult> {
     const html = await fetchHtml(PARLAMENT_BASE);
     if (!html) return { source, items: [], error: "Nedostupno" };
 
-    // Look for legislative activity links
-    const links = extractLinks(html, PARLAMENT_BASE, /zakon|prijedlog|amandman|izmjena/i).slice(0, 15);
+    // Try URL pattern first, then anchor text matching
+    let links = extractLinks(html, PARLAMENT_BASE, /zakon|prijedlog|amandman|izmjena/i).slice(0, 15);
+    if (links.length === 0) {
+      links = extractLinksWithText(html, PARLAMENT_BASE, /zakon|prijedlog|amandman|izmjena|nabavk|privred/i).slice(0, 15);
+    }
 
     for (const link of links) {
       try {
@@ -241,7 +299,6 @@ async function scrapeParlament(): Promise<LegalScraperResult> {
 
         const type = /izmjena|dopuna|amandman/i.test(title) ? "izmjena" : "zakon";
 
-        // Try to extract date
         const dateMatch = pageHtml.match(/(\d{1,2}[./]\d{1,2}[./]\d{4})/);
         const published_date = dateMatch ? parseDate(dateMatch[1]) : null;
 
@@ -276,8 +333,11 @@ async function scrapeVijeceMinistara(): Promise<LegalScraperResult> {
     const html = await fetchHtml(VIJECE_BASE);
     if (!html) return { source, items: [], error: "Nedostupno" };
 
-    // Look for decisions and regulations
-    const links = extractLinks(html, VIJECE_BASE, /odluka|uredba|zaključak|regulativ/i).slice(0, 15);
+    // Try URL pattern first, then anchor text matching
+    let links = extractLinks(html, VIJECE_BASE, /odluka|uredba|zaključak|regulativ/i).slice(0, 15);
+    if (links.length === 0) {
+      links = extractLinksWithText(html, VIJECE_BASE, /odluka|uredba|zaključak|nabavk|privred|ekonom|razvoj/i).slice(0, 15);
+    }
 
     for (const link of links) {
       try {
@@ -292,7 +352,6 @@ async function scrapeVijeceMinistara(): Promise<LegalScraperResult> {
 
         const type = /izmjena|dopuna/i.test(title) ? "izmjena" : "zakon";
 
-        // Try to extract date
         const dateMatch = pageHtml.match(/(\d{1,2}[./]\d{1,2}[./]\d{4})/);
         const published_date = dateMatch ? parseDate(dateMatch[1]) : null;
 

@@ -1,7 +1,22 @@
+import { Metadata } from "next";
 import { requireAdminUser } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { BarChart3, Eye, MousePointerClick, TrendingUp } from "lucide-react";
-import { RunPostSyncButton } from "@/components/admin/run-post-sync-button";
+import { BarChart3, Eye, ExternalLink, MousePointerClick, TrendingUp } from "lucide-react";
+import { ScraperSourcesList } from "@/components/admin/scraper-sources-list";
+
+export const metadata: Metadata = {
+  title: "Prilike & Scraperi | Admin",
+};
+
+interface ScraperLog {
+  id: string;
+  source: string;
+  items_found: number;
+  items_new: number;
+  items_skipped: number;
+  error: string | null;
+  ran_at: string;
+}
 
 export default async function AdminPrilikePage() {
   await requireAdminUser();
@@ -9,51 +24,46 @@ export default async function AdminPrilikePage() {
 
   const [
     { data: opportunities },
-    { data: analytics },
     { data: scraperLogs },
     { count: totalOpportunities },
     { count: publishedOpportunities },
     { data: legalUpdates },
+    { data: recentLogs },
   ] = await Promise.all([
     supabase
       .from("opportunities")
-      .select("id, title, type, quality_score, published, status, created_at")
+      .select("id, title, type, quality_score, published, status, source_url, created_at")
       .order("created_at", { ascending: false })
       .limit(20),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase.from("page_analytics") as any)
-      .select("event, path, created_at")
-      .order("created_at", { ascending: false })
-      .limit(100),
     supabase
       .from("scraper_log")
       .select("source, items_found, items_new, items_skipped, error, ran_at")
       .order("ran_at", { ascending: false })
-      .limit(10),
+      .limit(20),
     supabase.from("opportunities").select("*", { count: "exact", head: true }),
     supabase.from("opportunities").select("*", { count: "exact", head: true }).eq("published", true),
     supabase
       .from("legal_updates")
-      .select("id, type, title, published_date")
+      .select("id, type, title, source_url, published_date")
       .order("published_date", { ascending: false, nullsFirst: false })
-      .limit(5),
+      .limit(10),
+    supabase
+      .from("scraper_log")
+      .select("*")
+      .order("ran_at", { ascending: false })
+      .limit(50),
   ]);
-
-  const views = (analytics ?? []).filter((a: { event: string }) => a.event === "view").length;
-  const ctaClicks = (analytics ?? []).filter((a: { event: string }) => a.event === "cta_click").length;
 
   return (
     <div className="space-y-8 max-w-[1200px] mx-auto">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
-            Prilike — Admin
-          </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
-            Upravljanje prilikama, scraper logovi i analitika.
-          </p>
-        </div>
-        <RunPostSyncButton />
+      {/* Header */}
+      <div>
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+          Prilike & Scraperi
+        </h1>
+        <p className="mt-1.5 text-sm text-slate-500">
+          Pokrenite scrapere, pregledajte rezultate i upravljajte prilikama.
+        </p>
       </div>
 
       {/* KPIs */}
@@ -61,8 +71,8 @@ export default async function AdminPrilikePage() {
         {[
           { label: "Ukupno prilike", value: totalOpportunities ?? 0, icon: TrendingUp },
           { label: "Objavljeno", value: publishedOpportunities ?? 0, icon: Eye },
-          { label: "Pregledi (100)", value: views, icon: BarChart3 },
-          { label: "CTA klikovi", value: ctaClicks, icon: MousePointerClick },
+          { label: "Pravne izmjene", value: (legalUpdates ?? []).length, icon: BarChart3 },
+          { label: "Scraper logovi", value: (scraperLogs ?? []).length, icon: MousePointerClick },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-2">
@@ -74,29 +84,37 @@ export default async function AdminPrilikePage() {
         ))}
       </div>
 
+      {/* Scraper controls — Run All + individual buttons */}
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="border-b border-slate-100 px-6 py-4">
+          <h2 className="font-heading text-lg font-bold text-slate-900">Scraperi</h2>
+        </div>
+        <div className="p-6">
+          <ScraperSourcesList initialLogs={(recentLogs as ScraperLog[]) ?? []} />
+        </div>
+      </div>
+
       {/* Scraper logs */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
-          <h2 className="font-heading text-lg font-bold text-slate-900">Scraper logovi</h2>
-          {(scraperLogs ?? []).length === 0 && (
-            <span className="text-xs text-slate-400">Još nije pokrenuto — klikni "Pokreni scraper" gore</span>
-          )}
+        <div className="border-b border-slate-100 px-6 py-4">
+          <h2 className="font-heading text-lg font-bold text-slate-900">Posljednji logovi</h2>
         </div>
         {(scraperLogs ?? []).length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-slate-400">
-            Nema logova. Pokrenite scraper ručno ili pričekajte noćni sync.
+            Nema logova. Pokrenite scraper da vidite rezultate.
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {(scraperLogs ?? []).map((log) => (
-              <div key={log.ran_at} className="px-6 py-4 flex items-center justify-between gap-4">
+            {(scraperLogs ?? []).map((log, i) => (
+              <div key={`${log.source}-${log.ran_at}-${i}`} className="px-6 py-4 flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">{log.source}</p>
-                  {log.error && <p className="text-xs text-red-600 mt-0.5">{log.error}</p>}
+                  {log.error && <p className="text-xs text-red-600 mt-0.5 max-w-[500px] truncate">{log.error}</p>}
                 </div>
                 <div className="flex items-center gap-4 text-xs text-slate-500">
                   <span>{log.items_found} pronađeno</span>
                   <span className="text-emerald-700 font-semibold">{log.items_new} novo</span>
+                  <span>{log.items_skipped} preskočeno</span>
                   <span>{new Date(log.ran_at).toLocaleString("bs-BA")}</span>
                 </div>
               </div>
@@ -106,35 +124,46 @@ export default async function AdminPrilikePage() {
       </div>
 
       {/* Legal updates */}
-      {(legalUpdates ?? []).length > 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-slate-100 px-6 py-4">
-            <h2 className="font-heading text-lg font-bold text-slate-900">Pravne izmjene (zadnjih 5)</h2>
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="border-b border-slate-100 px-6 py-4">
+          <h2 className="font-heading text-lg font-bold text-slate-900">Pravne izmjene (zadnjih 10)</h2>
+        </div>
+        {(legalUpdates ?? []).length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-slate-400">
+            Nema pravnih izmjena u bazi.
           </div>
+        ) : (
           <div className="divide-y divide-slate-100">
             {(legalUpdates ?? []).map((u) => (
               <div key={u.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                <p className="text-sm font-semibold text-slate-900 truncate">{u.title}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{u.title}</p>
+                </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">{u.type}</span>
                   {u.published_date && <span className="text-xs text-slate-400">{u.published_date}</span>}
+                  {u.source_url && (
+                    <a href={u.source_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Opportunities list */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="border-b border-slate-100 px-6 py-4">
           <h2 className="font-heading text-lg font-bold text-slate-900">
-            Prilike {(opportunities ?? []).length === 0 ? "(prazno — pokrenite scraper)" : `(zadnjih 20)`}
+            Prilike {(opportunities ?? []).length === 0 ? "(prazno)" : `(zadnjih 20)`}
           </h2>
         </div>
         {(opportunities ?? []).length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-slate-400">
-            Nema prilike u bazi. Kliknite "Pokreni scraper" da pokrenete prikupljanje podataka.
+            Nema prilika u bazi. Pokrenite scrapere iznad.
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -151,6 +180,11 @@ export default async function AdminPrilikePage() {
                   <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${o.status === "active" ? "bg-blue-50 text-blue-700" : "bg-red-50 text-red-700"}`}>
                     {o.status}
                   </span>
+                  {o.source_url && (
+                    <a href={o.source_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
