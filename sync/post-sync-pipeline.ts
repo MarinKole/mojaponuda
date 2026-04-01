@@ -26,6 +26,8 @@ export interface PostSyncResult {
   opportunities_published: number;
   opportunities_filtered: number;
   legal_updates_processed: number;
+  ai_content_regen: number;
+  expired_marked: number;
   errors: string[];
   duration_ms: number;
   execution_layer?: ExecutionLayer;
@@ -301,17 +303,88 @@ export async function runPostSyncPipeline(layer: ExecutionLayer = "layer1"): Pro
   });
 
   // ── 7. Expire old opportunities ─────────────────────────────────
-  await supabase
-    .from("opportunities")
-    .update({ status: "expired" })
-    .lt("deadline", new Date().toISOString().split("T")[0])
-    .eq("status", "active");
+  let expiredCount = 0;
+  {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { data: expiredRows } = await supabase
+      .from("opportunities")
+      .update({ status: "expired", published: false })
+      .lt("deadline", today.toISOString())
+      .eq("status", "active")
+      .select("id");
+    expiredCount = expiredRows?.length ?? 0;
+    if (expiredCount > 0) console.log(`[PostSync] Marked ${expiredCount} opportunities as expired`);
+  }
+
+  // ── 8. Auto-regen missing ai_content (batch loop, max 120s budget) ───────────
+  let regenCount = 0;
+  {
+    const regenBudgetMs = 120_000;
+    const regenStart = Date.now();
+    const batchSize = 10;
+
+    while (Date.now() - regenStart < regenBudgetMs) {
+      // Check if ai_content column exists by trying a small query
+      const { data: batch, error: batchErr } = await supabase
+        .from("opportunities")
+        .select("id, title, issuer, description, requirements, value, deadline, type, location, eligibility_signals")
+        .eq("published", true)
+        .is("ai_content", null)
+        .order("created_at", { ascending: false })
+        .limit(batchSize);
+
+      // If ai_content column doesn't exist yet, bail silently
+      if (batchErr?.message?.includes("ai_content")) break;
+      if (!batch?.length) break;
+
+      for (const row of batch) {
+        if (Date.now() - regenStart >= regenBudgetMs) break;
+        try {
+          const aiContent = await generateOpportunityContent(
+            row.title,
+            row.issuer,
+            row.description,
+            row.requirements,
+            row.value,
+            row.deadline,
+            (row.type ?? "poticaj") as "tender" | "poticaj",
+            row.location,
+            row.eligibility_signals,
+          );
+          if (!aiContent) continue;
+          const { error: updErr } = await supabase
+            .from("opportunities")
+            .update({
+              seo_title: aiContent.seo_title,
+              seo_description: aiContent.seo_description,
+              ai_summary: aiContent.ai_summary,
+              ai_who_should_apply: aiContent.ai_who_should_apply,
+              ai_difficulty: aiContent.ai_difficulty,
+              ai_risks: aiContent.ai_risks,
+              ai_competition: aiContent.ai_competition,
+              ai_content: aiContent.ai_content,
+              ai_generated_at: new Date().toISOString(),
+            })
+            .eq("id", row.id);
+          if (!updErr) regenCount++;
+          else if (updErr.message?.includes("ai_content")) break;
+        } catch (err) {
+          errors.push(`regen ${row.id}: ${String(err)}`);
+        }
+      }
+    }
+
+    if (regenCount > 0) console.log(`[PostSync] Regenerated ai_content for ${regenCount} posts`);
+  }
 
   return {
     opportunities_processed: opProcessed,
     opportunities_published: opPublished,
     opportunities_filtered: opFiltered,
     legal_updates_processed: legalProcessed,
+    ai_content_regen: regenCount,
+    expired_marked: expiredCount,
     errors,
     duration_ms: Date.now() - start,
     execution_layer: layer,

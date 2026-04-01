@@ -59,7 +59,9 @@ describe("Post-Sync Pipeline Integration", () => {
     const mockResult: Awaited<ReturnType<typeof pipeline.runPostSyncPipeline>> = {
       opportunities_processed: 0,
       opportunities_published: 0,
-      opportunities_filtered: 0, // New field
+      opportunities_filtered: 0,
+      ai_content_regen: 0,
+      expired_marked: 0,
       legal_updates_processed: 0,
       errors: [],
       duration_ms: 0,

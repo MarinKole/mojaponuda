@@ -9,8 +9,16 @@
       "schedule": "0 3 * * *"
     },
     {
-      "path": "/api/cron/post-sync",
+      "path": "/api/cron/post-sync?layer=layer1",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/post-sync?layer=layer2",
+      "schedule": "0 4 * * 2"
+    },
+    {
+      "path": "/api/cron/post-sync?layer=layer3",
+      "schedule": "0 4 1 * *"
     }
   ]
 }
