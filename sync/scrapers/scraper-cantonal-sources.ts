@@ -14,7 +14,7 @@
  * Legal: Publicly available government websites, informational content only.
  */
 
-import { fetchHtml, extractLinks, extractLinksWithText, stripTags, parseDate, parseValue, extractBestDescription } from "./fetch-html";
+import { fetchHtml, extractLinks, extractLinksWithText, stripTags, cleanHtml, parseDate, parseValue, extractBestDescription } from "./fetch-html";
 import type { ScrapedOpportunity, ScraperResult } from "./types";
 
 interface CantonConfig {
@@ -65,7 +65,7 @@ const CANTONAL_SOURCES: CantonConfig[] = [
   },
   {
     name: "Hercegovačko-neretvanski Kanton",
-    baseUrl: "https://www.vladahnk.ba",
+    baseUrl: "https://www.hnk.gov.ba",
     grantsPath: "/",
     location: "Hercegovačko-neretvanski Kanton",
     linkPattern: /poziv|konkurs|grant|natječaj/i,
@@ -105,7 +105,7 @@ const CANTONAL_SOURCES: CantonConfig[] = [
   },
   {
     name: "Zapadnohercegovački Kanton",
-    baseUrl: "https://www.vladazhk.gov.ba",
+    baseUrl: "https://vladazhk.ba",
     grantsPath: "/",
     location: "Zapadnohercegovački Kanton",
     linkPattern: /poziv|konkurs|grant|poticaj/i,
@@ -113,7 +113,7 @@ const CANTONAL_SOURCES: CantonConfig[] = [
   },
   {
     name: "Livanjski Kanton",
-    baseUrl: "https://www.livanjskikanton.ba",
+    baseUrl: "https://www.kanton10.gov.ba",
     grantsPath: "/",
     location: "Livanjski Kanton",
     linkPattern: /poziv|konkurs|grant|poticaj/i,
@@ -324,7 +324,7 @@ function extractTitle(html: string): string {
 }
 
 function extractDescription(html: string): string | null {
-  // Look for main content area with various class names
+  const clean = cleanHtml(html);
   const contentPatterns = [
     /<(?:div|article)[^>]*class="[^"]*(?:content|body|text|entry|post|main)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i,
     /<(?:div|article)[^>]*id="[^"]*(?:content|body|text|entry|post|main)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i,
@@ -332,10 +332,10 @@ function extractDescription(html: string): string | null {
   ];
 
   for (const pattern of contentPatterns) {
-    const match = html.match(pattern);
+    const match = clean.match(pattern);
     if (match) {
       const text = stripTags(match[1]).slice(0, 1000);
-      if (text.length > 50) return text;
+      if (text.length > 80) return text;
     }
   }
 
@@ -343,11 +343,12 @@ function extractDescription(html: string): string | null {
 }
 
 function extractRequirements(html: string): string | null {
+  const clean = cleanHtml(html);
   const requirementKeywords = ["uvjet", "kriterij", "zahtjev", "potrebno", "mora"];
   
   for (const keyword of requirementKeywords) {
     const regex = new RegExp(`${keyword}[^<]*<[^>]+>([\\s\\S]*?)(?=<h[23]|$)`, "i");
-    const match = html.match(regex);
+    const match = clean.match(regex);
     if (match) {
       const text = stripTags(match[1]).slice(0, 500);
       if (text.length > 20) return text;

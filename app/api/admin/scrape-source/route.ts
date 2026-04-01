@@ -8,7 +8,7 @@ import { processOpportunitiesWithHashing } from "@/sync/scrapers/content-hasher"
 import { scoreOpportunity, generateSlug, PUBLISH_THRESHOLD } from "@/sync/opportunity-scorer";
 import { generateOpportunityContent, generateLegalSummary, aiReviewOpportunity } from "@/sync/ai-content-generator";
 import { scrapeFmrpo } from "@/sync/scrapers/scraper-fbih-ministarstvo";
-import { scrapeRazvojneAgencije } from "@/sync/scrapers/scraper-razvojne-agencije";
+import { scrapeSingleAgency } from "@/sync/scrapers/scraper-razvojne-agencije";
 import { scrapeSingleFederalSource } from "@/sync/scrapers/scraper-federal-sources";
 import { scrapeSingleCantonalSource } from "@/sync/scrapers/scraper-cantonal-sources";
 import { scrapeSingleMunicipalSource } from "@/sync/scrapers/scraper-municipal-sources";
@@ -27,7 +27,7 @@ async function getOpportunityResults(sourceId: string): Promise<ScraperResult[]>
     case "redah":
     case "nerda":
     case "zeda":
-      return await scrapeRazvojneAgencije();
+      return [await scrapeSingleAgency(sourceId)];
     case "fbih-vlada":
     case "undp-bih":
     case "mcp-bih":

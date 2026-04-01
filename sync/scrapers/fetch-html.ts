@@ -40,6 +40,18 @@ export function extractText(html: string, selector: string): string {
   return match ? stripTags(match[1]).trim() : "";
 }
 
+/** Remove non-content blocks before text extraction */
+export function cleanHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
+    .replace(/<nav[\s\S]*?<\/nav>/gi, "")
+    .replace(/<header[\s\S]*?<\/header>/gi, "")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "");
+}
+
 export function stripTags(html: string): string {
   return html
     .replace(/<[^>]+>/g, " ")
@@ -48,8 +60,22 @@ export function stripTags(html: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Returns true if extracted text is navigation, JS, address or otherwise garbage */
+function isGarbageText(text: string): boolean {
+  if (text.length < 40) return true;
+  if (/^(?:window\.|var |function |document\.|jQuery|\$\(|\/\*)/i.test(text)) return true;
+  if (/^(?:Naslovna|Home|Početna|Vijesti|Kontakt|Menu|Navigation)\b/i.test(text)) return true;
+  if (/^(?:Ul\.|Ulica\s|Trg\s|\d{5}\s)/i.test(text)) return true;
+  const words = text.split(/\s+/);
+  const long = words.filter(w => w.length > 3).length;
+  if (words.length > 5 && long / words.length < 0.25) return true;
+  return false;
 }
 
 /** Extract all links matching a pattern */
@@ -138,15 +164,15 @@ export function parseDate(raw: string | null | undefined): string | null {
 
 /**
  * Extract the best available description from a page.
- * Tries: og:description, meta description, first meaningful <p>, content div.
+ * Strips scripts/nav/header/footer first, then tries: og:description, meta description, content div, first meaningful <p>.
  */
 export function extractBestDescription(html: string): string | null {
-  // 1. og:description
+  // 1. og:description (from raw html, before clean)
   const og = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i)
     ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:description["']/i);
   if (og) {
     const text = stripTags(og[1]).trim();
-    if (text.length > 30) return text.slice(0, 1000);
+    if (text.length > 30 && !isGarbageText(text)) return text.slice(0, 1000);
   }
 
   // 2. meta description
@@ -154,29 +180,32 @@ export function extractBestDescription(html: string): string | null {
     ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
   if (meta) {
     const text = stripTags(meta[1]).trim();
-    if (text.length > 30) return text.slice(0, 1000);
+    if (text.length > 30 && !isGarbageText(text)) return text.slice(0, 1000);
   }
+
+  // Strip non-content blocks before content extraction
+  const clean = cleanHtml(html);
 
   // 3. Content area (article, main, common class names)
   const contentPatterns = [
     /<article[^>]*>([\s\S]*?)<\/article>/i,
     /<main[^>]*>([\s\S]*?)<\/main>/i,
-    /<div[^>]*class="[^"]*(?:content|entry-content|post-content|article-body|page-content|field-item)[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-    /<div[^>]*id="[^"]*(?:content|main-content|post-body)[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]*class="[^"]*(?:entry-content|post-content|article-body|page-content|field-item)[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+    /<div[^>]*id="[^"]*(?:main-content|post-body)[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
   ];
   for (const pattern of contentPatterns) {
-    const match = html.match(pattern);
+    const match = clean.match(pattern);
     if (match) {
       const text = stripTags(match[1]).trim();
-      if (text.length > 50) return text.slice(0, 1000);
+      if (text.length > 80 && !isGarbageText(text)) return text.slice(0, 1000);
     }
   }
 
-  // 4. First meaningful <p> tag (skip very short ones)
-  const paragraphs = html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+  // 4. First meaningful <p> tag (skip garbage)
+  const paragraphs = clean.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi);
   for (const p of paragraphs) {
     const text = stripTags(p[1]).trim();
-    if (text.length > 40) return text.slice(0, 1000);
+    if (text.length > 60 && !isGarbageText(text)) return text.slice(0, 1000);
   }
 
   return null;

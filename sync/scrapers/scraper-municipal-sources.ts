@@ -16,7 +16,7 @@
  * Legal: Publicly available municipal websites, informational content only.
  */
 
-import { fetchHtml, extractLinks, extractLinksWithText, stripTags, parseDate, parseValue, extractBestDescription } from "./fetch-html";
+import { fetchHtml, extractLinks, extractLinksWithText, stripTags, cleanHtml, parseDate, parseValue, extractBestDescription } from "./fetch-html";
 import type { ScrapedOpportunity, ScraperResult } from "./types";
 
 interface MunicipalityConfig {
@@ -86,7 +86,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Grad Doboj",
-    baseUrl: "https://www.gradoboj.rs.ba",
+    baseUrl: "https://www.doboj.ba",
     grantsPath: "/",
     location: "Doboj",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -110,7 +110,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Istočno Sarajevo",
-    baseUrl: "https://www.istocnosarajevo.rs.ba",
+    baseUrl: "https://www.istocnosarajevo.ba",
     grantsPath: "/",
     location: "Istočno Sarajevo",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -239,7 +239,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Općina Široki Brijeg",
-    baseUrl: "https://www.siroki-brijeg.ba",
+    baseUrl: "https://www.sirokibrijeg.ba",
     grantsPath: "/",
     location: "Široki Brijeg",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -247,7 +247,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Općina Čapljina",
-    baseUrl: "https://www.capljina-opcina.ba",
+    baseUrl: "https://www.capljina.ba",
     grantsPath: "/",
     location: "Čapljina",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -263,7 +263,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Općina Stolac",
-    baseUrl: "https://www.opcina-stolac.ba",
+    baseUrl: "https://stolac.ba",
     grantsPath: "/",
     location: "Stolac",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -280,7 +280,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Novi Grad Sarajevo",
-    baseUrl: "https://www.novigradsa.gov.ba",
+    baseUrl: "https://www.novigradsa.ba",
     grantsPath: "/",
     location: "Novi Grad Sarajevo",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -288,7 +288,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Općina Vogošća",
-    baseUrl: "https://www.vogosca.gov.ba",
+    baseUrl: "https://www.opcina-vogosca.ba",
     grantsPath: "/",
     location: "Vogošća",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -584,7 +584,7 @@ function extractTitle(html: string): string {
 }
 
 function extractDescription(html: string): string | null {
-  // Look for main content area with various class names and IDs
+  const clean = cleanHtml(html);
   const contentPatterns = [
     /<(?:div|article)[^>]*class="[^"]*(?:content|body|text|entry|post|main|article-body)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i,
     /<(?:div|article)[^>]*id="[^"]*(?:content|body|text|entry|post|main|article-body)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i,
@@ -594,10 +594,10 @@ function extractDescription(html: string): string | null {
   ];
 
   for (const pattern of contentPatterns) {
-    const match = html.match(pattern);
+    const match = clean.match(pattern);
     if (match) {
       const text = stripTags(match[1]).slice(0, 1000);
-      if (text.length > 50) return text;
+      if (text.length > 80) return text;
     }
   }
 
@@ -605,7 +605,7 @@ function extractDescription(html: string): string | null {
 }
 
 function extractRequirements(html: string): string | null {
-  // Broader requirement keywords for municipal sources
+  const clean = cleanHtml(html);
   const requirementKeywords = [
     "uvjet", "uvjeti",
     "kriterij", "kriteriji",
@@ -618,7 +618,7 @@ function extractRequirements(html: string): string | null {
   
   for (const keyword of requirementKeywords) {
     const regex = new RegExp(`${keyword}[^<]{0,50}<[^>]+>([\\s\\S]*?)(?=<h[23]|<div|$)`, "i");
-    const match = html.match(regex);
+    const match = clean.match(regex);
     if (match) {
       const text = stripTags(match[1]).slice(0, 500);
       if (text.length > 20) return text;

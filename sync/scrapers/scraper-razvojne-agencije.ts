@@ -8,7 +8,7 @@
  * ZEDA - Zeničko-dobojska razvojna agencija: https://www.zeda.ba
  */
 
-import { fetchHtml, extractLinks, extractLinksWithText, stripTags, parseDate, parseValue, extractBestDescription } from "./fetch-html";
+import { fetchHtml, extractLinks, extractLinksWithText, stripTags, cleanHtml, parseDate, parseValue, extractBestDescription } from "./fetch-html";
 import type { ScrapedOpportunity, ScraperResult } from "./types";
 
 interface AgencyConfig {
@@ -49,6 +49,24 @@ const AGENCIES: AgencyConfig[] = [
     linkPattern: /poziv|konkurs|grant|poticaj/i,
   },
 ];
+
+/** Map registry sourceId → agency name */
+const SOURCE_ID_MAP: Record<string, string> = {
+  "serda": "SERDA - Razvojna agencija Sarajevskog kantona",
+  "redah": "REDAH - Razvojna agencija za Hercegovinu",
+  "nerda": "NERDA - Sjeveroistočna razvojna agencija",
+  "zeda": "ZEDA - Zeničko-dobojska razvojna agencija",
+};
+
+/** Scrape a SINGLE agency by registry sourceId */
+export async function scrapeSingleAgency(sourceId: string): Promise<ScraperResult> {
+  const agencyName = SOURCE_ID_MAP[sourceId];
+  const agency = AGENCIES.find((a) => a.name === agencyName);
+  if (!agency) {
+    return { source: sourceId, items: [], error: `Unknown agency sourceId: ${sourceId}` };
+  }
+  return scrapeAgency(agency);
+}
 
 export async function scrapeRazvojneAgencije(): Promise<ScraperResult[]> {
   const results: ScraperResult[] = [];
@@ -116,8 +134,12 @@ function extractTitle(html: string): string {
 }
 
 function extractDescription(html: string): string | null {
-  const content = html.match(/<(?:div|article)[^>]*class="[^"]*(?:content|entry|post)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i);
-  if (content) return stripTags(content[1]).slice(0, 1000);
+  const clean = cleanHtml(html);
+  const content = clean.match(/<(?:div|article)[^>]*class="[^"]*(?:content|entry|post)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i);
+  if (content) {
+    const text = stripTags(content[1]).slice(0, 1000);
+    if (text.length > 80) return text;
+  }
   return null;
 }
 

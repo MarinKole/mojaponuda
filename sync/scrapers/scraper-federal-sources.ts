@@ -10,7 +10,7 @@
  * Legal: Publicly available government websites, informational content only.
  */
 
-import { fetchHtml, extractLinks, extractLinksWithText, stripTags, parseDate, parseValue, extractBestDescription } from "./fetch-html";
+import { fetchHtml, extractLinks, extractLinksWithText, stripTags, cleanHtml, parseDate, parseValue, extractBestDescription } from "./fetch-html";
 import type { ScrapedOpportunity, ScraperResult } from "./types";
 
 interface FederalSourceConfig {
@@ -73,7 +73,7 @@ const FEDERAL_SOURCES: FederalSourceConfig[] = [
   },
   {
     name: "FMERI",
-    baseUrl: "https://www.fmeri.gov.ba",
+    baseUrl: "https://fmeri.gov.ba",
     grantsPath: "/",
     location: "Federacija BiH",
     linkPattern: /poziv|grant|poticaj|subvencij/i,
@@ -89,7 +89,7 @@ const FEDERAL_SOURCES: FederalSourceConfig[] = [
   },
   {
     name: "FMRSP",
-    baseUrl: "https://www.fmrsp.gov.ba",
+    baseUrl: "https://fmrsp.gov.ba",
     grantsPath: "/",
     location: "Federacija BiH",
     linkPattern: /poziv|konkurs|grant|poticaj|zapošljavan/i,
@@ -97,7 +97,7 @@ const FEDERAL_SOURCES: FederalSourceConfig[] = [
   },
   {
     name: "FIPA BiH",
-    baseUrl: "https://www.fipa.gov.ba",
+    baseUrl: "https://fipa.gov.ba",
     grantsPath: "/bos/",
     location: "Bosna i Hercegovina",
     linkPattern: /poziv|grant|investicij/i,
@@ -105,7 +105,7 @@ const FEDERAL_SOURCES: FederalSourceConfig[] = [
   },
   {
     name: "MVTEO BiH",
-    baseUrl: "https://www.mvteo.gov.ba",
+    baseUrl: "https://mvteo.gov.ba",
     grantsPath: "/",
     location: "Bosna i Hercegovina",
     linkPattern: /poziv|grant|poticaj/i,
@@ -121,7 +121,7 @@ const FEDERAL_SOURCES: FederalSourceConfig[] = [
   },
   {
     name: "RARS RS",
-    baseUrl: "https://www.rars-msp.org",
+    baseUrl: "https://rars-msp.org",
     grantsPath: "/javni-pozivi-i-konkursi",
     location: "Republika Srpska",
     linkPattern: /poziv|konkurs|grant|poticaj/i,
@@ -129,15 +129,15 @@ const FEDERAL_SOURCES: FederalSourceConfig[] = [
   },
   {
     name: "Republika Srpska - Ministarstvo privrede",
-    baseUrl: "https://mper.vladars.net",
-    grantsPath: "/lat/",
+    baseUrl: "https://www.vladars.net",
+    grantsPath: "/sr-SP-Latn/Vlada/Ministarstva/mper/javni_pozivi/Pages/default.aspx",
     location: "Republika Srpska",
     linkPattern: /poziv|konkurs|grant|poticaj|subvencij/i,
     issuer: "Ministarstvo privrede i preduzetništva Republike Srpske",
   },
   {
     name: "EU Fondovi BiH",
-    baseUrl: "https://www.eufondbih.ba",
+    baseUrl: "https://www.dei.gov.ba",
     grantsPath: "/",
     location: "Bosna i Hercegovina",
     linkPattern: /poziv|grant|natječaj|konkurs/i,
@@ -243,15 +243,22 @@ function extractTitle(html: string): string {
 }
 
 function extractDescription(html: string): string | null {
-  // Look for main content area
-  const content = html.match(/<(?:div|article)[^>]*class="[^"]*(?:content|body|text|entry|post)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i);
-  if (content) return stripTags(content[1]).slice(0, 1000);
+  const clean = cleanHtml(html);
+  const content = clean.match(/<(?:div|article)[^>]*class="[^"]*(?:content|body|text|entry|post)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|article)>/i);
+  if (content) {
+    const text = stripTags(content[1]).slice(0, 1000);
+    if (text.length > 80) return text;
+  }
   return null;
 }
 
 function extractRequirements(html: string): string | null {
-  const uvjeti = html.match(/uvjeti[^<]*<[^>]+>([\s\S]*?)(?=<h[23]|$)/i);
-  if (uvjeti) return stripTags(uvjeti[1]).slice(0, 500);
+  const clean = cleanHtml(html);
+  const uvjeti = clean.match(/uvjeti[^<]*<[^>]+>([\s\S]*?)(?=<h[23]|$)/i);
+  if (uvjeti) {
+    const text = stripTags(uvjeti[1]).slice(0, 500);
+    if (text.length > 20) return text;
+  }
   return null;
 }
 

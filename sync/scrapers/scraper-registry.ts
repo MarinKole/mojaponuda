@@ -4,7 +4,7 @@
  */
 
 import { scrapeFmrpo } from "./scraper-fbih-ministarstvo";
-import { scrapeRazvojneAgencije } from "./scraper-razvojne-agencije";
+import { scrapeRazvojneAgencije, scrapeSingleAgency } from "./scraper-razvojne-agencije";
 import { scrapeSingleFederalSource } from "./scraper-federal-sources";
 import { scrapeSingleCantonalSource } from "./scraper-cantonal-sources";
 import { scrapeSingleMunicipalSource } from "./scraper-municipal-sources";
@@ -135,7 +135,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "kanton-hnk",
     name: "Hercegovačko-neretvanski kanton",
-    url: "https://www.vladahnk.ba/",
+    url: "https://www.hnk.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Javni pozivi HNK",
@@ -180,7 +180,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "kanton-zhk",
     name: "Zapadnohercegovački kanton",
-    url: "https://www.vladazhk.gov.ba/",
+    url: "https://vladazhk.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Javni pozivi Zapadnohercegovačkog kantona",
@@ -189,7 +189,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "kanton-10",
     name: "Livanjski kanton (Kanton 10)",
-    url: "https://www.livanjskikanton.ba/",
+    url: "https://www.kanton10.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Javni pozivi Livanjskog kantona",
@@ -235,7 +235,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "fmeri",
     name: "Federalno ministarstvo energije, rudarstva i industrije",
-    url: "https://www.fmeri.gov.ba/",
+    url: "https://fmeri.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Poticaji za energiju i industriju",
@@ -253,7 +253,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "fmrsp",
     name: "Federalno ministarstvo rada i socijalne politike",
-    url: "https://www.fmrsp.gov.ba/",
+    url: "https://fmrsp.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Poticaji za zapošljavanje i socijalnu zaštitu",
@@ -262,7 +262,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "fipa",
     name: "FIPA - Agencija za unapređenje stranih investicija BiH",
-    url: "https://www.fipa.gov.ba/",
+    url: "https://fipa.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Investicijski poticaji i grantovi",
@@ -271,7 +271,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "mvteo",
     name: "Ministarstvo vanjske trgovine i ekonomskih odnosa BiH",
-    url: "https://www.mvteo.gov.ba/",
+    url: "https://mvteo.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Grantovi za izvoz i ekonomske odnose",
@@ -290,7 +290,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "rars",
     name: "RARS - Razvojna agencija RS",
-    url: "https://www.rars-msp.org/",
+    url: "https://rars-msp.org/javni-pozivi-i-konkursi",
     category: "opportunities",
     layer: "layer2",
     description: "Poticaji za MSP u Republici Srpskoj",
@@ -299,7 +299,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "mper-rs",
     name: "Ministarstvo privrede RS",
-    url: "https://mper.vladars.net/",
+    url: "https://www.vladars.net/sr-SP-Latn/Vlada/Ministarstva/mper/",
     category: "opportunities",
     layer: "layer2",
     description: "Poticaji i grantovi Ministarstva privrede RS",
@@ -308,7 +308,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "eu-fondovi",
     name: "EU Fondovi BiH",
-    url: "https://www.eufondbih.ba/",
+    url: "https://www.dei.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "EU grantovi i IPA fondovi za BiH",
@@ -375,7 +375,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "grad-doboj",
     name: "Grad Doboj",
-    url: "https://www.gradoboj.rs.ba/",
+    url: "https://www.doboj.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Grada Doboja",
@@ -402,7 +402,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "grad-istocno-sarajevo",
     name: "Grad Istočno Sarajevo",
-    url: "https://www.istocnosarajevo.rs.ba/",
+    url: "https://www.istocnosarajevo.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Grada Istočno Sarajevo",
@@ -547,7 +547,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "opcina-siroki-brijeg",
     name: "Općina Široki Brijeg",
-    url: "https://www.siroki-brijeg.ba/",
+    url: "https://www.sirokibrijeg.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Široki Brijeg",
@@ -556,7 +556,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "opcina-capljina",
     name: "Općina Čapljina",
-    url: "https://www.capljina-opcina.ba/",
+    url: "https://www.capljina.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Čapljina",
@@ -574,7 +574,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "opcina-stolac",
     name: "Općina Stolac",
-    url: "https://www.opcina-stolac.ba/",
+    url: "https://stolac.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Stolac",
@@ -593,7 +593,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "novi-grad-sarajevo",
     name: "Novi Grad Sarajevo",
-    url: "https://www.novigradsa.gov.ba/",
+    url: "https://www.novigradsa.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Novi Grad Sarajevo",
@@ -602,7 +602,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "opcina-vogosca",
     name: "Općina Vogošća",
-    url: "https://www.vogosca.gov.ba/",
+    url: "https://www.opcina-vogosca.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Vogošća",
@@ -680,7 +680,7 @@ export async function runScraperById(
     case "redah":
     case "nerda":
     case "zeda":
-      return await scrapeRazvojneAgencije();
+      return [await scrapeSingleAgency(sourceId)];
 
     case "fbih-vlada":
     case "undp-bih":
