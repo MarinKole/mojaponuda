@@ -7,6 +7,7 @@ import { filterOpportunities } from "@/sync/scrapers/quality-filter";
 import { processOpportunitiesWithHashing } from "@/sync/scrapers/content-hasher";
 import { scoreOpportunity, generateSlug, PUBLISH_THRESHOLD } from "@/sync/opportunity-scorer";
 import { generateOpportunityContent, generateLegalSummary, aiReviewOpportunity } from "@/sync/ai-content-generator";
+import { categorizeOpportunity } from "@/lib/category-classifier";
 import { scrapeFmrpo } from "@/sync/scrapers/scraper-fbih-ministarstvo";
 import { scrapeSingleAgency } from "@/sync/scrapers/scraper-razvojne-agencije";
 import { scrapeSingleFederalSource } from "@/sync/scrapers/scraper-federal-sources";
@@ -244,7 +245,7 @@ export async function POST(request: NextRequest) {
             slug,
             title: item.title,
             issuer: item.issuer,
-            category: aiContent?.category ?? item.category,
+            category: aiContent?.category ?? categorizeOpportunity(item.title, item.issuer, item.description, item.eligibility_signals),
             description: item.description,
             requirements: item.requirements,
             value: item.value,

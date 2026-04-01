@@ -42,6 +42,18 @@ export function ScraperSourcesList({ initialLogs }: ScraperSourcesListProps) {
   const [runningAll, setRunningAll] = useState(false);
   const [runAllProgress, setRunAllProgress] = useState({ done: 0, total: 0 });
   const [regenStatus, setRegenStatus] = useState<{ loading: boolean; message?: string } | null>(null);
+  const [recatStatus, setRecatStatus] = useState<{ loading: boolean; message?: string } | null>(null);
+
+  const handleRecategorize = async () => {
+    setRecatStatus({ loading: true });
+    try {
+      const res = await fetch("/api/admin/recategorize", { method: "POST" });
+      const data = await res.json();
+      setRecatStatus({ loading: false, message: data.message ?? data.error });
+    } catch (err) {
+      setRecatStatus({ loading: false, message: String(err) });
+    }
+  };
 
   const handleRegenContent = async (limit = 20) => {
     setRegenStatus({ loading: true });
@@ -227,9 +239,27 @@ export function ScraperSourcesList({ initialLogs }: ScraperSourcesListProps) {
           )}
         </button>
 
+        <button
+          onClick={handleRecategorize}
+          disabled={recatStatus?.loading}
+          className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors text-sm font-semibold shadow-sm"
+          title="Rekategorizuj sve postove koji imaju generičku kategoriju 'Poticaji i grantovi'"
+        >
+          {recatStatus?.loading ? (
+            <><Loader2 className="w-4 h-4 animate-spin" />Kategorizujem...</>
+          ) : (
+            <><RefreshCw className="w-4 h-4" />Rekategorizuj postove</>
+          )}
+        </button>
+
         {regenStatus?.message && !regenStatus.loading && (
           <span className="text-xs text-slate-600 bg-slate-100 rounded-lg px-3 py-1.5">
             {regenStatus.message}
+          </span>
+        )}
+        {recatStatus?.message && !recatStatus.loading && (
+          <span className="text-xs text-slate-600 bg-slate-100 rounded-lg px-3 py-1.5">
+            {recatStatus.message}
           </span>
         )}
       </div>

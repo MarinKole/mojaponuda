@@ -11,6 +11,7 @@ import { processOpportunitiesWithHashing } from "./scrapers/content-hasher";
 import { filterOpportunities } from "./scrapers/quality-filter";
 import { scoreOpportunity, generateSlug, PUBLISH_THRESHOLD } from "./opportunity-scorer";
 import { generateOpportunityContent, generateLegalSummary, aiReviewOpportunity } from "./ai-content-generator";
+import { categorizeOpportunity } from "@/lib/category-classifier";
 import type { ScrapedOpportunity } from "./scrapers/types";
 
 function createServiceClient() {
@@ -223,7 +224,7 @@ export async function runPostSyncPipeline(layer: ExecutionLayer = "layer1"): Pro
         slug,
         title: item.title,
         issuer: item.issuer,
-        category: aiContent?.category ?? item.category,
+        category: aiContent?.category ?? categorizeOpportunity(item.title, item.issuer, item.description, item.eligibility_signals),
         description: item.description,
         requirements: item.requirements,
         value: item.value,

@@ -51,7 +51,8 @@ export default async function KategorijaPage({ params }: PageProps) {
     .order("deadline", { ascending: true, nullsFirst: false })
     .limit(40);
 
-  if (category.dbCategories.length > 0) {
+  // showAll categories (e.g. svi-poticaji) show everything — no category filter
+  if (!category.showAll && category.dbCategories.length > 0) {
     query = query.in("category", category.dbCategories);
   }
 

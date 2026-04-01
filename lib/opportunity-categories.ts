@@ -19,6 +19,8 @@ export interface OpportunityCategory {
   metaDescription: string;
   /** DB category values that map to this SEO category — must not overlap across categories */
   dbCategories: string[];
+  /** When true the category page shows ALL active poticaji (no category filter). Used for the catch-all overview. */
+  showAll?: boolean;
   type?: "poticaj";
 }
 
@@ -31,6 +33,7 @@ export const OPPORTUNITY_CATEGORIES: OpportunityCategory[] = [
     metaTitle: "Svi poticaji BiH 2026 — Grantovi i subvencije za firme | MojaPonuda.ba",
     metaDescription: "Pronađite sve aktivne poticaje i grantove u BiH. Federalni, kantonalni i EU programi podrške za firme. Svakodnevno ažurirano.",
     dbCategories: ["Poticaji i grantovi", "Ostali poticaji", "Subvencije", "Lokalni poticaji"],
+    showAll: true,
     type: "poticaj",
   },
   {
