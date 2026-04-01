@@ -25,6 +25,8 @@ async function getOpportunityResults(sourceId: string): Promise<ScraperResult[]>
       return [await scrapeFmrpo()];
     case "serda":
     case "redah":
+    case "nerda":
+    case "zeda":
       return await scrapeRazvojneAgencije();
     case "fbih-vlada":
     case "undp-bih":

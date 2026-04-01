@@ -58,6 +58,24 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
     enabled: true,
   },
   {
+    id: "nerda",
+    name: "NERDA - Sjeveroistočna razvojna agencija",
+    url: "https://www.nerda.ba/javni-pozivi-i-konkursi",
+    category: "opportunities",
+    layer: "layer1",
+    description: "Razvojni programi za Tuzlanski kanton i regiju",
+    enabled: true,
+  },
+  {
+    id: "zeda",
+    name: "ZEDA - Zeničko-dobojska razvojna agencija",
+    url: "https://www.zeda.ba/javni-pozivi",
+    category: "opportunities",
+    layer: "layer1",
+    description: "Razvojni programi za Zeničko-dobojski kanton",
+    enabled: true,
+  },
+  {
     id: "fbih-vlada",
     name: "Vlada Federacije BiH",
     url: "https://fbihvlada.gov.ba/bs/javni-pozivi",
@@ -135,7 +153,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "kanton-posavski",
     name: "Posavski kanton",
-    url: "https://www.pkanton.gov.ba/",
+    url: "https://www.pk.gov.ba/",
     category: "opportunities",
     layer: "layer2",
     description: "Javni pozivi Posavskog kantona",
@@ -357,7 +375,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "grad-doboj",
     name: "Grad Doboj",
-    url: "https://www.opstinadoboj.rs.ba/",
+    url: "https://www.gradoboj.rs.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Grada Doboja",
@@ -538,7 +556,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "opcina-capljina",
     name: "Općina Čapljina",
-    url: "https://www.capljina.ba/",
+    url: "https://www.capljina-opcina.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Čapljina",
@@ -556,7 +574,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "opcina-stolac",
     name: "Općina Stolac",
-    url: "https://www.stolac.gov.ba/",
+    url: "https://www.opcina-stolac.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Stolac",
@@ -575,7 +593,7 @@ export const SCRAPER_SOURCES: ScraperSource[] = [
   {
     id: "novi-grad-sarajevo",
     name: "Novi Grad Sarajevo",
-    url: "https://www.novigradsa.ba/",
+    url: "https://www.novigradsa.gov.ba/",
     category: "opportunities",
     layer: "layer3",
     description: "Javni pozivi Općine Novi Grad Sarajevo",
@@ -660,6 +678,8 @@ export async function runScraperById(
 
     case "serda":
     case "redah":
+    case "nerda":
+    case "zeda":
       return await scrapeRazvojneAgencije();
 
     case "fbih-vlada":

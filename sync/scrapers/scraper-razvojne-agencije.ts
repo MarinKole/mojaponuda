@@ -1,6 +1,11 @@
 /**
  * Scraper: SERDA, REDAH, NERDA, ZEDA razvojne agencije
  * Legal: Publicly available government/agency websites.
+ *
+ * SERDA - Razvojna agencija Sarajevskog kantona: https://www.serda.ba
+ * REDAH - Razvojna agencija za Hercegovinu: https://www.redah.ba
+ * NERDA - Sjevernoistočna razvojna agencija (Tuzla): https://www.nerda.ba
+ * ZEDA - Zeničko-dobojska razvojna agencija: https://www.zeda.ba
  */
 
 import { fetchHtml, extractLinks, extractLinksWithText, stripTags, parseDate, parseValue, extractBestDescription } from "./fetch-html";
@@ -28,6 +33,20 @@ const AGENCIES: AgencyConfig[] = [
     grantsPath: "/javni-pozivi",
     location: "Hercegovina",
     linkPattern: /poziv|grant|subvencij/i,
+  },
+  {
+    name: "NERDA - Sjeveroistočna razvojna agencija",
+    baseUrl: "https://www.nerda.ba",
+    grantsPath: "/javni-pozivi-i-konkursi",
+    location: "Tuzlanski Kanton",
+    linkPattern: /poziv|konkurs|grant|poticaj/i,
+  },
+  {
+    name: "ZEDA - Zeničko-dobojska razvojna agencija",
+    baseUrl: "https://www.zeda.ba",
+    grantsPath: "/javni-pozivi",
+    location: "Zeničko-dobojski Kanton",
+    linkPattern: /poziv|konkurs|grant|poticaj/i,
   },
 ];
 

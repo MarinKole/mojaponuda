@@ -81,7 +81,7 @@ const CANTONAL_SOURCES: CantonConfig[] = [
   },
   {
     name: "Posavski Kanton",
-    baseUrl: "https://www.pkanton.gov.ba",
+    baseUrl: "https://www.pk.gov.ba",
     grantsPath: "/",
     location: "Posavski Kanton",
     linkPattern: /poziv|konkurs|grant|poticaj/i,

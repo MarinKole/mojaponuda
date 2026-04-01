@@ -86,7 +86,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Grad Doboj",
-    baseUrl: "https://www.opstinadoboj.rs.ba",
+    baseUrl: "https://www.gradoboj.rs.ba",
     grantsPath: "/",
     location: "Doboj",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -247,7 +247,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Općina Čapljina",
-    baseUrl: "https://www.capljina.ba",
+    baseUrl: "https://www.capljina-opcina.ba",
     grantsPath: "/",
     location: "Čapljina",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -263,7 +263,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Općina Stolac",
-    baseUrl: "https://www.stolac.gov.ba",
+    baseUrl: "https://www.opcina-stolac.ba",
     grantsPath: "/",
     location: "Stolac",
     linkPattern: /konkurs|poziv|grant|poticaj/i,
@@ -280,7 +280,7 @@ const MUNICIPAL_SOURCES: MunicipalityConfig[] = [
   },
   {
     name: "Novi Grad Sarajevo",
-    baseUrl: "https://www.novigradsa.ba",
+    baseUrl: "https://www.novigradsa.gov.ba",
     grantsPath: "/",
     location: "Novi Grad Sarajevo",
     linkPattern: /konkurs|poziv|grant|poticaj/i,

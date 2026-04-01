@@ -114,7 +114,7 @@ const FEDERAL_SOURCES: FederalSourceConfig[] = [
   {
     name: "Vlada RS",
     baseUrl: "https://www.vladars.net",
-    grantsPath: "/lat/Vlada/Ministarstva/mper/javni_pozivi",
+    grantsPath: "/",
     location: "Republika Srpska",
     linkPattern: /poziv|konkurs|grant|poticaj/i,
     issuer: "Vlada Republike Srpske",
