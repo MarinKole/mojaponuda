@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { PublicCta } from "@/components/public/public-cta";
 import { OpportunityStructuredData } from "@/components/public/opportunity-structured-data";
+import { ArticleContent } from "@/components/public/article-content";
 import { OpportunityActionsWrapper } from "@/components/dashboard/opportunity-actions-wrapper";
-import { ArrowLeft, Calendar, MapPin, Building2, TrendingUp, AlertTriangle, Users, Ban } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Building2, TrendingUp, ExternalLink, Ban } from "lucide-react";
 import type { Database } from "@/types/database";
 
 type OpportunityRow = Database["public"]["Tables"]["opportunities"]["Row"];
@@ -90,15 +90,19 @@ export default async function OpportunityPage({ params }: PageProps) {
           Sve prilike
         </Link>
 
+        {/* Header card */}
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm mb-6">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
               {opportunity.type === "poticaj" ? "Poticaj / Grant" : "Javna nabavka"}
             </span>
             {opportunity.category && (
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              <Link
+                href={`/prilike?kategorija=${encodeURIComponent(opportunity.category)}`}
+                className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+              >
                 {opportunity.category}
-              </span>
+              </Link>
             )}
             {opportunity.ai_difficulty && (
               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${difficultyColor[opportunity.ai_difficulty] ?? ""}`}>
@@ -118,14 +122,7 @@ export default async function OpportunityPage({ params }: PageProps) {
             </div>
           )}
 
-          <PublicCta
-            text="Provjeri ispunjava li tvoja firma uvjete"
-            href={`/signup?ref=opportunity&id=${opportunity.id}`}
-            variant="primary"
-            className="mb-6"
-          />
-
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 mb-6">
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <Building2 className="size-4 text-slate-400 shrink-0" />
               <span>{opportunity.issuer}</span>
@@ -158,78 +155,70 @@ export default async function OpportunityPage({ params }: PageProps) {
               </div>
             )}
           </div>
-        </div>
 
-        {opportunity.ai_summary && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6 space-y-5">
-            <h2 className="font-heading text-lg font-bold text-slate-900">Analiza prilike</h2>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Sažetak</p>
-              <p className="text-sm leading-6 text-slate-700">{opportunity.ai_summary}</p>
-            </div>
-            {opportunity.ai_who_should_apply && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kome je namijenjeno</p>
-                <p className="text-sm leading-6 text-slate-700">{opportunity.ai_who_should_apply}</p>
-              </div>
-            )}
-            {opportunity.ai_risks && (
-              <div className="flex gap-3">
-                <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Rizici</p>
-                  <p className="text-sm leading-6 text-slate-700">{opportunity.ai_risks}</p>
-                </div>
-              </div>
-            )}
-            {opportunity.ai_competition && (
-              <div className="flex gap-3">
-                <Users className="size-4 text-blue-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Konkurencija</p>
-                  <p className="text-sm leading-6 text-slate-700">{opportunity.ai_competition}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {opportunity.description && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
-            <h2 className="font-heading text-lg font-bold text-slate-900 mb-3">Opis</h2>
-            <p className="text-sm leading-7 text-slate-700 whitespace-pre-line">{opportunity.description}</p>
-          </div>
-        )}
-
-        {opportunity.requirements && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
-            <h2 className="font-heading text-lg font-bold text-slate-900 mb-3">Uvjeti prijave</h2>
-            <p className="text-sm leading-7 text-slate-700 whitespace-pre-line">{opportunity.requirements}</p>
-          </div>
-        )}
-
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6 mb-6">
-          <h3 className="font-heading text-lg font-bold text-slate-900 mb-2">Pratite ovu priliku</h3>
-          <p className="text-sm text-slate-600 mb-4">
-            Prijavite se i pratite ovu i slične prilike. Dobijte obavijest kada se pojave novi uvjeti ili rok.
-          </p>
+          {/* Primary CTA — follow */}
           <OpportunityActionsWrapper
             opportunityId={opportunity.id}
-            signupHrefFollow={`/signup?ref=follow&id=${opportunity.id}`}
-            signupHrefChecklist={`/signup?ref=checklist&id=${opportunity.id}`}
+            signupHref={`/signup?ref=follow&id=${opportunity.id}`}
           />
         </div>
 
-        <p className="text-xs text-slate-400 mb-8">
+        {/* Quick analysis strip */}
+        {opportunity.ai_summary && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6 space-y-3">
+            <p className="text-sm leading-6 text-slate-700">{opportunity.ai_summary}</p>
+            {opportunity.ai_who_should_apply && (
+              <p className="text-xs text-slate-500 leading-5">
+                <span className="font-semibold text-slate-700">Kome je namijenjeno: </span>
+                {opportunity.ai_who_should_apply}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Main article content (AI-generated SEO post) */}
+        {(opportunity as OpportunityRow & { ai_content?: string | null }).ai_content ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
+            <ArticleContent content={(opportunity as OpportunityRow & { ai_content?: string | null }).ai_content!} />
+          </div>
+        ) : opportunity.description ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm mb-6">
+            <p className="text-sm leading-7 text-slate-700 whitespace-pre-line">{opportunity.description}</p>
+          </div>
+        ) : null}
+
+        {/* Mid-content CTA */}
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6 mb-6">
+          <p className="text-sm font-semibold text-slate-900 mb-1">Pratite rokove, ne propustite prijavu</p>
+          <p className="text-xs text-slate-600 mb-4">
+            Dodajte ovu priliku u praćene i bit ćete obaviješteni o svim promjenama roka i uvjeta.
+            Pogledajte i{" "}
+            <Link href="/prilike" className="text-blue-700 underline hover:text-blue-900">
+              sve aktivne prilike na MojaPonuda.ba
+            </Link>.
+          </p>
+          <OpportunityActionsWrapper
+            opportunityId={opportunity.id}
+            signupHref={`/signup?ref=follow&id=${opportunity.id}`}
+          />
+        </div>
+
+        <p className="text-xs text-slate-400 mb-8 flex items-center gap-1.5">
+          <ExternalLink className="size-3 shrink-0" />
           Izvor:{" "}
-          <a href={opportunity.source_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+          <a href={opportunity.source_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600 truncate">
             {opportunity.source_url}
           </a>
         </p>
 
+        {/* Related opportunities — internal backlinks */}
         {(related ?? []).length > 0 && (
           <div>
-            <h2 className="font-heading text-xl font-bold text-slate-900 mb-4">Slične prilike</h2>
+            <h2 className="font-heading text-xl font-bold text-slate-900 mb-1">Slične prilike</h2>
+            <p className="text-xs text-slate-500 mb-4">
+              Više{opportunity.category ? ` sličnih poziva u kategoriji ${opportunity.category}` : " javnih poziva i grantova"} dostupno je na{" "}
+              <Link href="/prilike" className="text-blue-700 underline hover:text-blue-900">MojaPonuda.ba</Link>.
+            </p>
             <div className="space-y-3">
               {(related ?? []).map((r) => (
                 <Link

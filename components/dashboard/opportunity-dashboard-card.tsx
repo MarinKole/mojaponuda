@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Calendar, MapPin, TrendingUp, ArrowUpRight } from "lucide-react";
-import { FollowButton, ChecklistButton } from "./opportunity-actions";
+import { FollowButton } from "./opportunity-actions";
 
 interface Props {
   opportunity: {
@@ -88,9 +88,8 @@ export function OpportunityDashboardCard({ opportunity: o }: Props) {
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4">
             <FollowButton opportunityId={o.id} />
-            <ChecklistButton opportunityId={o.id} />
           </div>
         </div>
         <Link href={`/prilike/${slug}`}>

@@ -767,6 +767,7 @@ export interface Database {
           ai_difficulty: "lako" | "srednje" | "tesko" | null;
           ai_risks: string | null;
           ai_competition: string | null;
+          ai_content: string | null;
           ai_generated_at: string | null;
           quality_score: number;
           published: boolean;
@@ -798,6 +799,7 @@ export interface Database {
           ai_difficulty?: "lako" | "srednje" | "tesko" | null;
           ai_risks?: string | null;
           ai_competition?: string | null;
+          ai_content?: string | null;
           ai_generated_at?: string | null;
           quality_score?: number;
           published?: boolean;
@@ -829,6 +831,7 @@ export interface Database {
           ai_difficulty?: "lako" | "srednje" | "tesko" | null;
           ai_risks?: string | null;
           ai_competition?: string | null;
+          ai_content?: string | null;
           ai_generated_at?: string | null;
           quality_score?: number;
           published?: boolean;
@@ -909,18 +912,21 @@ export interface Database {
           id: string;
           user_id: string;
           opportunity_id: string;
+          outcome: "won" | "lost" | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
           opportunity_id: string;
+          outcome?: "won" | "lost" | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
           opportunity_id?: string;
+          outcome?: "won" | "lost" | null;
         };
         Relationships: [];
       };

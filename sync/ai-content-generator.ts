@@ -9,6 +9,7 @@ export interface OpportunityAiContent {
   ai_difficulty: "lako" | "srednje" | "tesko";
   ai_risks: string;
   ai_competition: string;
+  ai_content: string;
 }
 
 const SYSTEM_PROMPT = `Ti si stručnjak za javne nabavke i poslovne prilike u Bosni i Hercegovini.
@@ -96,34 +97,48 @@ export async function generateOpportunityContent(
   requirements: string | null,
   value: number | null,
   deadline: string | null,
-  type: "tender" | "poticaj"
+  type: "tender" | "poticaj",
+  location?: string | null,
+  eligibilitySignals?: string[] | null,
 ): Promise<OpportunityAiContent | null> {
   try {
     const openai = getOpenAIClient();
 
-    const valueStr = value ? `${(value / 1000).toFixed(0)}K KM` : "nije navedena";
-    const deadlineStr = deadline ?? "nije naveden";
+    const valueStr = value ? `${value.toLocaleString("bs-BA")} KM` : "nije navedena";
+    const deadlineStr = deadline
+      ? new Date(deadline).toLocaleDateString("bs-BA", { day: "numeric", month: "long", year: "numeric" })
+      : "nije naveden";
     const typeLabel = type === "tender" ? "javna nabavka" : "poticaj/grant";
+    const locationStr = location ?? "Bosna i Hercegovina";
+    const eligStr = eligibilitySignals?.length ? eligibilitySignals.join(", ") : null;
 
-    const prompt = `Analiziraj ovu poslovnu priliku i popuni sva polja.
+    const rawDesc = description?.slice(0, 800) ?? null;
+    const rawReq = requirements?.slice(0, 600) ?? null;
 
+    const prompt = `Analiziraj ovu poslovnu priliku i popuni SVA polja u JSON-u.
+Piši isključivo na osnovu dostavljenih podataka — bez izmišljenih detalja, iznosa ili uvjeta koji nisu navedeni.
+
+PODATCI O PRILICI:
 Vrsta: ${typeLabel}
 Naziv: ${title}
-Naručilac/Institucija: ${issuer}
+Institucija: ${issuer}
+Lokacija: ${locationStr}
 Vrijednost: ${valueStr}
-Rok: ${deadlineStr}
-Opis: ${description?.slice(0, 500) ?? "nije dostupan"}
-Uvjeti: ${requirements?.slice(0, 300) ?? "nisu navedeni"}
+Rok za prijavu: ${deadlineStr}
+Eligibilnost (signali iz teksta): ${eligStr ?? "nisu detektirani"}
+Sirovi opis s web stranice: ${rawDesc ?? "nije dostupan"}
+Sirovi uvjeti s web stranice: ${rawReq ?? "nisu navedeni"}
 
-Odgovori u JSON formatu:
+JSON format — sva polja obavezna:
 {
-  "seo_title": "SEO naslov do 60 znakova, konkretan",
-  "seo_description": "Meta opis do 155 znakova, informativan",
-  "ai_summary": "Kratki sažetak prilike u 2 rečenice",
-  "ai_who_should_apply": "Koje firme trebaju aplicirati i zašto",
+  "seo_title": "SEO naslov max 60 znakova — konkretan, uključi naziv i instituciju",
+  "seo_description": "Meta opis max 155 znakova — informativan, uključi rok/vrijednost ako poznati",
+  "ai_summary": "Sažetak prilike u 2 rečenice — samo provjerene informacije",
+  "ai_who_should_apply": "Koje firme/osobe trebaju aplicirati i zašto — konkretan odgovor",
   "ai_difficulty": "lako|srednje|tesko",
-  "ai_risks": "Glavni rizici i izazovi prijave",
-  "ai_competition": "Procjena konkurencije i tržišne situacije"
+  "ai_risks": "Glavni rizici i izazovi prijave — max 2 rečenice",
+  "ai_competition": "Procjena konkurencije i tržišta — max 2 rečenice",
+  "ai_content": "Cjeloviti SEO članak u markdown formatu, 300-600 riječi.\n\nStruktura:\n## O ovom pozivu\n[2-3 rečenice o svrsi poziva i instituciji koja ga objavljuje]\n\n## Ko može aplicirati?\n[Konkretni uvjeti prihvatljivosti iz dostavljenih podataka. Ako nisu dostupni: 'Uvjeti prihvatljivosti objavljeni su u originalnoj dokumentaciji dostupnoj na web stranici institucije.']\n\n## Iznos i rok\n[Dostupne finansijske informacije i rok. Ako vrijednost nije poznata: 'Finansijska vrijednost bit će navedena u pozivnoj dokumentaciji.']\n\n## Kako aplicirati?\n[Upute iz dostavljenih podataka ili: 'Kompletna dokumentacija i upute za prijavu dostupne su na originalnom pozivu na web stranici ${issuer}.']\n\nVAŽNO za ai_content:\n- Piši isključivo na osnovu dostavljenih sirovih podataka\n- Ne izmišljaj iznose, datume, uvjete koji nisu eksplicitno navedeni\n- Završi s pozivom na akciju: 'Pratite ovu i slične prilike na MojaPonuda.ba'\n- SEO ključne riječi: javni poziv BiH, ${typeLabel}, ${locationStr}"
 }`;
 
     const completion = await openai.chat.completions.create({
@@ -134,7 +149,7 @@ Odgovori u JSON formatu:
       ],
       response_format: { type: "json_object" },
       temperature: 0.3,
-      max_tokens: 600,
+      max_tokens: 2000,
     });
 
     const raw = completion.choices[0]?.message?.content;
@@ -142,7 +157,6 @@ Odgovori u JSON formatu:
 
     const parsed = JSON.parse(raw) as OpportunityAiContent;
 
-    // Validate difficulty
     if (!["lako", "srednje", "tesko"].includes(parsed.ai_difficulty)) {
       parsed.ai_difficulty = "srednje";
     }
