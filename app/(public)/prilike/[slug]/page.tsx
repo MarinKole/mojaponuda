@@ -112,11 +112,12 @@ export default async function OpportunityPage({ params }: PageProps) {
       .order("created_at", { ascending: false })
       .limit(3),
 
-    // Layer 4: trend — count in same category last 6 months
+    // Layer 4: trend — active opps in same category last 6 months (matches what category page shows)
     supabase
       .from("opportunities")
       .select("*", { count: "exact", head: true })
       .eq("published", true)
+      .eq("status", "active")
       .eq("category", opportunity.category ?? "")
       .gte("created_at", sixMonthsAgo),
   ]);

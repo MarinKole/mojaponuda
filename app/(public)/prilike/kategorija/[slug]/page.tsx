@@ -111,7 +111,9 @@ export default async function KategorijaPage({ params }: PageProps) {
           <div className="mb-16 rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center">
             <p className="text-slate-500 mb-2">Trenutno nema aktivnih prilike u ovoj kategoriji.</p>
             <p className="text-sm text-slate-400">Prilike se ažuriraju svakodnevno. Prijavite se za obavijesti.</p>
-            <PublicCta text="Primajte obavijesti" href="/signup" className="mt-6 inline-block" />
+            <div className="flex justify-center mt-6">
+              <PublicCta text="Primajte obavijesti" href="/signup" />
+            </div>
           </div>
         ) : (
           <>
