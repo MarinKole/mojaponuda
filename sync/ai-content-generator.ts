@@ -14,10 +14,11 @@ export interface OpportunityAiContent {
   category?: string;
 }
 
-const SYSTEM_PROMPT = `Ti si stručnjak za javne nabavke i poslovne prilike u Bosni i Hercegovini.
-Pišeš kratke, precizne i korisne analize za firme koje traže prilike.
-Jezik: bosanski/hrvatski. Bez anglizama. Bez generičkih fraza.
-Budi konkretan i informativan. Maksimalno 2-3 rečenice po polju.`;
+const SYSTEM_PROMPT = `Ti si SEO stručnjak i savjetnik za poslovne prilike u Bosni i Hercegovini.
+Pišeš sadržaj koji istovremeno rangira na Google.ba I pomaže firmama da donesu prave odluke.
+Jezik: bosanski/hrvatski. Bez anglizama. Bez generičkih fraza. Budi konkretan i informativan.
+SEO pravilo br. 1: seo_title MORA biti pretraživački upit, NIKAD prepis naslova dokumenta.
+SEO pravilo br. 2: Uvijek uključi lokaciju, godinu (2026) i tip poticaja u prvom paragrafu ai_content.`;
 
 /**
  * AI Review Gate: Checks if a scraped item is a legitimate business opportunity
@@ -118,7 +119,8 @@ export async function generateOpportunityContent(
     const rawReq = requirements?.slice(0, 600) ?? null;
 
     const prompt = `Analiziraj ovu poslovnu priliku i popuni SVA polja u JSON-u.
-Piši isključivo na osnovu dostavljenih podataka — bez izmišljenih detalja, iznosa ili uvjeta koji nisu navedeni.
+CILJ: Stranica treba rangirati na Google.ba za upite poput "poticaji [sektor] [lokacija] 2026".
+Piši isključivo na osnovu dostavljenih podataka — bez izmišljenih iznosa, rokova ili uvjeta.
 
 PODATCI O PRILICI:
 Vrsta: ${typeLabel}
@@ -127,20 +129,20 @@ Institucija: ${issuer}
 Lokacija: ${locationStr}
 Vrijednost: ${valueStr}
 Rok za prijavu: ${deadlineStr}
-Eligibilnost (signali iz teksta): ${eligStr ?? "nisu detektirani"}
-Sirovi opis s web stranice: ${rawDesc ?? "nije dostupan"}
-Sirovi uvjeti s web stranice: ${rawReq ?? "nisu navedeni"}
+Ciljana publika (signali): ${eligStr ?? "nisu detektirani"}
+Opis: ${rawDesc ?? "nije dostupan"}
+Uvjeti: ${rawReq ?? "nisu navedeni"}
 
 JSON format — sva polja obavezna:
 {
-  "seo_title": "SEO naslov max 60 znakova — konkretan, uključi naziv i instituciju",
-  "seo_description": "Meta opis max 155 znakova — informativan, uključi rok/vrijednost ako poznati",
-  "ai_summary": "Sažetak prilike u 2 rečenice — samo provjerene informacije",
-  "ai_who_should_apply": "Koje firme/osobe trebaju aplicirati i zašto — konkretan odgovor",
+  "seo_title": "SEO naslov koji cilja PRETRAŽIVANJE — NIKAD ne kopiraj sirovi naziv dokumenta. Format obavezan: '[Vrsta] za [ko] u [lokacija] (2026)'. Primjeri ispravnog: 'Poticaji za mikro firme u Tuzlanskom kantonu (2026)' | 'EU grant za izvoznike u FBiH (2026)' | 'Subvencije za zapošljavanje Kanton Sarajevo (2026)' | 'Grantovi za startuppe u Republici Srpskoj (2026)'. Max 65 znakova.",
+  "seo_description": "Meta opis 140-155 znakova koji uključuje: vrstu poticaja, lokaciju, ko može aplicirati, rok/vrijednost ako su poznati. Počni akcijskom riječju (Prijavite se / Saznajte više / Iskoristite). Uključi ključne pojmove: poticaji, grantovi, ${locationStr}, firme.",
+  "ai_summary": "2 rečenice sažetka koje uključuju: vrstu poticaja/granta, lokaciju (${locationStr}) i konkretnu ciljanu skupinu. Zvuči kao stručni pregled, ne prepis naslova.",
+  "ai_who_should_apply": "Konkretno koje firme, preduzetnici ili organizacije trebaju aplicirati — sektori, veličina, lokacija. 2-3 rečenice.",
   "ai_difficulty": "lako|srednje|tesko",
-  "ai_risks": "Glavni rizici i izazovi prijave — max 2 rečenice",
-  "ai_competition": "Procjena konkurencije i tržišta — max 2 rečenice",
-  "ai_content": "VAŽNO — FORMAT PRAVILA (obavezno poštovati):\\n1. Svaki heading (## Naslov) mora biti na SVOJOJ LINIJI, odvojen praznom linijom od teksta ispod.\\n2. NIKAD ne stavljaj heading i paragraf na istu liniju.\\n3. Ispravno:\\n## O ovom pozivu\\n\\nTekst paragraf ovdje.\\n\\n## Ko može aplicirati?\\n\\nTekst paragraf ovdje.\\n\\nNeispravno (zabranjeno): ## O ovom pozivu Tekst paragraf ovdje.\\n\\nStruktura članka (300-600 riječi):\\n\\n## O ovom pozivu\\n\\n[2-3 rečenice o svrsi poziva i instituciji koja ga objavljuje]\\n\\n## Ko može aplicirati?\\n\\n[Konkretni uvjeti prihvatljivosti. Ako nisu dostupni: napiši da su uvjeti navedeni u originalnoj dokumentaciji.]\\n\\n## Iznos i rok\\n\\n[Finansijske informacije i rok. Ako vrijednost nije poznata: napiši da će biti navedena u dokumentaciji.]\\n\\n## Kako aplicirati?\\n\\n[Upute ili: Kompletna dokumentacija dostupna je na web stranici ${issuer}.]\\n\\nZavrši s: Pratite ovu i slične prilike na MojaPonuda.ba\\n\\nSEO ključne riječi: javni poziv BiH, ${typeLabel}, ${locationStr}. Piši samo na osnovu dostavljenih podataka — bez izmišljenih detalja.",
+  "ai_risks": "Glavni rizici i izazovi prijave — max 2 rečenice.",
+  "ai_competition": "Procjena konkurentnosti: koliko je tražen ovaj tip poticaja, realni broj prijavitelja, šanse za uspjeh. Max 2 rečenice.",
+  "ai_content": "FORMAT PRAVILA (strogo obavezno):\\n1. Heading (## Naslov) — UVIJEK na svojoj liniji, odvojen PRAZNOM LINIJOM od teksta.\\n2. NIKAD heading i paragraf na istoj liniji.\\n\\nStruktura (400-650 riječi):\\n\\n## O ovom pozivu\\n\\n[KRITIČNO: Ovaj paragraf mora sadržavati ključne SEO pojmove. Obavezno uključi: (1) vrstu finansiranja — poticaj/grant/subvencija, (2) lokaciju — ${locationStr}, (3) ciljanu skupinu — firme/poduzetnike, (4) godinu — 2026. Obrazac: '${issuer} raspisao je u 2026. godini [vrstu] namijenjen [kome] u ${locationStr}...' Zatim 1-2 rečenice o svrsi programa i ciljevima.]\\n\\n## Ko treba aplicirati?\\n\\n[Konkretni uvjeti prihvatljivosti — sektori, veličina firme, lokacija, registracija. Ako uvjeti nisu dostupni, napiši da su detalji u originalnoj dokumentaciji institucije ${issuer}.]\\n\\n## Šta ovo znači za vašu firmu?\\n\\n[SAVJETODAVNA ANALIZA — budi iskren i koristan: (1) Isplati li se prijaviti s obzirom na obim dokumentacije? (2) Koliko je realna konkurencija? (3) Za koga je ovo posebno dobra prilika? Nije generično — daj konkretno mišljenje na osnovu tipa poziva i vrijednosti.]\\n\\n## Iznos i rok prijave\\n\\n[Finansijski detalji, način isplate/refundacije i rok. Ako vrijednost nije navedena — piši da je definisana u pozivu.]\\n\\n## Kako aplicirati?\\n\\n[Konkretni koraci ili: Kompletan postupak i dokumentacija dostupni su na web stranici institucije ${issuer}.]\\n\\nZadnja rečenica: Pratite ove i slične poticaje za firme u BiH na MojaPonuda.ba — baza se ažurira svakodnevno.\\n\\nPIŠI ISKLJUČIVO NA OSNOVU DOSTAVLJENIH PODATAKA. Uključi prirodno: poticaji ${locationStr} 2026, grantovi za firme BiH, ${typeLabel}.",
   "category": "Odaberi JEDNU kategoriju iz liste: ${AI_CATEGORY_VALUES.join(' | ')}"
 }`;
 
@@ -152,7 +154,7 @@ JSON format — sva polja obavezna:
       ],
       response_format: { type: "json_object" },
       temperature: 0.3,
-      max_tokens: 2000,
+      max_tokens: 2500,
     });
 
     const raw = completion.choices[0]?.message?.content;

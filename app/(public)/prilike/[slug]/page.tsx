@@ -158,7 +158,7 @@ export default async function OpportunityPage({ params }: PageProps) {
             </>
           )}
           <ChevronRight className="size-3 shrink-0" />
-          <span className="text-slate-600 truncate max-w-[200px]">{opportunity.title}</span>
+          <span className="text-slate-600 truncate max-w-[200px]">{opportunity.seo_title ?? opportunity.title}</span>
         </nav>
 
         {/* ── Header card ───────────────────────────────────────────────── */}
@@ -186,9 +186,36 @@ export default async function OpportunityPage({ params }: PageProps) {
             )}
           </div>
 
-          <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl mb-4">
-            {opportunity.title}
+          <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl mb-2">
+            {opportunity.seo_title ?? opportunity.title}
           </h1>
+          {opportunity.seo_title && opportunity.seo_title !== opportunity.title && (
+            <p className="text-sm text-slate-500 mb-4 leading-5">{opportunity.title}</p>
+          )}
+
+          {/* Urgency banner — shown when deadline is ≤7 days and not expired */}
+          {!isExpired && daysLeft !== null && daysLeft <= 7 && (
+            <div className={`flex items-center gap-2 rounded-xl px-4 py-3 mb-4 ${
+              daysLeft <= 1
+                ? "bg-red-50 border border-red-200"
+                : daysLeft <= 3
+                ? "bg-orange-50 border border-orange-200"
+                : "bg-amber-50 border border-amber-200"
+            }`}>
+              <Clock className={`size-4 shrink-0 ${
+                daysLeft <= 1 ? "text-red-600" : daysLeft <= 3 ? "text-orange-600" : "text-amber-600"
+              }`} />
+              <p className={`text-sm font-bold ${
+                daysLeft <= 1 ? "text-red-700" : daysLeft <= 3 ? "text-orange-700" : "text-amber-700"
+              }`}>
+                {daysLeft === 0
+                  ? "⚡ ROK ISTJEČE DANAS — PRIJAVITE SE!"
+                  : daysLeft === 1
+                  ? "⚡ ROK ISTJEČE SUTRA — POSLJEDNJI DAN!"
+                  : `⏰ ROK ZA PRIJAVU ZA ${daysLeft} DANA`}
+              </p>
+            </div>
+          )}
 
           {isExpired && (
             <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-4">
