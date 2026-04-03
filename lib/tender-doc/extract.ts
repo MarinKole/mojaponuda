@@ -1,4 +1,4 @@
-import pdf from "pdfjs-dist";
+import * as pdf from "pdfjs-dist";
 
 // Use the worker from the installed pdfjs-dist package
 if (typeof globalThis !== "undefined" && !pdf.GlobalWorkerOptions.workerSrc) {
