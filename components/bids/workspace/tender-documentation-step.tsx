@@ -6,6 +6,50 @@ import { Button } from "@/components/ui/button";
 import { FileUp, Loader2, Sparkles } from "lucide-react";
 import type { BidTenderSourceDocument } from "@/types/database";
 
+type OcrPage = { pageNumber: number; text: string };
+
+function isPdfFile(file: File): boolean {
+  return file.type.toLowerCase().includes("pdf") || file.name.toLowerCase().endsWith(".pdf");
+}
+
+async function clientOcrPdf(file: File): Promise<OcrPage[]> {
+  const [{ getDocument }, tesseract] = await Promise.all([
+    import("pdfjs-dist/legacy/build/pdf.mjs"),
+    import("tesseract.js"),
+  ]);
+
+  const buffer = await file.arrayBuffer();
+  const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
+  const maxPages = Math.min(pdf.numPages, 25);
+
+  const worker = await tesseract.createWorker("eng");
+  const pages: OcrPage[] = [];
+
+  try {
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 1.6 });
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas nije dostupan za OCR.");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Ne mogu napraviti sliku za OCR."))), "image/png");
+      });
+      const result = await worker.recognize(blob);
+      const text = (result.data.text || "").replace(/\s+/g, " ").trim();
+      pages.push({ pageNumber: i, text });
+    }
+  } finally {
+    await worker.terminate();
+  }
+
+  return pages;
+}
+
 interface TenderDocumentationStepProps {
   bidId: string;
   tenderTitle: string;
@@ -43,8 +87,26 @@ export function TenderDocumentationStep({
           body: fd,
         });
         const data = await res.json().catch(() => ({}));
+
         if (!res.ok) {
-          throw new Error(data.error || "Obrada dokumenta nije uspjela.");
+          if (res.status === 409 && data?.code === "OCR_REQUIRED" && isPdfFile(file)) {
+            // Seamless OCR flow for scanned PDFs.
+            const ocrPages = await clientOcrPdf(file);
+            const res2 = await fetch(`/api/bids/${bidId}/tender-documentation-text`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                source_document_id: data.source_document_id,
+                pages: ocrPages,
+              }),
+            });
+            const data2 = await res2.json().catch(() => ({}));
+            if (!res2.ok) {
+              throw new Error(data2.error || "OCR analiza nije uspjela.");
+            }
+          } else {
+            throw new Error(data.error || "Obrada dokumenta nije uspjela.");
+          }
         }
         router.refresh();
       } catch (err) {

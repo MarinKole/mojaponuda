@@ -126,12 +126,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const nonEmpty = pages.filter((p) => p.text.trim().length > 0);
     if (!nonEmpty.length) {
+      // Signal client-side OCR flow (scanned PDFs are common).
       return NextResponse.json(
         {
-          error:
-            "Nije moguće izvući tekst iz datoteke (možda je sken bez OCR-a). Pokušajte PDF s tekstnim slojem ili DOCX.",
+          ok: false,
+          code: "OCR_REQUIRED",
+          source_document_id: sourceRow.id,
+          message:
+            "Dokument izgleda kao sken bez tekstualnog sloja. Pokrećem OCR u browseru i nastavljam analizu…",
         },
-        { status: 422 }
+        { status: 409 }
       );
     }
 
