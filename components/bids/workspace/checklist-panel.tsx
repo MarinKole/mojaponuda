@@ -2,13 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type {
-  BidChecklistItem,
-  BidTenderSourceDocument,
-  ChecklistStatus,
-  Document,
-  Json,
-} from "@/types/database";
+import type { BidChecklistItem, ChecklistStatus, Document } from "@/types/database";
 import { getExpiryStatus, getExpiryBadgeClasses, formatExpiryText, AI_TO_VAULT_TYPE_MAP } from "@/lib/vault/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Plus,
+  Trash2,
   Pencil,
   AlertTriangle,
   FileText,
@@ -30,13 +25,9 @@ import {
   Check,
   X,
   ListTodo,
-  BookOpen,
+  Sparkles
 } from "lucide-react";
 import { AddDocumentModal } from "@/components/vault/add-document-modal";
-import {
-  TenderSourcePdfModal,
-  type HighlightRegion,
-} from "@/components/bids/workspace/tender-source-pdf-modal";
 
 const STATUS_LABELS: Record<ChecklistStatus, string> = {
   missing: "Nedostaje",
@@ -54,46 +45,9 @@ interface ChecklistPanelProps {
   bidId: string;
   items: BidChecklistItem[];
   vaultDocuments: Document[];
-  tenderSourceDocument: BidTenderSourceDocument | null;
 }
 
-function parseHighlightRegions(json: Json | null): HighlightRegion[] | null {
-  if (!json || !Array.isArray(json)) return null;
-  const out: HighlightRegion[] = [];
-  for (const entry of json) {
-    if (
-      entry &&
-      typeof entry === "object" &&
-      "x" in entry &&
-      "y" in entry &&
-      "width" in entry &&
-      "height" in entry
-    ) {
-      const o = entry as Record<string, unknown>;
-      out.push({
-        x: Number(o.x),
-        y: Number(o.y),
-        width: Number(o.width),
-        height: Number(o.height),
-      });
-    }
-  }
-  return out.length ? out : null;
-}
-
-function sourceIsPdf(doc: BidTenderSourceDocument | null): boolean {
-  if (!doc) return false;
-  const m = (doc.mime_type || "").toLowerCase();
-  const n = doc.name.toLowerCase();
-  return m.includes("pdf") || n.endsWith(".pdf");
-}
-
-export function ChecklistPanel({
-  bidId,
-  items,
-  vaultDocuments,
-  tenderSourceDocument,
-}: ChecklistPanelProps) {
+export function ChecklistPanel({ bidId, items, vaultDocuments }: ChecklistPanelProps) {
   const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -106,8 +60,6 @@ export function ChecklistPanel({
   const [loading, setLoading] = useState(false);
   const [attachModalOpen, setAttachModalOpen] = useState(false);
   const [attachItemId, setAttachItemId] = useState<string | null>(null);
-  const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false);
-  const [sourcePreviewItem, setSourcePreviewItem] = useState<BidChecklistItem | null>(null);
 
   const confirmedCount = items.filter((i) => i.status === "confirmed").length;
   const totalCount = items.length;
@@ -193,11 +145,6 @@ export function ChecklistPanel({
     setAttachItemId(itemId);
     setAttachModalOpen(true);
   }
-
-  function openSourcePreview(item: BidChecklistItem) {
-    setSourcePreviewItem(item);
-    setSourcePreviewOpen(true);
-  }
 function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
     if (!item.document_type) return undefined;
     const targetType = AI_TO_VAULT_TYPE_MAP[item.document_type];
@@ -249,14 +196,12 @@ function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
       <div className="space-y-3">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-             <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-slate-50">
-               <ListTodo className="size-6 text-slate-300" />
+             <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-blue-50">
+               <Sparkles className="size-6 text-blue-400" />
              </div>
-             <p className="text-sm font-medium text-slate-900">Lista je prazna</p>
-             <p className="text-xs text-slate-500 max-w-sm mt-1 px-4 leading-relaxed">
-               {tenderSourceDocument
-                 ? "U učitanoj dokumentaciji nismo pronašli eksplicitno navedene zahtjeve za priloge. Provjerite da li je tekst čitljiv (OCR), dodajte kompletnu datoteku ili unesite stavke ručno."
-                 : "Kada gore učitate tendersku dokumentaciju, ovdje će se pojaviti tačna lista onoga što se traži — uz referencu na stranicu."}
+             <p className="text-sm font-medium text-slate-900">Čekamo tendersku dokumentaciju</p>
+             <p className="text-xs text-slate-500 max-w-[240px] mt-1">
+               Uploadajte tendersku dokumentaciju iznad da bismo generisali tačnu listu zahtjeva za ovaj tender.
              </p>
           </div>
         ) : (
@@ -347,9 +292,34 @@ function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
                     </div>
 
                     {item.description && (
-                      <p className="text-sm text-slate-500 mb-2 leading-relaxed">
-                        {item.description}
-                      </p>
+                      <div className="mb-2 space-y-1.5">
+                        {item.description.split("\n").map((line, lineIdx) => {
+                          if (line.startsWith("📄 ")) {
+                            return (
+                              <div key={lineIdx} className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700 border border-blue-100">
+                                <FileText className="size-3" />
+                                {line.replace("📄 ", "")}
+                              </div>
+                            );
+                          }
+                          if (line.startsWith("📝 Iz dokumentacije: ")) {
+                            const quote = line.replace("📝 Iz dokumentacije: ", "").replace(/^"|"$/g, "");
+                            return (
+                              <blockquote key={lineIdx} className="border-l-2 border-slate-200 pl-3 text-xs text-slate-400 italic leading-relaxed">
+                                {quote}
+                              </blockquote>
+                            );
+                          }
+                          if (line.trim()) {
+                            return (
+                              <p key={lineIdx} className="text-sm text-slate-500 leading-relaxed">
+                                {line}
+                              </p>
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
                     )}
 
                     {item.risk_note && (
@@ -364,21 +334,6 @@ function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
                       >
                         {STATUS_LABELS[item.status]}
                       </span>
-
-                      {item.tender_source_document_id &&
-                        item.source_page != null &&
-                        tenderSourceDocument &&
-                        item.tender_source_document_id === tenderSourceDocument.id && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 gap-1 px-2 text-[10px] rounded-lg border-violet-200 bg-violet-50/60 text-violet-800 hover:bg-violet-50"
-                            onClick={() => openSourcePreview(item)}
-                          >
-                            <BookOpen className="size-3" />
-                            Str. {item.source_page}
-                          </Button>
-                        )}
 
                       {item.document_id ? (
                         <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700 border border-blue-100">
@@ -504,48 +459,6 @@ function findSuggestedDocument(item: BidChecklistItem): Document | undefined {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {sourcePreviewItem &&
-        sourcePreviewItem.tender_source_document_id &&
-        sourceIsPdf(tenderSourceDocument) && (
-          <TenderSourcePdfModal
-            open={sourcePreviewOpen}
-            onOpenChange={(o) => {
-              setSourcePreviewOpen(o);
-              if (!o) setSourcePreviewItem(null);
-            }}
-            bidId={bidId}
-            sourceDocumentId={sourcePreviewItem.tender_source_document_id}
-            title={tenderSourceDocument?.name || "Tenderska dokumentacija"}
-            initialPage={sourcePreviewItem.source_page ?? 1}
-            regions={parseHighlightRegions(sourcePreviewItem.source_highlight_regions)}
-          />
-        )}
-
-      {sourcePreviewItem && !sourceIsPdf(tenderSourceDocument) && (
-        <Dialog
-          open={sourcePreviewOpen}
-          onOpenChange={(o) => {
-            if (!o) {
-              setSourcePreviewOpen(false);
-              setSourcePreviewItem(null);
-            }
-          }}
-        >
-          <DialogContent className="max-w-lg rounded-2xl border-slate-100">
-            <DialogHeader>
-              <DialogTitle className="font-heading">Citirani odlomak</DialogTitle>
-              <DialogDescription>
-                Stranica ili odlomak {sourcePreviewItem.source_page != null ? `(${sourcePreviewItem.source_page})` : ""} u{" "}
-                {tenderSourceDocument?.name || "dokumentaciji"}.
-              </DialogDescription>
-            </DialogHeader>
-            <blockquote className="rounded-xl border border-amber-100 bg-amber-50/80 p-4 text-sm leading-relaxed text-slate-800">
-              {sourcePreviewItem.source_quote || "—"}
-            </blockquote>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Modal: Priloži dokument iz Vaulta */}
       <Dialog open={attachModalOpen} onOpenChange={setAttachModalOpen}>

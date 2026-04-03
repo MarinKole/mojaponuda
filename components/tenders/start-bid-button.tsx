@@ -52,7 +52,7 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
 
     setError(null);
     setLoading(true);
-    setLoadingText("Otvaram radni prostor za pripremu…");
+    setLoadingText("Kreiram radni prostor za ponudu...");
     try {
       const res = await fetch("/api/bids", {
         method: "POST",
@@ -128,7 +128,7 @@ export function StartBidButton({ tenderId, existingBidId, variant = "default", c
         title={limitInfo ? "Dostigli ste limit paketa" : "Profesionalna priprema ponude je dostupna uz pretplatu"}
         description={limitInfo
           ? `Vaš trenutni paket omogućava maksimalno ${limitInfo?.limit} aktivnih tendera. Trenutno imate ${limitInfo?.current}. Nadogradite paket ako želite nastaviti rad bez blokade.`
-          : "Uz pretplatu dobijate radni prostor za pripremu ponude: učitajte tendersku dokumentaciju i sistem izvuče tačnu listu zahtjeva iz nje."}
+          : "Uz pretplatu dobijate profesionalnu pripremu ponude, početnu listu onoga što treba prikupiti i jasniji pregled prije slanja."}
         limitType="tenders"
       />
 

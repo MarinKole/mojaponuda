@@ -197,49 +197,6 @@ export interface Database {
           }
         ];
       };
-      bid_tender_source_documents: {
-        Row: {
-          id: string;
-          bid_id: string;
-          company_id: string;
-          name: string;
-          file_path: string;
-          mime_type: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          bid_id: string;
-          company_id: string;
-          name: string;
-          file_path: string;
-          mime_type?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          bid_id?: string;
-          company_id?: string;
-          name?: string;
-          file_path?: string;
-          mime_type?: string | null;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "bid_tender_source_documents_bid_id_fkey";
-            columns: ["bid_id"];
-            referencedRelation: "bids";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "bid_tender_source_documents_company_id_fkey";
-            columns: ["company_id"];
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
       bid_checklist_items: {
         Row: {
           id: string;
@@ -252,10 +209,6 @@ export interface Database {
           risk_note: string | null;
           sort_order: number;
           created_at: string;
-          tender_source_document_id: string | null;
-          source_page: number | null;
-          source_quote: string | null;
-          source_highlight_regions: Json | null;
         };
         Insert: {
           id?: string;
@@ -268,10 +221,6 @@ export interface Database {
           risk_note?: string | null;
           sort_order?: number;
           created_at?: string;
-          tender_source_document_id?: string | null;
-          source_page?: number | null;
-          source_quote?: string | null;
-          source_highlight_regions?: Json | null;
         };
         Update: {
           id?: string;
@@ -284,10 +233,6 @@ export interface Database {
           risk_note?: string | null;
           sort_order?: number;
           created_at?: string;
-          tender_source_document_id?: string | null;
-          source_page?: number | null;
-          source_quote?: string | null;
-          source_highlight_regions?: Json | null;
         };
         Relationships: [
           {
@@ -300,12 +245,6 @@ export interface Database {
             foreignKeyName: "bid_checklist_items_document_id_fkey";
             columns: ["document_id"];
             referencedRelation: "documents";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "bid_checklist_items_tender_source_document_id_fkey";
-            columns: ["tender_source_document_id"];
-            referencedRelation: "bid_tender_source_documents";
             referencedColumns: ["id"];
           }
         ];
@@ -1020,6 +959,57 @@ export interface Database {
         };
         Relationships: [];
       };
+      tender_doc_uploads: {
+        Row: {
+          id: string;
+          bid_id: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          content_type: string | null;
+          extracted_text: string | null;
+          ai_analysis: Json | null;
+          page_count: number | null;
+          status: string;
+          error_message: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          bid_id: string;
+          file_name: string;
+          file_path: string;
+          file_size?: number;
+          content_type?: string | null;
+          extracted_text?: string | null;
+          ai_analysis?: Json | null;
+          page_count?: number | null;
+          status?: string;
+          error_message?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          bid_id?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number;
+          content_type?: string | null;
+          extracted_text?: string | null;
+          ai_analysis?: Json | null;
+          page_count?: number | null;
+          status?: string;
+          error_message?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tender_doc_uploads_bid_id_fkey";
+            columns: ["bid_id"];
+            referencedRelation: "bids";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       documents_with_expiry: {
@@ -1071,7 +1061,6 @@ export type BidUpdate = Database["public"]["Tables"]["bids"]["Update"];
 export type BidChecklistItem = Database["public"]["Tables"]["bid_checklist_items"]["Row"];
 export type BidChecklistItemInsert = Database["public"]["Tables"]["bid_checklist_items"]["Insert"];
 export type BidChecklistItemUpdate = Database["public"]["Tables"]["bid_checklist_items"]["Update"];
-export type BidTenderSourceDocument = Database["public"]["Tables"]["bid_tender_source_documents"]["Row"];
 
 export type BidDocument = Database["public"]["Tables"]["bid_documents"]["Row"];
 export type BidDocumentInsert = Database["public"]["Tables"]["bid_documents"]["Insert"];
@@ -1106,3 +1095,7 @@ export type DocumentWithExpiry = Database["public"]["Views"]["documents_with_exp
 export type AuthorityRequirementPattern = Database["public"]["Tables"]["authority_requirement_patterns"]["Row"];
 export type AuthorityRequirementPatternInsert = Database["public"]["Tables"]["authority_requirement_patterns"]["Insert"];
 export type AuthorityRequirementPatternUpdate = Database["public"]["Tables"]["authority_requirement_patterns"]["Update"];
+
+export type TenderDocUpload = Database["public"]["Tables"]["tender_doc_uploads"]["Row"];
+export type TenderDocUploadInsert = Database["public"]["Tables"]["tender_doc_uploads"]["Insert"];
+export type TenderDocUploadUpdate = Database["public"]["Tables"]["tender_doc_uploads"]["Update"];

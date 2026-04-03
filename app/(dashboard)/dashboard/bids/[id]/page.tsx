@@ -1,20 +1,21 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   Company,
   Bid,
   Tender,
   BidChecklistItem,
-  BidTenderSourceDocument,
   Document,
   BidStatus,
   Json,
+  Subscription,
 } from "@/types/database";
 import { TopBar } from "@/components/bids/workspace/top-bar";
 import { ChecklistPanel } from "@/components/bids/workspace/checklist-panel";
 import { DocumentsPanel } from "@/components/bids/workspace/documents-panel";
 import { NotesSection } from "@/components/bids/workspace/notes-section";
-import { TenderDocumentationStep } from "@/components/bids/workspace/tender-documentation-step";
+import { TenderDocUpload } from "@/components/bids/workspace/tender-doc-upload";
 import { PaywallOverlay } from "@/components/subscription/paywall-overlay";
 import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 
@@ -105,14 +106,16 @@ export default async function BidWorkspacePage({
 
   const vaultDocuments = (vaultData ?? []) as Document[];
 
-  const { data: tenderSourceRows } = await supabase
-    .from("bid_tender_source_documents")
-    .select("*")
+  // Dohvati tender dokumentaciju upload za ovaj bid
+  const supabaseAdmin = createAdminClient();
+  const { data: tenderDocData } = await supabaseAdmin
+    .from("tender_doc_uploads")
+    .select("id, file_name, file_size, content_type, page_count, status, ai_analysis, error_message, created_at")
     .eq("bid_id", id)
     .order("created_at", { ascending: false })
     .limit(1);
 
-  const tenderSourceDocument = (tenderSourceRows?.[0] ?? null) as BidTenderSourceDocument | null;
+  const tenderDocUpload = tenderDocData?.[0] || null;
 
   // Provjera pretplate — paywall
   const { isSubscribed } = await getSubscriptionStatus(user.id, user.email);
@@ -140,6 +143,7 @@ export default async function BidWorkspacePage({
         contractingAuthority={bid.tenders.contracting_authority}
         currentStatus={bid.status as BidStatus}
         initialRiskFlags={extractRiskFlags(bid.ai_analysis)}
+        isSubscribed={isSubscribed}
         hasMissingItems={hasMissingItems}
       />
 
@@ -151,16 +155,23 @@ export default async function BidWorkspacePage({
           <div className="grid gap-6 lg:grid-cols-5">
             {/* Lijevi panel: Checklist — 3/5 */}
             <div className="lg:col-span-3 space-y-6">
-              <TenderDocumentationStep
+              {/* Tender dokumentacija upload */}
+              <TenderDocUpload
                 bidId={id}
-                tenderTitle={bid.tenders.title}
-                sourceDocument={tenderSourceDocument}
+                existingUpload={tenderDocUpload ? {
+                  id: tenderDocUpload.id,
+                  file_name: tenderDocUpload.file_name,
+                  status: tenderDocUpload.status,
+                  page_count: tenderDocUpload.page_count,
+                  ai_analysis: tenderDocUpload.ai_analysis,
+                  error_message: tenderDocUpload.error_message,
+                } : null}
               />
+
               <ChecklistPanel
                 bidId={id}
                 items={checklistItems}
                 vaultDocuments={vaultDocuments}
-                tenderSourceDocument={tenderSourceDocument}
               />
               <NotesSection bidId={id} initialNotes={bid.notes || ""} />
             </div>
