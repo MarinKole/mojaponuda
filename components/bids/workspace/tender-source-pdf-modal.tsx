@@ -13,7 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Bundler-safe worker setup for Next.js / Vercel.
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 
 export type HighlightRegion = { x: number; y: number; width: number; height: number };
 
