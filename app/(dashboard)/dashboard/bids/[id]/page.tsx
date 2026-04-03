@@ -5,15 +5,16 @@ import type {
   Bid,
   Tender,
   BidChecklistItem,
+  BidTenderSourceDocument,
   Document,
   BidStatus,
   Json,
-  Subscription,
 } from "@/types/database";
 import { TopBar } from "@/components/bids/workspace/top-bar";
 import { ChecklistPanel } from "@/components/bids/workspace/checklist-panel";
 import { DocumentsPanel } from "@/components/bids/workspace/documents-panel";
 import { NotesSection } from "@/components/bids/workspace/notes-section";
+import { TenderDocumentationStep } from "@/components/bids/workspace/tender-documentation-step";
 import { PaywallOverlay } from "@/components/subscription/paywall-overlay";
 import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 
@@ -104,6 +105,15 @@ export default async function BidWorkspacePage({
 
   const vaultDocuments = (vaultData ?? []) as Document[];
 
+  const { data: tenderSourceRows } = await supabase
+    .from("bid_tender_source_documents")
+    .select("*")
+    .eq("bid_id", id)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const tenderSourceDocument = (tenderSourceRows?.[0] ?? null) as BidTenderSourceDocument | null;
+
   // Provjera pretplate — paywall
   const { isSubscribed } = await getSubscriptionStatus(user.id, user.email);
 
@@ -130,7 +140,6 @@ export default async function BidWorkspacePage({
         contractingAuthority={bid.tenders.contracting_authority}
         currentStatus={bid.status as BidStatus}
         initialRiskFlags={extractRiskFlags(bid.ai_analysis)}
-        isSubscribed={isSubscribed}
         hasMissingItems={hasMissingItems}
       />
 
@@ -142,10 +151,16 @@ export default async function BidWorkspacePage({
           <div className="grid gap-6 lg:grid-cols-5">
             {/* Lijevi panel: Checklist — 3/5 */}
             <div className="lg:col-span-3 space-y-6">
+              <TenderDocumentationStep
+                bidId={id}
+                tenderTitle={bid.tenders.title}
+                sourceDocument={tenderSourceDocument}
+              />
               <ChecklistPanel
                 bidId={id}
                 items={checklistItems}
                 vaultDocuments={vaultDocuments}
+                tenderSourceDocument={tenderSourceDocument}
               />
               <NotesSection bidId={id} initialNotes={bid.notes || ""} />
             </div>

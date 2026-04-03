@@ -92,6 +92,27 @@ CREATE TABLE bid_documents (
   is_confirmed        boolean NOT NULL DEFAULT false
 );
 
+-- bid_tender_source_documents — učitana tenderska dokumentacija za izvlačenje liste zahtjeva
+CREATE TABLE bid_tender_source_documents (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  bid_id        uuid NOT NULL REFERENCES bids(id) ON DELETE CASCADE,
+  company_id    uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  name          text NOT NULL,
+  file_path     text NOT NULL,
+  mime_type     text,
+  created_at    timestamptz NOT NULL DEFAULT now()
+);
+
+-- Proširenje bid_checklist_items (migracija 20260403120000 u starim bazama)
+ALTER TABLE bid_checklist_items
+  ADD COLUMN IF NOT EXISTS tender_source_document_id uuid REFERENCES bid_tender_source_documents(id) ON DELETE SET NULL;
+ALTER TABLE bid_checklist_items
+  ADD COLUMN IF NOT EXISTS source_page integer;
+ALTER TABLE bid_checklist_items
+  ADD COLUMN IF NOT EXISTS source_quote text;
+ALTER TABLE bid_checklist_items
+  ADD COLUMN IF NOT EXISTS source_highlight_regions jsonb;
+
 -- subscriptions — Lemon Squeezy pretplate
 CREATE TABLE subscriptions (
   id                            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -244,6 +265,7 @@ CREATE INDEX idx_bids_status ON bids(status);
 -- bid_checklist_items
 CREATE INDEX idx_bid_checklist_items_bid_id ON bid_checklist_items(bid_id);
 CREATE INDEX idx_bid_checklist_items_document_id ON bid_checklist_items(document_id);
+CREATE INDEX idx_bid_tender_source_documents_bid_id ON bid_tender_source_documents(bid_id);
 
 -- bid_documents
 CREATE INDEX idx_bid_documents_bid_id ON bid_documents(bid_id);
@@ -294,6 +316,7 @@ ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tenders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bids ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bid_checklist_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bid_tender_source_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bid_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contracting_authorities ENABLE ROW LEVEL SECURITY;
@@ -410,6 +433,18 @@ CREATE POLICY "Users can delete own bid_checklist_items"
     JOIN companies c ON c.id = b.company_id
     WHERE c.user_id = auth.uid()
   ));
+
+CREATE POLICY "Users can view own bid_tender_source_documents"
+  ON bid_tender_source_documents FOR SELECT
+  USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
+
+CREATE POLICY "Users can insert own bid_tender_source_documents"
+  ON bid_tender_source_documents FOR INSERT
+  WITH CHECK (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
+
+CREATE POLICY "Users can delete own bid_tender_source_documents"
+  ON bid_tender_source_documents FOR DELETE
+  USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
 -- bid_documents: korisnik vidi samo bid_documents svojih ponuda
 CREATE POLICY "Users can view own bid_documents"
