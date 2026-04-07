@@ -19,6 +19,19 @@ export async function extractTextFromPDF(buffer: ArrayBuffer): Promise<Extractio
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfjsLib: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
+  // pdfjs-dist sets workerSrc to relative "./pdf.worker.mjs" in its static block,
+  // but Vercel Lambda's file tracer misses the worker file (it uses /*webpackIgnore*/).
+  // Override with a file:// URL so the ESM dynamic import() can resolve it.
+  try {
+    const { pathToFileURL } = await import("url");
+    const workerPath = require.resolve(
+      "pdfjs-dist/legacy/build/pdf.worker.mjs",
+    );
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
+  } catch {
+    // Fallback: keep the default relative path
+  }
+
   const doc = await pdfjsLib.getDocument({
     data: new Uint8Array(buffer),
     useSystemFonts: true,
