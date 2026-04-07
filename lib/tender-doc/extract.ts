@@ -1,5 +1,3 @@
-import { PDFParse } from "pdf-parse";
-
 export interface ExtractedPage {
   pageNumber: number;
   text: string;
@@ -12,35 +10,57 @@ export interface ExtractionResult {
 }
 
 /**
- * Extract text from a PDF buffer using pdf-parse v2 (PDFParse class).
+ * Extract text from a PDF buffer using pdfjs-dist legacy build (Node.js compatible).
+ * No native dependencies — works reliably on Vercel Lambda.
  * Adds [Stranica X] markers per page for AI page reference extraction.
  */
 export async function extractTextFromPDF(buffer: ArrayBuffer): Promise<ExtractionResult> {
-  const parser = new PDFParse({
+  // Dynamic import of the legacy build avoids bundling issues
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdfjsLib: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
+
+  const doc = await pdfjsLib.getDocument({
     data: new Uint8Array(buffer),
+    useSystemFonts: true,
     verbosity: 0,
-  });
+  }).promise;
 
-  const result = await parser.getText({
-    pageJoiner: "\n\n[Stranica page_number]\n",
-  });
+  const pages: ExtractedPage[] = [];
 
-  const pages: ExtractedPage[] = result.pages.map((p) => ({
-    pageNumber: p.num,
-    text: p.text,
-  }));
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const textContent = await page.getTextContent();
+
+    // Build text preserving line structure via Y-position changes
+    let lastY: number | null = null;
+    let text = "";
+
+    for (const item of textContent.items) {
+      if (!("str" in item)) continue;
+      const y = (item as { transform: number[] }).transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 2) {
+        text += "\n";
+      } else if (text.length > 0 && !text.endsWith("\n")) {
+        text += " ";
+      }
+      text += (item as { str: string }).str;
+      lastY = y;
+    }
+
+    pages.push({ pageNumber: i, text: text.trim() });
+  }
 
   // Build fullText with [Stranica X] markers prepended to each page
   const fullText = pages
     .map((p) => `[Stranica ${p.pageNumber}]\n${p.text}`)
     .join("\n\n");
 
-  await parser.destroy();
+  doc.destroy();
 
   return {
     pages,
     fullText,
-    pageCount: result.total,
+    pageCount: doc.numPages,
   };
 }
 
