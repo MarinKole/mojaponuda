@@ -1,8 +1,5 @@
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
-
-// Point to the actual worker file in node_modules (available via serverExternalPackages)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-GlobalWorkerOptions.workerSrc = require.resolve("pdfjs-dist/build/pdf.worker.mjs");
+const pdfParse = require("pdf-parse");
 
 export interface ExtractedPage {
   pageNumber: number;
@@ -16,35 +13,33 @@ export interface ExtractionResult {
 }
 
 /**
- * Extract text from a PDF buffer.
- * Returns per-page text and a combined full text.
+ * Extract text from a PDF buffer using pdf-parse (Node.js native, no worker needed).
+ * Adds [Stranica X] markers per page for AI page reference extraction.
  */
 export async function extractTextFromPDF(buffer: ArrayBuffer): Promise<ExtractionResult> {
-  const doc = await getDocument({
-    data: new Uint8Array(buffer),
-    useWorkerFetch: false,
-    isEvalSupported: false,
-    useSystemFonts: true,
-  }).promise;
-
   const pages: ExtractedPage[] = [];
+  let pageIndex = 0;
 
-  for (let i = 1; i <= doc.numPages; i++) {
-    const page = await doc.getPage(i);
-    const content = await page.getTextContent();
-    const text = content.items
-      .map((item) => ("str" in item ? item.str : ""))
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
+  const data = await pdfParse(Buffer.from(buffer), {
+    // Custom page renderer to capture per-page text with markers
+    pagerender: async function (pageData: { getTextContent: () => Promise<{ items: Array<{ str?: string }> }> }) {
+      pageIndex++;
+      const textContent = await pageData.getTextContent();
+      const text = textContent.items
+        .map((item) => item.str || "")
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
 
-    pages.push({ pageNumber: i, text });
-  }
+      pages.push({ pageNumber: pageIndex, text });
+      return `[Stranica ${pageIndex}]\n${text}`;
+    },
+  });
 
   return {
     pages,
-    fullText: pages.map((p) => `[Stranica ${p.pageNumber}]\n${p.text}`).join("\n\n"),
-    pageCount: doc.numPages,
+    fullText: data.text,
+    pageCount: data.numpages,
   };
 }
 
@@ -56,7 +51,6 @@ export async function extractTextFromDOCX(buffer: ArrayBuffer): Promise<Extracti
   const result = await mammoth.extractRawText({ buffer: Buffer.from(buffer) });
   const text = result.value.trim();
 
-  // DOCX doesn't have pages, so treat it as a single block
   return {
     pages: [{ pageNumber: 1, text }],
     fullText: text,
@@ -86,7 +80,6 @@ export async function extractText(
   }
 
   if (contentType === "application/msword" || lowerName.endsWith(".doc")) {
-    // .doc files - try mammoth (it handles some .doc files)
     try {
       return await extractTextFromDOCX(buffer);
     } catch {
