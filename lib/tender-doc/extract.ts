@@ -15,21 +15,23 @@ export interface ExtractionResult {
  * Adds [Stranica X] markers per page for AI page reference extraction.
  */
 export async function extractTextFromPDF(buffer: ArrayBuffer): Promise<ExtractionResult> {
-  // Dynamic import of the legacy build avoids bundling issues
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfjsLib: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // @ts-expect-error -- worker module has no type declarations
+  const pdfjsWorker: any = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
 
-  // pdfjs-dist sets workerSrc to relative "./pdf.worker.mjs" in its static block,
-  // but Vercel Lambda's file tracer misses the worker file (it uses /*webpackIgnore*/).
-  // Override with a file:// URL so the ESM dynamic import() can resolve it.
-  try {
-    const { pathToFileURL } = await import("url");
-    const workerPath = require.resolve(
-      "pdfjs-dist/legacy/build/pdf.worker.mjs",
-    );
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
-  } catch {
-    // Fallback: keep the default relative path
+  // pdfjs-dist's internal worker import uses /*webpackIgnore: true*/ which makes
+  // it invisible to all bundlers/file tracers. On Vercel Lambda the worker file
+  // is never deployed, causing "Setting up fake worker failed".
+  // Fix: inject the pre-imported WorkerMessageHandler directly, bypassing the
+  // broken dynamic import entirely.
+  if (pdfjsWorker.WorkerMessageHandler) {
+    Object.defineProperty(pdfjsLib.PDFWorker, "_setupFakeWorkerGlobal", {
+      value: Promise.resolve(pdfjsWorker.WorkerMessageHandler),
+      writable: true,
+      configurable: true,
+    });
   }
 
   const doc = await pdfjsLib.getDocument({
