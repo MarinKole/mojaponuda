@@ -271,13 +271,6 @@ async function rebuildChecklistFromAnalysis(
         }
       }
 
-      // Extract page number from page_reference string (e.g. "Stranica 12, tačka 4.2.1" -> 12)
-      let pageNumber: number | null = null;
-      if (item.page_reference) {
-        const match = item.page_reference.match(/\d+/);
-        if (match) pageNumber = parseInt(match[0], 10);
-      }
-
       return {
         bid_id: bidId,
         title: item.name,
@@ -288,7 +281,7 @@ async function rebuildChecklistFromAnalysis(
         risk_note: item.risk_note || null,
         page_reference: item.page_reference || null,
         source_text: item.source_text || null,
-        page_number: pageNumber,
+        page_number: item.page_number ?? null,
         sort_order: idx,
       };
     },

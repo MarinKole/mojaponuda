@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import type { BidChecklistItem, Document } from "@/types/database";
 import { ChecklistPanel } from "./checklist-panel";
 import { TenderDocViewer } from "./tender-doc-viewer";
 
-interface BidWorkspaceClientProps {
+interface BidWorkspaceLayoutProps {
   bidId: string;
   checklistItems: BidChecklistItem[];
   vaultDocuments: Document[];
@@ -14,19 +14,29 @@ interface BidWorkspaceClientProps {
     content_type: string | null;
     status: string;
   } | null;
+  /** Rendered above the checklist (TenderDocUpload + NotesSection) */
+  topContent?: ReactNode;
+  /** The documents panel (shown when viewer is closed) */
+  documentsPanel: ReactNode;
+  /** Notes section (below checklist) */
+  notesSection?: ReactNode;
 }
 
-export function BidWorkspaceChecklist({
+export function BidWorkspaceLayout({
   bidId,
   checklistItems,
   vaultDocuments,
   tenderDocUpload,
-}: BidWorkspaceClientProps) {
+  topContent,
+  documentsPanel,
+  notesSection,
+}: BidWorkspaceLayoutProps) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerPage, setViewerPage] = useState(1);
   const [viewerHighlight, setViewerHighlight] = useState<string | undefined>();
 
-  const isPdf = tenderDocUpload?.content_type === "application/pdf" ||
+  const isPdf =
+    tenderDocUpload?.content_type === "application/pdf" ||
     tenderDocUpload?.file_name?.toLowerCase().endsWith(".pdf");
 
   const canView = tenderDocUpload?.status === "ready" && isPdf;
@@ -42,23 +52,36 @@ export function BidWorkspaceChecklist({
   );
 
   return (
-    <>
-      <ChecklistPanel
-        bidId={bidId}
-        items={checklistItems}
-        vaultDocuments={vaultDocuments}
-        onViewPage={canView ? handleViewPage : undefined}
-      />
-
-      {viewerOpen && canView && (
-        <TenderDocViewer
-          fileUrl={`/api/bids/${bidId}/tender-documentation/file`}
-          fileName={tenderDocUpload.file_name}
-          initialPage={viewerPage}
-          highlightText={viewerHighlight}
-          onClose={() => setViewerOpen(false)}
+    <div className="grid gap-6 lg:grid-cols-5">
+      {/* Left: Checklist — 3/5 */}
+      <div className="lg:col-span-3 space-y-6">
+        {topContent}
+        <ChecklistPanel
+          bidId={bidId}
+          items={checklistItems}
+          vaultDocuments={vaultDocuments}
+          onViewPage={canView ? handleViewPage : undefined}
         />
-      )}
-    </>
+        {notesSection}
+      </div>
+
+      {/* Right: Documents OR PDF Viewer — 2/5 */}
+      <div className="lg:col-span-2">
+        {viewerOpen && canView ? (
+          <div className="lg:sticky lg:top-6 h-[calc(100vh-8rem)]">
+            <TenderDocViewer
+              fileUrl={`/api/bids/${bidId}/tender-documentation/file`}
+              fileName={tenderDocUpload.file_name}
+              pageNumber={viewerPage}
+              highlightText={viewerHighlight}
+              onClose={() => setViewerOpen(false)}
+              onPageChange={setViewerPage}
+            />
+          </div>
+        ) : (
+          documentsPanel
+        )}
+      </div>
+    </div>
   );
 }

@@ -12,7 +12,7 @@ import type {
   Subscription,
 } from "@/types/database";
 import { TopBar } from "@/components/bids/workspace/top-bar";
-import { BidWorkspaceChecklist } from "@/components/bids/workspace/bid-workspace-client";
+import { BidWorkspaceLayout } from "@/components/bids/workspace/bid-workspace-client";
 import { DocumentsPanel } from "@/components/bids/workspace/documents-panel";
 import { NotesSection } from "@/components/bids/workspace/notes-section";
 import { TenderDocUpload } from "@/components/bids/workspace/tender-doc-upload";
@@ -150,47 +150,39 @@ export default async function BidWorkspacePage({
       {showPaywall ? (
         <PaywallOverlay usedBids={totalBids} maxFreeBids={MAX_FREE_BIDS} />
       ) : (
-        <>
-          {/* Dva panela */}
-          <div className="grid gap-6 lg:grid-cols-5">
-            {/* Lijevi panel: Checklist — 3/5 */}
-            <div className="lg:col-span-3 space-y-6">
-              {/* Tender dokumentacija upload */}
-              <TenderDocUpload
-                bidId={id}
-                existingUpload={tenderDocUpload ? {
-                  id: tenderDocUpload.id,
-                  file_name: tenderDocUpload.file_name,
-                  status: tenderDocUpload.status,
-                  page_count: tenderDocUpload.page_count,
-                  ai_analysis: tenderDocUpload.ai_analysis,
-                  error_message: tenderDocUpload.error_message,
-                } : null}
-              />
-
-              <BidWorkspaceChecklist
-                bidId={id}
-                checklistItems={checklistItems}
-                vaultDocuments={vaultDocuments}
-                tenderDocUpload={tenderDocUpload ? {
-                  file_name: tenderDocUpload.file_name,
-                  content_type: tenderDocUpload.content_type ?? null,
-                  status: tenderDocUpload.status,
-                } : null}
-              />
-              <NotesSection bidId={id} initialNotes={bid.notes || ""} />
-            </div>
-
-            {/* Desni panel: Dokumenti — 2/5 */}
-            <div className="lg:col-span-2">
-              <DocumentsPanel
-                bidId={id}
-                attachedDocs={attachedDocs}
-                vaultDocuments={vaultDocuments}
-              />
-            </div>
-          </div>
-        </>
+        <BidWorkspaceLayout
+          bidId={id}
+          checklistItems={checklistItems}
+          vaultDocuments={vaultDocuments}
+          tenderDocUpload={tenderDocUpload ? {
+            file_name: tenderDocUpload.file_name,
+            content_type: tenderDocUpload.content_type ?? null,
+            status: tenderDocUpload.status,
+          } : null}
+          topContent={
+            <TenderDocUpload
+              bidId={id}
+              existingUpload={tenderDocUpload ? {
+                id: tenderDocUpload.id,
+                file_name: tenderDocUpload.file_name,
+                status: tenderDocUpload.status,
+                page_count: tenderDocUpload.page_count,
+                ai_analysis: tenderDocUpload.ai_analysis,
+                error_message: tenderDocUpload.error_message,
+              } : null}
+            />
+          }
+          notesSection={
+            <NotesSection bidId={id} initialNotes={bid.notes || ""} />
+          }
+          documentsPanel={
+            <DocumentsPanel
+              bidId={id}
+              attachedDocs={attachedDocs}
+              vaultDocuments={vaultDocuments}
+            />
+          }
+        />
       )}
     </div>
   );

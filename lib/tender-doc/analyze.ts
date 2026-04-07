@@ -8,26 +8,48 @@ import type { AnalysisChecklistItem, AnalysisDeadline, AnalysisResult } from "@/
 export interface TenderDocChecklistItem extends AnalysisChecklistItem {
   page_reference: string | null;
   source_text: string | null;
+  page_number: number | null;
 }
 
 export interface TenderDocAnalysisResult extends AnalysisResult {
   checklist_items: TenderDocChecklistItem[];
 }
 
-const SYSTEM_PROMPT = `Ti si ekspertni analitičar za javne nabavke u Bosni i Hercegovini. Specijaliziran si za detaljnu analizu tenderske dokumentacije (TD).
+const SYSTEM_PROMPT = `Ti si ekspertni analitičar za javne nabavke u Bosni i Hercegovini.
 
-Tvoj zadatak je da iz PUNOG TEKSTA tenderske dokumentacije izvučeš TAČNU i KOMPLETNU listu dokumentacije koju ponuđač mora dostaviti.
+ZADATAK: Iz teksta tenderske dokumentacije (TD) izvuci KOMPLETNU listu svega što ponuđač mora dostaviti.
 
-PRAVILA:
-1. Izvuci ISKLJUČIVO zahtjeve koji su eksplicitno navedeni u dokumentu — NEMOJ pretpostavljati, dodavati ili pogađati.
-2. Za svaki zahtjev navedi tačnu stranicu (koristi oznake [Stranica X] iz teksta) i citiraj relevantan dio teksta.
-3. Klasificiraj svaki zahtjev u odgovarajući tip dokumenta.
-4. Označi da li je zahtjev obavezan ili opcioni.
-5. Dodaj napomenu o riziku samo ako postoji konkretan uslov (npr. rok važenja, specifičan format, ovjera).
-6. NE DODAJ ništa što nije eksplicitno traženo u dokumentu.
-7. Svaki zahtjev MORA imati page_reference i source_text — ako ne možeš identificirati stranicu, napiši "Neidentificirana stranica".
+═══════════════════════════════════════
+PRAVILO O STRANICAMA (KRITIČNO!)
+═══════════════════════════════════════
+Tekst dokumenta sadrži oznake [Stranica 1], [Stranica 2], [Stranica 3] itd.
+- Polje "page_number" MORA biti INTEGER — tačan broj iz najbliže prethodne oznake [Stranica X]
+- Polje "page_reference" je čitljiv opis, npr. "Stranica 26, tačka 4.16"
+- NIKADA ne izmišljaj brojeve stranica. Ako tekst kaže "[Stranica 26]" pa onda govori o tački 4.16, onda je page_number = 26
+- Ako nisi siguran, pogledaj koja [Stranica X] oznaka se pojavljuje NEPOSREDNO PRIJE tog teksta
 
-Tipovi dokumenata:
+═══════════════════════════════════════
+PRAVILO O ANEKSIMA I OBRASCIMA (KRITIČNO!)
+═══════════════════════════════════════
+Tenderska dokumentacija UVIJEK sadrži anekse i obrasce — obično na KRAJU dokumenta.
+MORAŠ proći CIJELI dokument do samog kraja i identificirati SVE:
+- "Aneks" (Aneks 1, Aneks 2, Aneks 3...)
+- "Obrazac" (Obrazac za cijenu, Obrazac ponude...)
+- "Prilog" (Prilog A, Prilog B...)
+- "Formular"
+- Bilo koji predložak/šablon koji ponuđač mora popuniti
+
+Za svaki pronađeni aneks/obrazac:
+- Kreiraj ZASEBNU stavku sa document_type = "form"
+- Navedi TAČAN naziv kako piše u dokumentu (npr. "Aneks 3 - Obrazac za cijenu ponude")
+- page_number = broj stranice na kojoj aneks POČINJE
+- is_required = true (svi aneksi su obavezni osim ako eksplicitno piše drugačije)
+
+Ako u tekstu naiđeš na "Obrazac i tekst Izjave dat je u Aneksu 11" ili slično — to znači da postoji Aneks 11 koji se MORA navesti kao form stavka.
+
+═══════════════════════════════════════
+TIPOVI DOKUMENATA
+═══════════════════════════════════════
 - registration: rješenje o registraciji, izvod iz sudskog registra
 - tax: porezna uvjerenja
 - contributions: uvjerenja o doprinosima za zaposlene
@@ -37,18 +59,19 @@ Tipovi dokumenata:
 - staff: CV-ovi, diplome, certifikati osoblja
 - license: dozvole, licence, odobrenja
 - declaration: izjave ponuđača (nekažnjavanje, sposobnost itd.)
-- form: obrasci i aneksi iz tenderske dokumentacije koje ponuđač mora popuniti i priložiti (Aneks 1, Aneks 2, Obrazac za cijenu ponude, Obrazac ponude, Obrazac izjave, tabelarni pregledi itd.)
+- form: obrasci, aneksi, prilozi, formulari koje ponuđač popunjava
 - other: sve ostalo
 
-KRITIČNO VAŽNO — ANEKSI I OBRASCI:
-Tenderska dokumentacija SKORO UVIJEK sadrži anekse/obrasce na kraju dokumenta. Ovo su predlošci/formulari koje ponuđač MORA popuniti, potpisati i priložiti uz ponudu. Traži sljedeće:
-- Riječi: "Aneks", "Obrazac", "Prilog", "Formular", "Tabela za popunjavanje"
-- Prepoznaj ih po karakterističnom formatu: prazan prostor za upis, linije za potpis, pečat
-- Svaki aneks/obrazac MORA biti zasebna stavka u listi sa tipom "form"
-- Navedi tačan naziv (npr. "Aneks 1 - Obrazac za cijenu ponude") i stranicu
-- Ako aneks sadrži više pod-obrazaca, navedi svaki posebno
+═══════════════════════════════════════
+OSTALA PRAVILA
+═══════════════════════════════════════
+1. Izvuci ISKLJUČIVO zahtjeve eksplicitno navedene u dokumentu
+2. Za svaki zahtjev citiraj relevantan dio teksta u "source_text"
+3. Označi da li je obavezan ili opcioni
+4. Dodaj risk_note samo ako postoji konkretan uslov (rok, format, ovjera)
+5. NE DODAJ ništa što nije traženo u dokumentu
 
-Odgovori ISKLJUČIVO u traženom JSON formatu. Ne dodaj ništa izvan JSON-a.`;
+Odgovori ISKLJUČIVO u JSON formatu.`;
 
 const RESPONSE_SCHEMA = {
   type: "json_schema" as const,
@@ -92,13 +115,17 @@ const RESPONSE_SCHEMA = {
                 type: ["string", "null"],
                 description: "Konkretna napomena o riziku iz TD, ili null",
               },
+              page_number: {
+                type: ["integer", "null"],
+                description: "Broj stranice iz oznake [Stranica X] u tekstu. MORA biti tačan integer iz najbliže prethodne oznake [Stranica X]. Ne izmišljaj.",
+              },
               page_reference: {
                 type: ["string", "null"],
-                description: "Referenca na stranicu, npr. 'Stranica 12, tačka 4.2.1'",
+                description: "Čitljiva referenca, npr. 'Stranica 26, tačka 4.16'. Broj stranice MORA odgovarati page_number polju.",
               },
               source_text: {
                 type: ["string", "null"],
-                description: "Citirani dio teksta iz TD koji definira ovaj zahtjev",
+                description: "TAČAN citat iz dokumenta (copy-paste) koji definira ovaj zahtjev. Maksimalno 200 karaktera.",
               },
             },
             required: [
@@ -107,6 +134,7 @@ const RESPONSE_SCHEMA = {
               "document_type",
               "is_required",
               "risk_note",
+              "page_number",
               "page_reference",
               "source_text",
             ],
@@ -157,8 +185,9 @@ export async function analyzeTenderDocumentation(
 ): Promise<TenderDocAnalysisResult> {
   const openai = getOpenAIClient();
 
-  // Trim text to fit context window (~120k chars ≈ ~30k tokens for GPT-4o)
-  const maxChars = 120_000;
+  // GPT-4o supports 128k tokens. ~200k chars ≈ ~50k tokens for text + prompt + response.
+  // Must be large enough to include annexes/forms at the END of long documents.
+  const maxChars = 200_000;
   const text =
     extractedText.length > maxChars
       ? extractedText.slice(0, maxChars) +
