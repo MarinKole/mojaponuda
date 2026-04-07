@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, type ReactNode } from "react";
+import { useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import type { BidChecklistItem, Document } from "@/types/database";
 import { ChecklistPanel } from "./checklist-panel";
 import { TenderDocViewer } from "./tender-doc-viewer";
@@ -34,6 +34,8 @@ export function BidWorkspaceLayout({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerPage, setViewerPage] = useState(1);
   const [viewerHighlight, setViewerHighlight] = useState<string | undefined>();
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const [scrollCount, setScrollCount] = useState(0);
 
   const isPdf =
     tenderDocUpload?.content_type === "application/pdf" ||
@@ -41,12 +43,24 @@ export function BidWorkspaceLayout({
 
   const canView = tenderDocUpload?.status === "ready" && isPdf;
 
+  // Auto-scroll viewer into view when it opens or user clicks a different "Pogledaj"
+  useEffect(() => {
+    if (viewerOpen && viewerRef.current) {
+      const t = setTimeout(() => {
+        viewerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [viewerOpen, scrollCount]);
+
   const handleViewPage = useCallback(
     (pageNumber: number, highlightText?: string) => {
       if (!canView) return;
       setViewerPage(pageNumber);
       setViewerHighlight(highlightText);
       setViewerOpen(true);
+      // Bump counter so scroll effect fires even if viewer is already open
+      setScrollCount((c) => c + 1);
     },
     [canView],
   );
@@ -68,7 +82,7 @@ export function BidWorkspaceLayout({
       {/* Right: Documents OR PDF Viewer — 2/5 */}
       <div className="lg:col-span-2">
         {viewerOpen && canView ? (
-          <div className="lg:sticky lg:top-6 h-[calc(100vh-8rem)]">
+          <div ref={viewerRef} className="h-[calc(100vh-8rem)]">
             <TenderDocViewer
               fileUrl={`/api/bids/${bidId}/tender-documentation/file`}
               fileName={tenderDocUpload.file_name}
