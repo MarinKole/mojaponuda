@@ -1,7 +1,8 @@
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 
-// Disable worker entirely for serverless environments (Vercel)
-GlobalWorkerOptions.workerSrc = "";
+// Point to the actual worker file in node_modules (available via serverExternalPackages)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+GlobalWorkerOptions.workerSrc = require.resolve("pdfjs-dist/build/pdf.worker.mjs");
 
 export interface ExtractedPage {
   pageNumber: number;
