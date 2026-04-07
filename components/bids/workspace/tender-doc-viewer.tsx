@@ -11,6 +11,7 @@ import {
   Loader2,
   Minus,
   Plus,
+  Maximize2,
 } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -22,6 +23,7 @@ interface TenderDocViewerProps {
   highlightText?: string;
   onClose: () => void;
   onPageChange: (page: number) => void;
+  onOpenFull?: () => void;
 }
 
 /**
@@ -105,9 +107,10 @@ export function TenderDocViewer({
   highlightText,
   onClose,
   onPageChange,
+  onOpenFull,
 }: TenderDocViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
-  const [scale, setScale] = useState(1.0);
+  const [scale, setScale] = useState(0.65);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -169,6 +172,12 @@ export function TenderDocViewer({
 
           <div className="w-px h-4 bg-slate-200 mx-1" />
 
+          {onOpenFull && (
+            <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:text-blue-700"
+              onClick={onOpenFull} title="Otvori puni pregled">
+              <Maximize2 className="size-3.5" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="size-7 text-slate-400 hover:text-slate-700"
             onClick={onClose}>
             <X className="size-3.5" />
