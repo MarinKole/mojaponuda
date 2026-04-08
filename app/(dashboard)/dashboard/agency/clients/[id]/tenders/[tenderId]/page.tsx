@@ -9,12 +9,13 @@ import {
   ExternalLink,
   FileText,
   Sparkles,
+  Tag,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { getOpenAIClient } from "@/lib/openai";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
-import { getOpenAIClient } from "@/lib/openai";
 import type { Tender } from "@/types/database";
 
 function formatDate(dateStr: string | null): string {
@@ -32,8 +33,8 @@ function getDeadlineColor(deadline: string | null): string {
     (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   );
   if (diffDays < 0) return "text-slate-400 line-through";
-  if (diffDays <= 7) return "text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-full";
-  return "text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full";
+  if (diffDays <= 7) return "rounded-full bg-red-50 px-2 py-0.5 font-bold text-red-600";
+  return "rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700";
 }
 
 async function generateAiDescription(
@@ -215,10 +216,10 @@ export default async function AgencyClientTenderDetailPage({
         <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="max-w-2xl text-white">
             <p className="text-2xl font-heading font-bold leading-snug text-white">
-              {existingBidId ? "Priprema ponude je već otvorena" : "Pripremite ponudu profesionalno"}
+              {existingBidId ? "Nastavite pripremu ponude" : "Pripremite ponudu profesionalno"}
             </p>
             <p className="mt-2 text-base leading-relaxed text-slate-400">
-              Agency paket vodi pripremu kroz radni prostor klijenta. Ovdje odmah otvorite sekciju ponuda za {company.name} i nastavite bez lutanja po zasebnim ekranima.
+              Odmah dobijete početnu listu koraka, dokumenata i zahtjeva za klijenta {company.name}, bez ručnog sastavljanja.
             </p>
           </div>
           <div className="flex-shrink-0 sm:pl-8">
@@ -227,7 +228,7 @@ export default async function AgencyClientTenderDetailPage({
               className="h-14 w-full rounded-2xl bg-blue-500 px-8 text-base font-bold text-white shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-0.5 hover:bg-blue-400 hover:shadow-blue-500/30 sm:w-auto"
             >
               <Link href={`${clientBase}/bids`}>
-                {existingBidId ? "Otvori ponude klijenta" : "Idi u pripremu ponude"}
+                {existingBidId ? "Otvori postojeću ponudu" : "Započni pripremu ponude"}
               </Link>
             </Button>
           </div>
@@ -259,13 +260,13 @@ export default async function AgencyClientTenderDetailPage({
             <h3 className="mb-4 text-base font-bold text-slate-900">Šta dobijate odmah</h3>
             <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Jasan pregled koraka i dokumentacije za konkretnog klijenta.
+                Početnu listu dokumentacije bez dodatnog ručnog sastavljanja.
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Centraliziran agency workflow bez skakanja između nepovezanih sekcija.
+                Povezivanje postojećih dokumenata kada već imate nešto spremno.
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Brži start pripreme kad već znate da tender vrijedi obraditi.
+                Prostor za rad i završnu provjeru prije predaje ponude.
               </div>
             </div>
           </div>
@@ -287,7 +288,7 @@ export default async function AgencyClientTenderDetailPage({
                 <StatRow
                   label="Dodijeljeni ugovori"
                   value={String(authorityStats.totalAwards)}
-                  icon={<Briefcase className="size-4 text-emerald-500" />}
+                  icon={<Tag className="size-4 text-emerald-500" />}
                 />
               </div>
               {authorityStats.avgDiscount !== null && authorityStats.totalAwards > 0 ? (

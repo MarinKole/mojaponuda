@@ -28,11 +28,13 @@ function formatDate(dateStr: string | null): string {
 
 function formatValue(value: number | null): string {
   if (value === null || value === undefined) return "Vrijednost nije objavljena";
-  return new Intl.NumberFormat("bs-BA", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value) + " KM";
+  return (
+    new Intl.NumberFormat("bs-BA", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value) + " KM"
+  );
 }
 
 function getDeadlineStatus(deadline: string | null): {
@@ -41,10 +43,13 @@ function getDeadlineStatus(deadline: string | null): {
   accentClass: string;
   textClass: string;
 } {
+  const baseCardClass =
+    "border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)]";
+
   if (!deadline) {
     return {
       text: "Rok nije objavljen",
-      cardClass: "border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)]",
+      cardClass: baseCardClass,
       accentClass: "bg-slate-500",
       textClass: "text-slate-300",
     };
@@ -55,7 +60,7 @@ function getDeadlineStatus(deadline: string | null): {
   if (diffDays <= 3) {
     return {
       text: diffDays <= 0 ? "Rok je danas" : `Još ${diffDays} dana`,
-      cardClass: "border-rose-500/40 bg-[linear-gradient(180deg,rgba(64,12,28,0.96)_0%,rgba(24,24,27,0.98)_100%)] shadow-[0_24px_60px_-42px_rgba(244,63,94,0.24)]",
+      cardClass: baseCardClass,
       accentClass: "bg-rose-500",
       textClass: "text-rose-200",
     };
@@ -64,7 +69,7 @@ function getDeadlineStatus(deadline: string | null): {
   if (diffDays <= 10) {
     return {
       text: `Još ${diffDays} dana`,
-      cardClass: "border-amber-500/35 bg-[linear-gradient(180deg,rgba(69,45,12,0.96)_0%,rgba(24,24,27,0.98)_100%)] shadow-[0_24px_60px_-42px_rgba(245,158,11,0.22)]",
+      cardClass: baseCardClass,
       accentClass: "bg-amber-400",
       textClass: "text-amber-100",
     };
@@ -72,16 +77,16 @@ function getDeadlineStatus(deadline: string | null): {
 
   return {
     text: formatDate(deadline),
-    cardClass: "border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)]",
+    cardClass: baseCardClass,
     accentClass: "bg-emerald-400",
     textClass: "text-emerald-200",
   };
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  Robe: "border-sky-500/35 bg-sky-500/16 text-sky-100",
-  Usluge: "border-fuchsia-500/35 bg-fuchsia-500/16 text-fuchsia-100",
-  Radovi: "border-amber-500/35 bg-amber-500/16 text-amber-100",
+  Robe: "border-sky-500/30 bg-sky-500/12 text-sky-100",
+  Usluge: "border-fuchsia-500/30 bg-fuchsia-500/12 text-fuchsia-100",
+  Radovi: "border-amber-500/30 bg-amber-500/12 text-amber-100",
 };
 
 export function TenderCard({ tender, locked = false, clientNames, href }: TenderCardProps) {
@@ -97,7 +102,7 @@ export function TenderCard({ tender, locked = false, clientNames, href }: Tender
         className={`relative overflow-hidden rounded-[1.5rem] border p-5 text-white transition-all hover:-translate-y-0.5 hover:brightness-[1.04] ${deadline.cardClass}`}
       >
         <div className={`absolute inset-y-0 left-0 w-1.5 ${deadline.accentClass}`} />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_34%)] opacity-80" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_34%)] opacity-80" />
         <div className="flex flex-col gap-5 pl-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -107,7 +112,7 @@ export function TenderCard({ tender, locked = false, clientNames, href }: Tender
               {clientNames?.map((name) => (
                 <span
                   key={name}
-                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-violet-500/35 bg-violet-500/16 px-2.5 py-1 text-[11px] font-semibold text-violet-100"
+                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/12 px-2.5 py-1 text-[11px] font-semibold text-violet-100"
                 >
                   <Users className="size-3 shrink-0" />
                   <span className="truncate">{name}</span>

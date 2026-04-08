@@ -271,7 +271,7 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
   return (
     <div className="space-y-8">
       {/* Basic Info */}
-      <div className="rounded-[1.75rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] [&_.text-slate-900]:text-white [&_.text-slate-700]:text-slate-200 [&_.text-slate-600]:text-slate-300 [&_.text-slate-500]:text-slate-400 [&_label]:text-slate-300">
+      <div className="rounded-[1.75rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] [&_.text-slate-900]:text-white [&_.text-slate-700]:text-slate-200 [&_.text-slate-600]:text-slate-300 [&_.text-slate-500]:text-slate-400 [&_input]:border-white/10 [&_input]:bg-white/[0.03] [&_input]:text-white [&_input]:placeholder:text-slate-500 [&_textarea]:border-white/10 [&_textarea]:bg-white/[0.03] [&_textarea]:text-white [&_textarea]:placeholder:text-slate-500 [&_label]:text-slate-300">
         <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
           <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-sky-300">
             <Building2 className="size-5" />
@@ -328,7 +328,7 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
       </div>
 
       {/* Search Profile */}
-      <div className="rounded-[1.75rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] [&_.text-slate-900]:text-white [&_.text-slate-700]:text-slate-200 [&_.text-slate-600]:text-slate-300 [&_.text-slate-500]:text-slate-400 [&_label]:text-slate-300">
+      <div className="rounded-[1.75rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] [&_.text-slate-900]:text-white [&_.text-slate-700]:text-slate-200 [&_.text-slate-600]:text-slate-300 [&_.text-slate-500]:text-slate-400 [&_input]:border-white/10 [&_input]:bg-white/[0.03] [&_input]:text-white [&_input]:placeholder:text-slate-500 [&_textarea]:border-white/10 [&_textarea]:bg-white/[0.03] [&_textarea]:text-white [&_textarea]:placeholder:text-slate-500 [&_label]:text-slate-300">
         <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
           <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-violet-300">
             <Brain className="size-5" />
