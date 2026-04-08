@@ -44,11 +44,6 @@ const coreItems: NavItem[] = [
   { href: "/dashboard/prilike", label: "Poticaji", icon: Sparkles, pro: true },
 ];
 
-const accountItems: NavItem[] = [
-  { href: "/dashboard/settings", label: "Postavke", icon: Settings },
-  { href: "/dashboard/subscription", label: "Pretplata", icon: CreditCard },
-];
-
 const adminItems: NavItem[] = [
   { href: "/dashboard/admin", label: "Overview", icon: Shield, exact: true },
   { href: "/dashboard/admin/agencies", label: "Agencije", icon: Users },
@@ -114,24 +109,13 @@ export function DashboardSidebar({
     { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
   ];
 
-  const agencyAccountItems: NavItem[] = [
-    { href: "/dashboard/settings", label: "Postavke", icon: Settings },
-    { href: "/dashboard/subscription", label: "Pretplata", icon: CreditCard },
-  ];
-
   const sections = isAdmin
     ? [{ label: "Admin", items: adminItems }]
     : isAgency && activeClient
       ? [{ label: activeClient.name, items: clientNavItems }]
       : isAgency
-        ? [
-            { label: "Glavno", items: agencyDefaultItems },
-            { label: "Račun", items: agencyAccountItems },
-          ]
-        : [
-            { label: "Glavno", items: coreItems },
-            { label: "Račun", items: accountItems },
-          ];
+        ? [{ label: "Glavno", items: agencyDefaultItems }]
+        : [{ label: "Glavno", items: coreItems }];
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -260,9 +244,25 @@ export function DashboardSidebar({
         <div className="relative">
           {isMenuOpen ? (
             <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_20px_45px_-24px_rgba(15,23,42,0.45)]">
+              <Link
+                href="/dashboard/settings"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+              >
+                <Settings className="size-4" />
+                Račun
+              </Link>
+              <Link
+                href="/dashboard/subscription"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+              >
+                <CreditCard className="size-4" />
+                Pretplata
+              </Link>
               <button
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
               >
                 <LogOut className="size-4" />
                 Odjava

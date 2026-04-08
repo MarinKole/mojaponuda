@@ -44,10 +44,9 @@ function getMultiParam(value: SearchParamValue): string[] {
   return typeof value === "string" && value.trim().length > 0 ? [value] : [];
 }
 
-async function TendersContent({ agencyClientId, companyId, companyName, recommendationContext, searchParams }: {
+async function TendersContent({ agencyClientId, companyId, recommendationContext, searchParams }: {
   agencyClientId: string;
   companyId: string;
-  companyName: string;
   recommendationContext: RecommendationContext;
   searchParams: Promise<{ [key: string]: SearchParamValue }>;
 }) {
@@ -212,7 +211,11 @@ async function TendersContent({ agencyClientId, companyId, companyName, recommen
       ) : (
         <div className="space-y-3">
           {tenders.map((tender) => (
-            <TenderCard key={tender.id} tender={tender} />
+            <TenderCard
+              key={tender.id}
+              tender={tender}
+              href={`/dashboard/agency/clients/${agencyClientId}/tenders/${tender.id}`}
+            />
           ))}
         </div>
       )}
@@ -331,7 +334,6 @@ export default async function AgencyClientTendersPage({ params, searchParams }: 
             <TendersContent
               agencyClientId={agencyClientId}
               companyId={company.id}
-              companyName={company.name}
               recommendationContext={recommendationContext}
               searchParams={searchParams}
             />

@@ -98,9 +98,9 @@ export default async function PrilikeDashboardPage() {
       {activeFollows.length > 0 ? (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <Heart className="size-5 text-rose-300" />
-            <h2 className="font-heading text-xl font-bold text-white">Praćene prilike</h2>
-            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-300">
+            <Heart className="size-5 text-rose-500" />
+            <h2 className="font-heading text-xl font-bold text-slate-950">Praćene prilike</h2>
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
               {activeFollows.length}
             </span>
           </div>
@@ -122,7 +122,7 @@ export default async function PrilikeDashboardPage() {
 
       {resolvedFollows.length > 0 ? (
         <section className="space-y-4">
-          <h2 className="font-heading text-xl font-bold text-white">Arhiva prijava</h2>
+          <h2 className="font-heading text-xl font-bold text-slate-950">Arhiva prijava</h2>
           <div className="space-y-3">
             {resolvedFollows.map((follow) => (
               <TrackedOpportunityCard
@@ -142,9 +142,9 @@ export default async function PrilikeDashboardPage() {
       {forYou.length > 0 ? (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <Star className="size-5 fill-amber-300 text-amber-300" />
-            <h2 className="font-heading text-xl font-bold text-white">Poticaji za vas</h2>
-            <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-100">
+            <Star className="size-5 fill-amber-400 text-amber-500" />
+            <h2 className="font-heading text-xl font-bold text-slate-950">Poticaji za Vas</h2>
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
               {forYou.length}
             </span>
           </div>
@@ -158,8 +158,8 @@ export default async function PrilikeDashboardPage() {
 
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-5 text-sky-300" />
-          <h2 className="font-heading text-xl font-bold text-white">
+          <Sparkles className="size-5 text-sky-600" />
+          <h2 className="font-heading text-xl font-bold text-slate-950">
             {forYou.length > 0 ? "Ostali poticaji" : "Svi poticaji"}
           </h2>
         </div>
@@ -170,7 +170,7 @@ export default async function PrilikeDashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[1.75rem] border border-dashed border-white/10 bg-white/5 py-12 text-center text-sm text-slate-400">
+          <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/80 py-12 text-center text-sm text-slate-500 shadow-[0_16px_40px_-34px_rgba(15,23,42,0.22)]">
             Poticaji se ažuriraju svakodnevno. Provjerite ponovo uskoro.
           </div>
         )}

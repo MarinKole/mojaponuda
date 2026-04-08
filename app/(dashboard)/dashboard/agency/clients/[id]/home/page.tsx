@@ -284,7 +284,7 @@ export default async function AgencyClientHomePage({
           ? {
               title: "Pogledajte novu priliku",
               description: `Tender "${relevantTenders[0].title}" izgleda kao kvalitetan fit za profil ovog klijenta.`,
-              href: `/dashboard/tenders/${relevantTenders[0].id}`,
+              href: `${clientBase}/tenders/${relevantTenders[0].id}`,
               cta: "Otvori tender",
               meta: `${relevantTenderCount} relevantnih tendera`,
               tone: "opportunity" as const,
@@ -340,7 +340,7 @@ export default async function AgencyClientHomePage({
       id: `deadline-${bid.id}`,
       title: bid.tenders.title,
       description: `Rok za predaju je ${bid.tenders.deadline ? formatDaysLabel(daysUntil(bid.tenders.deadline)) : "uskoro"}.`,
-      href: `/dashboard/bids/${bid.id}`,
+      href: `${clientBase}/bids`,
       badge: bid.tenders.deadline ? formatDaysLabel(daysUntil(bid.tenders.deadline)) : "Rok",
       tone: "critical" as const,
     })),
@@ -369,7 +369,7 @@ export default async function AgencyClientHomePage({
           id: `relevant-${relevantTenders[0].id}`,
           title: "Pogledajte sljedeći tender",
           description: `Vrijedi provjeriti: ${relevantTenders[0].title}`,
-          href: `/dashboard/tenders/${relevantTenders[0].id}`,
+          href: `${clientBase}/tenders/${relevantTenders[0].id}`,
           badge: "Nova prilika",
           tone: "opportunity" as const,
         }]
@@ -419,6 +419,7 @@ export default async function AgencyClientHomePage({
       quickLinks={quickLinks}
       subscriptionActive
       isLocked={false}
+      tenderHrefBase={`${clientBase}/tenders`}
     />
   );
 }

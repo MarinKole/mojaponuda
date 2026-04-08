@@ -80,6 +80,7 @@ interface DashboardHomeOverviewProps {
   quickLinks: DashboardQuickLink[];
   subscriptionActive: boolean;
   isLocked: boolean;
+  tenderHrefBase?: string;
 }
 
 interface DashboardChecklistItem {
@@ -283,6 +284,7 @@ export function DashboardHomeOverview({
   quickLinks,
   subscriptionActive,
   isLocked,
+  tenderHrefBase = "/dashboard/tenders",
 }: DashboardHomeOverviewProps) {
   const operationalChecklist = buildOperationalChecklist({
     profileLabel,
@@ -445,7 +447,7 @@ export function DashboardHomeOverview({
                 return (
                   <Link
                     key={tender.id}
-                    href={isLocked ? "/dashboard/subscription" : `/dashboard/tenders/${tender.id}`}
+                    href={isLocked ? "/dashboard/subscription" : `${tenderHrefBase}/${tender.id}`}
                     className={`block rounded-xl border p-4 transition-all hover:-translate-y-0.5 hover:bg-white/8 ${getTenderToneClasses(tone)}`}
                   >
                     <div className="flex items-start justify-between gap-3">
