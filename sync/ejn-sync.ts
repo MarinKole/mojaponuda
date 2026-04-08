@@ -1784,14 +1784,14 @@ export async function runAdminMaintenanceSweep(): Promise<{
 }> {
   const start = Date.now();
   const results = await runNightlyMaintenanceSweep({
-    authorityTarget: DEFAULT_AUTHORITY_BACKFILL_TARGET,
-    authorityScanBatchSize: DEFAULT_AUTHORITY_SCAN_BATCH_SIZE,
-    authorityScanLimit: DEFAULT_AUTHORITY_SCAN_LIMIT,
-    tenderTarget: DEFAULT_TENDER_AREA_BACKFILL_TARGET,
-    tenderScanBatchSize: DEFAULT_TENDER_AREA_SCAN_BATCH_SIZE,
-    tenderScanLimit: DEFAULT_TENDER_AREA_SCAN_LIMIT,
-    maxCycles: 10,
-    timeBudgetMs: 240_000,
+    authorityTarget: 30,
+    authorityScanBatchSize: 100,
+    authorityScanLimit: 300,
+    tenderTarget: 30,
+    tenderScanBatchSize: 100,
+    tenderScanLimit: 300,
+    maxCycles: 2,
+    timeBudgetMs: 75_000,
   });
 
   const totalUpdated = results.reduce((sum, r) => sum + r.added + r.updated, 0);

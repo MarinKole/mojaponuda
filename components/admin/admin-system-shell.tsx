@@ -170,7 +170,7 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
       const payload = raw.trim().startsWith("{") ? (JSON.parse(raw) as MaintenanceRunResult) : null;
 
       if (!response.ok) {
-        throw new Error(payload?.error ?? (raw.trim() || "Ne mogu pokrenuti maintenance."));
+        throw new Error(normalizeSyncErrorMessage(payload?.error ?? (raw.trim() || "Ne mogu pokrenuti maintenance.")));
       }
 
       if (!payload) {
@@ -182,7 +182,7 @@ export function AdminSystemShell({ data }: AdminSystemShellProps) {
     } catch (maintenanceRunError) {
       setMaintenanceError(
         maintenanceRunError instanceof Error
-          ? maintenanceRunError.message
+          ? normalizeSyncErrorMessage(maintenanceRunError.message)
           : "Greska pri pokretanju maintenancea."
       );
     } finally {
