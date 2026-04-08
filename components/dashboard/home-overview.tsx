@@ -170,6 +170,15 @@ function getChecklistIconColor(tone: DashboardChecklistItem["tone"]): string {
   }
 }
 
+function mapQueueToneToChecklistTone(
+  tone: NextActionCard["tone"] | ActionQueueItem["tone"],
+): DashboardChecklistItem["tone"] {
+  if (tone === "critical") return "critical";
+  if (tone === "attention") return "attention";
+  if (tone === "opportunity") return "opportunity";
+  return "opportunity";
+}
+
 function getTenderUrgencyTone(deadline: string | null): "critical" | "attention" | "positive" {
   if (!deadline) return "positive";
   const diffDays = Math.ceil((new Date(deadline).getTime() - Date.now()) / 86_400_000);
@@ -242,26 +251,14 @@ function buildOperationalChecklist({
       title: nextAction.title,
       description: nextAction.description,
       href: nextAction.href,
-      tone:
-        nextAction.tone === "neutral"
-          ? "opportunity"
-          : nextAction.tone === "critical"
-            ? "critical"
-            : nextAction.tone === "attention"
-              ? "attention"
-              : "opportunity",
+      tone: mapQueueToneToChecklistTone(nextAction.tone),
     },
     ...actionQueue.slice(0, 3).map((item) => ({
       id: item.id,
       title: item.title,
       description: item.description,
       href: item.href,
-      tone:
-        item.tone === "critical"
-          ? "critical"
-          : item.tone === "attention"
-            ? "attention"
-            : "opportunity",
+      tone: mapQueueToneToChecklistTone(item.tone),
     })),
   ];
 
