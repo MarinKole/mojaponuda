@@ -155,8 +155,11 @@ export default async function AgencyClientBidsPage({
       .order("created_at", { ascending: false });
 
     if (bidsError) {
+      console.error("Agency client bids page - bids query error:", bidsError);
       throw bidsError;
     }
+
+    console.log("Agency client bids page - bids data:", JSON.stringify(bidsData, null, 2));
 
     const bids: BidRow[] = ((bidsData as BidWithTender[] | null) ?? [])
       .filter(isValidBid)
@@ -166,6 +169,8 @@ export default async function AgencyClientBidsPage({
         created_at: bid.created_at,
         tender: normalizeBidTender(bid.tenders),
       }));
+
+    console.log("Agency client bids page - normalized bids:", JSON.stringify(bids, null, 2));
 
     const { data: tendersData, error: tendersError } = await supabase
       .from("tenders")
