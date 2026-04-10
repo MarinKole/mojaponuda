@@ -257,7 +257,7 @@ export async function checkRobotsTxt(baseUrl: string): Promise<boolean> {
   try {
     const robotsUrl = new URL("/robots.txt", baseUrl).toString();
     const response = await fetch(robotsUrl, {
-      headers: { "User-Agent": "TenderSistem-Bot/1.0" },
+      headers: { "User-Agent": "Tendersistem-Bot/1.0" },
     });
     
     if (!response.ok) {
@@ -276,7 +276,7 @@ export async function checkRobotsTxt(baseUrl: string): Promise<boolean> {
       
       if (trimmed.startsWith("User-agent:")) {
         const agent = trimmed.substring(11).trim();
-        isOurAgent = agent === "*" || agent === "TenderSistem-Bot";
+        isOurAgent = agent === "*" || agent === "Tendersistem-Bot";
       }
       
       if (isOurAgent && trimmed.startsWith("Disallow:")) {

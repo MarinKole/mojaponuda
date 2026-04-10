@@ -119,7 +119,7 @@ export class SEOOptimizer {
 
     // Ensure length is within bounds
     if (description.length < this.MIN_DESCRIPTION_LENGTH) {
-      description += ". Detalji i uslovi na TenderSistem.com";
+      description += ". Detalji i uslovi na Tendersistem.com";
     }
 
     if (description.length > this.MAX_DESCRIPTION_LENGTH) {

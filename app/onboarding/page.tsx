@@ -45,7 +45,7 @@ export default async function OnboardingPage() {
         <h1 className="font-heading text-3xl font-bold text-slate-900">
           Prvo pogledajte tendere koji vam imaju smisla
         </h1>
-        <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-500">
+        <p className="mt-3 text-base text-slate-500 max-w-2xl mx-auto leading-7">
           Ne tražimo od vas odmah sve podatke firme. Prvo odaberite čime se bavite i gdje se firma nalazi, pogledajte prve relevantne i najbliže tendere, a zatim dopunite profil da preporuke budu još preciznije.
         </p>
         <div className="mt-5 flex items-center justify-center gap-3">
@@ -58,7 +58,7 @@ export default async function OnboardingPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-blue-500/5 sm:p-10">
+      <div className="w-full max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-xl shadow-blue-500/5">
         <OnboardingValueFirstForm
           companyId={company?.id ?? ""}
           companyName={company?.name ?? user.user_metadata?.company_name ?? demoDefaults?.name ?? ""}

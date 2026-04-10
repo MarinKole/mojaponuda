@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { OpportunityCard } from "@/components/public/opportunity-card";
@@ -7,8 +7,8 @@ import { OPPORTUNITY_CATEGORIES } from "@/lib/opportunity-categories";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Poticaji i grantovi za firme u BiH | TenderSistem.com",
-  description: "Aktivni grantovi i poticaji za firme u Bosni i Hercegovini. Federalni, kantonalni i EU programi. Svakodnevno aÅ¾urirano.",
+  title: "Poticaji i grantovi za firme u BiH | Tendersistem.com",
+  description: "Aktivni grantovi i poticaji za firme u Bosni i Hercegovini. Federalni, kantonalni i EU programi. Svakodnevno ažurirano.",
   alternates: { canonical: "https://tendersistem.com/prilike" },
 };
 
@@ -55,10 +55,10 @@ export default async function PrilikePage() {
           </h1>
           <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
             Aktivni grantovi i poticaji za firme u Bosni i Hercegovini.
-            Svakodnevno aÅ¾urirano.
+            Svakodnevno ažurirano.
           </p>
           <PublicCta
-            text="Pratite prilike prilagoÄ‘ene vaÅ¡oj firmi"
+            text="Pratite prilike prilagođene vašoj firmi"
             href="/signup"
             className="mt-6"
           />
@@ -67,7 +67,7 @@ export default async function PrilikePage() {
         {/* Category navigation */}
         <section className="mb-12">
           <h2 className="font-heading text-xl font-bold text-slate-900 mb-4">
-            PretraÅ¾i po kategoriji
+            Pretraži po kategoriji
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {OPPORTUNITY_CATEGORIES.map((cat) => (
@@ -87,7 +87,7 @@ export default async function PrilikePage() {
 
         {all.length === 0 && (
           <div className="text-center py-20 text-slate-500">
-            Prilike se aÅ¾uriraju svakodnevno. Provjerite ponovo uskoro.
+            Prilike se ažuriraju svakodnevno. Provjerite ponovo uskoro.
           </div>
         )}
 
@@ -96,9 +96,9 @@ export default async function PrilikePage() {
           <section className="mb-10">
             <div className="flex items-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                â° Rok uskoro
+                ⏰ Rok uskoro
               </span>
-              <span className="text-xs text-slate-400">Prijava istiÄe u 7 dana</span>
+              <span className="text-xs text-slate-400">Prijava ističe u 7 dana</span>
             </div>
             <div className="space-y-4">
               {soon.map((o) => <OpportunityCard key={o.id} opportunity={o} />)}
@@ -106,14 +106,14 @@ export default async function PrilikePage() {
           </section>
         )}
 
-        {/* NajvaÅ¾nije */}
+        {/* Najvažnije */}
         {top.length > 0 && (
           <section className="mb-10">
             <div className="flex items-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                â­ NajvaÅ¾nije
+                ⭐ Najvažnije
               </span>
-              <span className="text-xs text-slate-400">NajveÄ‡a vrijednost</span>
+              <span className="text-xs text-slate-400">Najveća vrijednost</span>
             </div>
             <div className="space-y-4">
               {top.map((o) => <OpportunityCard key={o.id} opportunity={o} />)}
@@ -135,4 +135,3 @@ export default async function PrilikePage() {
     </main>
   );
 }
-

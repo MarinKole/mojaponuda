@@ -1,11 +1,11 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { PublicCta } from "@/components/public/public-cta";
 import { Scale, FileText, Newspaper } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Zakon o javnim nabavkama BiH â€” Izmjene i vijesti | TenderSistem.com",
-  description: "Pratite zakon o javnim nabavkama u BiH, izmjene propisa i relevantne vijesti. AÅ¾urirano iz sluÅ¾benih izvora.",
+  title: "Zakon o javnim nabavkama BiH — Izmjene i vijesti | Tendersistem.com",
+  description: "Pratite zakon o javnim nabavkama u BiH, izmjene propisa i relevantne vijesti. Ažurirano iz službenih izvora.",
   alternates: { canonical: "https://tendersistem.com/zakon" },
 };
 
@@ -112,7 +112,7 @@ function Section({ title, items, formatDate }: {
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-blue-600 hover:text-blue-800"
                       >
-                        ProÄitaj original â†’
+                        Pročitaj original →
                       </a>
                     )}
                   </div>
@@ -125,4 +125,3 @@ function Section({ title, items, formatDate }: {
     </section>
   );
 }
-

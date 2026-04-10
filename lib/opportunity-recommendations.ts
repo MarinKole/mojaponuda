@@ -264,16 +264,16 @@ function buildOpportunityReasons(
       ? `Poklapa se s profilom: ${matchedKeywords.slice(0, 2).join(", ")}`
       : null,
     eligibilityMatches.length > 0
-      ? `Uslovi i ko treba da aplicira odgovaraju vaÅ¡em profilu`
+      ? `Uslovi i ko treba da aplicira odgovaraju vašem profilu`
       : null,
     locationScope === "selected" && context.regionLabels.length > 0
-      ? `Otvoreno za vaÅ¡u regiju: ${context.regionLabels.slice(0, 2).join(", ")}`
+      ? `Otvoreno za vašu regiju: ${context.regionLabels.slice(0, 2).join(", ")}`
       : null,
     locationScope === "same_group"
-      ? "Otvoreno za Å¡ire podruÄje vaÅ¡eg poslovanja"
+      ? "Otvoreno za šire područje vašeg poslovanja"
       : null,
     locationScope === "neighboring"
-      ? "Primjenjivo je u susjednim regijama vaÅ¡eg poslovanja"
+      ? "Primjenjivo je u susjednim regijama vašeg poslovanja"
       : null,
   ].filter((reason): reason is string => Boolean(reason)).slice(0, 3);
 }
@@ -339,7 +339,7 @@ export function scoreOpportunityRecommendation<
   const hasLocationPreference = context.regionTerms.length > 0;
   const isGenericBusinessGrant =
     structuredSignalCount === 0 &&
-    /poduzetni|preduzetni|msp|mala i srednja|razvoj biznisa|razvoj poslovanja|lokalni razvoj|samozapoÅ¡lj|samozapošlj|preduzeÄ‡|preduzeće|obrtn|biznis/i.test(
+    /poduzetni|preduzetni|msp|mala i srednja|razvoj biznisa|razvoj poslovanja|lokalni razvoj|samozapošlj|samozapošlj|preduzeća|preduzeće|obrtn|biznis/i.test(
       [title, category, eligibility, text].join(" ")
     );
 

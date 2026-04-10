@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -37,7 +37,7 @@ interface NavItem {
 }
 
 const coreItems: NavItem[] = [
-  { href: "/dashboard", label: "PoÄetna", icon: LayoutDashboard, exact: true },
+  { href: "/dashboard", label: "Početna", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
   { href: "/dashboard/bids", label: "Moje ponude", icon: Briefcase },
   { href: "/dashboard/vault", label: "Dokumenti", icon: FileText },
@@ -93,7 +93,7 @@ export function DashboardSidebar({
     ? [
         {
           href: `/dashboard/agency/clients/${activeClient.id}/home`,
-          label: "PoÄetna",
+          label: "Početna",
           icon: LayoutDashboard,
           exact: true,
         },
@@ -246,7 +246,7 @@ export function DashboardSidebar({
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
               >
                 <Settings className="size-4" />
-                RaÄun
+                Račun
               </Link>
               <Link
                 href="/dashboard/subscription"
@@ -286,4 +286,3 @@ export function DashboardSidebar({
     </aside>
   );
 }
-

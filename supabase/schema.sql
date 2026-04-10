@@ -1,5 +1,5 @@
 ﻿-- ============================================================
--- TenderSistem â€” Complete Database Schema
+-- Tendersistem â€” Complete Database Schema
 -- ============================================================
 
 -- 1. ENUMS

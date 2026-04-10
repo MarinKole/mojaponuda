@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Serif, IBM_Plex_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
@@ -22,8 +22,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TenderSistem.com â€” Upravljanje ponudama u javnim nabavkama",
-  description: "TenderSistem je VaÅ¡ recept za uspjeh. Alat za upravljanje ponudama u javnim nabavkama u Bosni i Hercegovini.",
+  title: "Tendersistem.com — Upravljanje ponudama u javnim nabavkama",
+  description: "Tendersistem je Vaš recept za uspjeh. Alat za upravljanje ponudama u javnim nabavkama u Bosni i Hercegovini.",
 };
 
 export default function RootLayout({
@@ -42,4 +42,3 @@ export default function RootLayout({
     </html>
   );
 }
-

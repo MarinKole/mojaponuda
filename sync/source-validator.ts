@@ -61,7 +61,7 @@ export class SourceValidator {
             signal: controller.signal,
             redirect: "manual", // Handle redirects manually
             headers: {
-              "User-Agent": "TenderSistem.com/1.0 (Source Validator)",
+              "User-Agent": "Tendersistem.com/1.0 (Source Validator)",
             },
           });
 

@@ -24,19 +24,19 @@ const sizeStyles: Record<
 > = {
   sm: {
     wrapper: "gap-2.5",
-    icon: "h-9 w-9 rounded-xl",
+    icon: "h-9 w-9",
     title: "text-lg",
     subtitle: "text-[10px]",
   },
   md: {
     wrapper: "gap-3",
-    icon: "h-12 w-12 rounded-2xl",
+    icon: "h-12 w-12",
     title: "text-2xl",
     subtitle: "text-[11px]",
   },
   lg: {
     wrapper: "gap-4",
-    icon: "h-14 w-14 rounded-[1.25rem]",
+    icon: "h-14 w-14",
     title: "text-3xl",
     subtitle: "text-xs",
   },
@@ -55,16 +55,10 @@ export function TenderSistemLogo({
 
   const content = (
     <>
-      <span
-        className={cn(
-          "relative block shrink-0 overflow-hidden border shadow-sm",
-          styles.icon,
-          isDark ? "border-white/10 bg-white/10" : "border-slate-200 bg-white",
-        )}
-      >
+      <span className={cn("relative block shrink-0 overflow-hidden", styles.icon)}>
         <Image
           src="/images/tendersistem-logo.png"
-          alt="TenderSistem logo"
+          alt="Tendersistem logo"
           fill
           sizes={size === "sm" ? "36px" : size === "md" ? "48px" : "56px"}
           className="object-contain"
@@ -74,12 +68,14 @@ export function TenderSistemLogo({
       <span className="flex min-w-0 flex-col">
         <span
           className={cn(
-            "font-heading font-bold tracking-tight leading-none",
+            "font-heading flex items-baseline gap-0 font-bold tracking-tight leading-none",
             styles.title,
             isDark ? "text-white" : "text-slate-900",
           )}
         >
-          TenderSistem.com
+          <span>Tender</span>
+          <span className="text-[#31C5FF]">sistem</span>
+          <span className={cn("font-semibold", isDark ? "text-slate-200" : "text-slate-700")}>.com</span>
         </span>
         {subtitle ? (
           <span

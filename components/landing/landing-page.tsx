@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -69,10 +69,10 @@ const fadeUpItem: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } }
 };
 
-// â”€â”€â”€ Shared CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Shared CTA ────────────────────────────────────────────────────────────
 function PrimaryCTA({
   isLoggedIn,
-  label = "PronaÄ‘i moje tendere",
+  label = "Pronađi moje tendere",
   className = "",
 }: {
   isLoggedIn?: boolean;
@@ -90,7 +90,7 @@ function PrimaryCTA({
   );
 }
 
-// â”€â”€â”€ NavBar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── NavBar ─────────────────────────────────────────────────────────────────
 function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
@@ -113,14 +113,14 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
       animate={hidden ? "hidden" : "visible"}
       initial="visible"
       transition={{ duration: 0.35, ease: "easeInOut" }}
-      className="fixed top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-xl"
+      className="fixed top-0 z-50 w-full border-b border-slate-200/70 bg-white/78 backdrop-blur-2xl"
     >
       <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6">
         <TenderSistemLogo href="/" size="sm" className="group" />
 
         <div className="hidden items-center gap-8 md:flex">
           <a href="#kako-radi" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Kako radi</a>
-          <a href="#usporedba" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">PoreÄ‘enje</a>
+          <a href="#usporedba" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Poređenje</a>
           <a href="#cijene" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Cijene</a>
         </div>
 
@@ -145,7 +145,7 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   );
 }
 
-// â”€â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Hero ────────────────────────────────────────────────────────────────────
 function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <section className="relative overflow-hidden bg-white px-4 sm:px-6 pb-12 pt-28 sm:pb-16 sm:pt-36 border-b border-slate-200">
@@ -164,7 +164,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         >
           <span className="flex size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
           <span className="text-[13px] font-bold uppercase tracking-wide text-blue-700">
-            Sve javne nabavke u BiH â€” na jednom mjestu
+            Sve javne nabavke u BiH — na jednom mjestu
           </span>
         </motion.div>
 
@@ -174,7 +174,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           className="font-heading text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[4rem] mb-5"
         >
-          ViÅ¡e tendera. BrÅ¾e prijave.<br className="hidden md:block" /> Manje odbijenica.
+          Više tendera. Brže prijave.<br className="hidden md:block" /> Manje odbijenica.
         </motion.h1>
 
         <motion.p 
@@ -183,7 +183,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
            className="mx-auto max-w-3xl text-[1.1rem] leading-relaxed text-slate-700 sm:text-[1.25rem] mb-7"
         >
-          Automatski <strong>pronalazimo</strong> najbolje tendere za vaÅ¡u djelatnost, izdvajamo <strong>Å¡ta taÄno treba predati</strong> i vodimo vas kroz prijavu â€” bez gubljenja vremena i <strong>bez greÅ¡aka</strong>.
+          Automatski <strong>pronalazimo</strong> najbolje tendere za vašu djelatnost, izdvajamo <strong>šta tačno treba predati</strong> i vodimo vas kroz prijavu — bez gubljenja vremena i <strong>bez grešaka</strong>.
         </motion.p>
 
         {/* Digitalni zaposlenik blok */}
@@ -197,7 +197,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <Bot className="size-6" />
           </div>
           <p className="text-base leading-snug text-slate-700 mt-0.5">
-            Sistem Vam daje vrijednost zaposlenika koji koÅ¡ta preko <strong className="text-slate-900">1.500 KM mjeseÄno</strong> â€” prati tendere, filtrira najbolje prilike i vodi Vas kroz prijavu bez ijednog propuÅ¡tenog dokumenta.
+            Sistem Vam daje vrijednost zaposlenika koji košta preko <strong className="text-slate-900">1.500 KM mjesečno</strong> — prati tendere, filtrira najbolje prilike i vodi Vas kroz prijavu bez ijednog propuštenog dokumenta.
           </p>
         </motion.div>
 
@@ -213,7 +213,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             className="w-full sm:w-auto h-[3.75rem] sm:px-12 text-lg shadow-2xl shadow-blue-500/40 border border-blue-600" 
           />
           <p className="text-[14px] font-medium text-slate-600 rounded-full bg-blue-50/50 px-4 py-1.5 border border-blue-100/50 whitespace-nowrap mt-1">
-            Postoje aktivni tenderi za vaÅ¡u firmu â€” provjerite za <span className="font-bold text-slate-800">30 sekundi</span>
+            Postoje aktivni tenderi za vašu firmu — provjerite za <span className="font-bold text-slate-800">30 sekundi</span>
           </p>
         </motion.div>
 
@@ -224,12 +224,12 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
            transition={{ duration: 1, delay: 0.6 }}
            className="mx-auto max-w-4xl border-t border-slate-200/60 pt-10"
         >
-          <p className="text-[14px] font-bold text-slate-500 uppercase tracking-widest mb-6">Pouzdano praÄ‡enje sa svih kljuÄnih bh. izvora</p>
+          <p className="text-[14px] font-bold text-slate-500 uppercase tracking-widest mb-6">Pouzdano praćenje sa svih ključnih bh. izvora</p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-600 font-bold text-[15px]">
             <span className="flex items-center gap-2"><Landmark className="size-5 text-slate-400" /> Portal Javnih Nabavki</span>
             <span className="flex items-center gap-2"><Building className="size-5 text-slate-400" /> Vlada FBiH i RS</span>
             <span className="flex items-center gap-2"><Building className="size-5 text-slate-400" /> Kantonalna ministarstva</span>
-            <span className="flex items-center gap-2"><Briefcase className="size-5 text-slate-400" /> Javna preduzeÄ‡a</span>
+            <span className="flex items-center gap-2"><Briefcase className="size-5 text-slate-400" /> Javna preduzeća</span>
           </div>
         </motion.div>
 
@@ -242,9 +242,9 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
            className="mt-16 grid gap-5 text-left md:grid-cols-3"
         >
           {[
-            { metric: "3x", title: "viÅ¡e tendera", desc: "Sistem filtrira trÅ¾iÅ¡te i izdvaja samo one prilike koje bi vjerovatno propustili ruÄnim traÅ¾enjem." },
-            { metric: "10x", title: "brÅ¾a priprema", desc: "Automatska analiza obimne dokumentacije uklanja desetine sati dosadnog ruÄnog Äitanja." },
-            { metric: "2x", title: "veÄ‡a potencijalna zarada", desc: "Bez propuÅ¡tenih prilika i bez odbaÄenih prijava zbog sitnih greÅ¡aka koje bi napravili da radite sami." },
+            { metric: "3x", title: "više tendera", desc: "Sistem filtrira tržište i izdvaja samo one prilike koje bi vjerovatno propustili ručnim traženjem." },
+            { metric: "10x", title: "brža priprema", desc: "Automatska analiza obimne dokumentacije uklanja desetine sati dosadnog ručnog čitanja." },
+            { metric: "2x", title: "veća potencijalna zarada", desc: "Bez propuštenih prilika i bez odbačenih prijava zbog sitnih grešaka koje bi napravili da radite sami." },
           ].map((item) => (
              <motion.div 
                variants={fadeUpItem}
@@ -264,32 +264,32 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   );
 }
 
-// â”€â”€â”€ Kako Radi â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Kako Radi ───────────────────────────────────────────────────────────────
 function HowItWorksSection() {
   const steps = [
     {
       icon: Zap,
       badge: "SKENIRANJE",
       title: "Pronalazak tendera",
-      desc: "Skeniramo portale i filtriramo tendere precizno prema vaÅ¡oj djelatnosti i lokaciji.",
+      desc: "Skeniramo portale i filtriramo tendere precizno prema vašoj djelatnosti i lokaciji.",
     },
     {
       icon: Bell,
-      badge: "OBAVJEÅ TAVANJE",
+      badge: "OBAVJEŠTAVANJE",
       title: "Obavijest na email",
-      desc: "ÄŒim se pojavi novi tender za vas â€” odmah dobijate jasan email saÅ¾etak bez logiranja.",
+      desc: "Čim se pojavi novi tender za vas — odmah dobijate jasan email sažetak bez logiranja.",
     },
     {
       icon: FileText,
       badge: "ANALIZA",
       title: "Jasni zahtjevi",
-      desc: "Odmah vidite koje taÄno dokumente i uvjerenja trebate priloÅ¾iti za sigurnu prijavu.",
+      desc: "Odmah vidite koje tačno dokumente i uvjerenja trebate priložiti za sigurnu prijavu.",
     },
     {
       icon: CheckCircle,
       badge: "VALIDACIJA",
-      title: "Priprema bez greÅ¡ke",
-      desc: "Sistem vas upozorava na sve papire koji nedostaju prije nego Å¡to se ponuda poÅ¡alje.",
+      title: "Priprema bez greške",
+      desc: "Sistem vas upozorava na sve papire koji nedostaju prije nego što se ponuda pošalje.",
     },
   ];
 
@@ -366,7 +366,7 @@ function HowItWorksSection() {
   );
 }
 
-// â”€â”€â”€ Opportunities Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Opportunities Preview ───────────────────────────────────────────────────
 function OpportunitiesPreviewSection({ 
   recentOpportunities, 
   recentLegalUpdates 
@@ -399,7 +399,7 @@ function OpportunitiesPreviewSection({
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-3 text-lg text-slate-700"
           >
-            Najnovije prilike i pravne izmjene koje mogu uticati na vaÅ¡e poslovanje.
+            Najnovije prilike i pravne izmjene koje mogu uticati na vaše poslovanje.
           </motion.p>
         </div>
 
@@ -504,7 +504,7 @@ function OpportunitiesPreviewSection({
   );
 }
 
-// â”€â”€â”€ Prije / Poslije â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Prije / Poslije ─────────────────────────────────────────────────────────
 function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <section id="usporedba" className="bg-white px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-100 overflow-hidden">
@@ -526,7 +526,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-3 text-lg text-slate-700"
           >
-            Razlika izmeÄ‘u iscrpljujuÄ‡eg ruÄnog rada i servisa koji radi za Vas.
+            Razlika između iscrpljujućeg ručnog rada i servisa koji radi za Vas.
           </motion.p>
         </div>
 
@@ -545,14 +545,14 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <X className="size-6" />
               </div>
               <div>
-                <p className="text-[13px] font-bold uppercase tracking-wider text-red-600">PostojeÄ‡i naÄin</p>
-                <p className="font-heading text-2xl font-bold text-slate-900">3â€“5 sati po tenderu</p>
+                <p className="text-[13px] font-bold uppercase tracking-wider text-red-600">Postojeći način</p>
+                <p className="font-heading text-2xl font-bold text-slate-900">3–5 sati po tenderu</p>
               </div>
             </div>
             
             <div className="mb-6 space-y-2 relative">
               <div className="flex justify-between text-[13px] font-bold text-slate-600">
-                <span>UtroÅ¡eno vrijeme procesa</span>
+                <span>Utrošeno vrijeme procesa</span>
                 <span className="text-red-500">100%</span>
               </div>
               <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
@@ -567,10 +567,10 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
             <ul className="space-y-4 relative">
               {[
-                "RuÄno pretraÅ¾ivanje portala apsolutno svaki dan",
-                "Pregledanje i Äitanje tendera koji nisu za vas",
-                "ÄŒitanje stotina stranica dokumentacije od nule",
-                "Nejasno Å¡ta sve taÄno prikupiti od papira",
+                "Ručno pretraživanje portala apsolutno svaki dan",
+                "Pregledanje i čitanje tendera koji nisu za vas",
+                "Čitanje stotina stranica dokumentacije od nule",
+                "Nejasno šta sve tačno prikupiti od papira",
                 "Niste sigurni je li ponuda 100% ispravna za predaju",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-base text-slate-700">
@@ -595,15 +595,15 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <Zap className="size-6" />
               </div>
               <div>
-                <p className="text-[13px] font-bold uppercase tracking-wider text-emerald-700">Sa TenderSistem sistemom</p>
-                <p className="font-heading text-2xl font-bold text-slate-900">15â€“30 minuta ukupno</p>
+                <p className="text-[13px] font-bold uppercase tracking-wider text-emerald-700">Sa Tendersistem sistemom</p>
+                <p className="font-heading text-2xl font-bold text-slate-900">15–30 minuta ukupno</p>
               </div>
             </div>
 
             <div className="mb-6 space-y-2 relative">
               <div className="flex justify-between text-[13px] font-bold text-slate-600">
-                <span>UtroÅ¡eno vrijeme procesa</span>
-                <span className="text-emerald-700">-90% kraÄ‡e (10x brÅ¾e)</span>
+                <span>Utrošeno vrijeme procesa</span>
+                <span className="text-emerald-700">-90% kraće (10x brže)</span>
               </div>
               <div className="h-2 w-full rounded-full bg-emerald-200/50 overflow-hidden">
                 <motion.div 
@@ -617,11 +617,11 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
             <ul className="space-y-4 relative">
               {[
-                "Dobijate tendere izabrane iskljuÄivo za vas",
-                "Jasan pregled onoga Å¡to je kritiÄno za tender",
-                "TaÄan grafiÄki spisak dokumentacije koja vam treba",
+                "Dobijate tendere izabrane isključivo za vas",
+                "Jasan pregled onoga što je kritično za tender",
+                "Tačan grafički spisak dokumentacije koja vam treba",
                 "Sigurnosne provjere ispravnosti prije predaje",
-                "Vidite trÅ¾iÅ¡te, analizu i konkurenciju",
+                "Vidite tržište, analizu i konkurenciju",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-base text-slate-800 font-semibold">
                   <CheckCircle className="mt-0.5 size-5 shrink-0 text-emerald-600" />
@@ -636,7 +636,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   );
 }
 
-// â”€â”€â”€ Novac blok â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Novac blok ──────────────────────────────────────────────────────────────
 function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <section className="bg-slate-900 px-4 sm:px-6 py-16 sm:py-24 text-white relative overflow-hidden">
@@ -659,10 +659,10 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <span className="text-[12px] font-bold uppercase tracking-wider text-emerald-400">Sigurnost poslovanja</span>
             </div>
             <h2 className="font-heading text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-              Jedan propuÅ¡ten tender koÅ¡ta vas viÅ¡e od cijele godiÅ¡nje pretplate.
+              Jedan propušten tender košta vas više od cijele godišnje pretplate.
             </h2>
             <p className="mt-5 text-lg text-slate-300 leading-relaxed">
-              Firme gube poslove zbog bizarnih administrativnih greÅ¡aka. NevaÅ¾eÄ‡a porezna potvrda, zaboravljen aneks... to viÅ¡e nije vaÅ¡ problem. Gubitak stotina hiljada KM zbog papira je neprihvatljiv.
+              Firme gube poslove zbog bizarnih administrativnih grešaka. Nevažeća porezna potvrda, zaboravljen aneks... to više nije vaš problem. Gubitak stotina hiljada KM zbog papira je neprihvatljiv.
             </p>
 
             <motion.div 
@@ -675,7 +675,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               {[
                 { icon: AlertTriangle, text: "Niste vidjeli tender jer taj dan niste stigli provjeriti portale" },
                 { icon: Clock, text: "Ponuda kasni jer vam je ostalo premalo dana za pripremu svega" },
-                { icon: FileText, text: "Ponuda je potpuno odbaÄena jer je nedostajao jedan jedini papir" },
+                { icon: FileText, text: "Ponuda je potpuno odbačena jer je nedostajao jedan jedini papir" },
               ].map((item) => (
                 <motion.div variants={fadeUpItem} key={item.text} className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
                   <item.icon className="size-6 shrink-0 text-red-400" />
@@ -685,9 +685,9 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </motion.div>
 
             <div className="mt-8 rounded-xl border border-blue-500/30 bg-blue-600/20 p-5">
-              <p className="text-lg font-bold text-white">Softver dizajniran da sprjeÄava ljudske greÅ¡ke.</p>
+              <p className="text-lg font-bold text-white">Softver dizajniran da sprječava ljudske greške.</p>
               <p className="mt-1 text-base text-slate-300">
-                Ljudski je pogrijeÅ¡iti u papirologiji. Sistem to ne dozvoljava.
+                Ljudski je pogriješiti u papirologiji. Sistem to ne dozvoljava.
               </p>
             </div>
           </motion.div>
@@ -699,7 +699,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
              transition={{ duration: 0.7, delay: 0.2 }}
              className="rounded-[1.5rem] border border-white/10 bg-white/5 p-8 sm:p-10 backdrop-blur-sm shadow-2xl"
           >
-            <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Visualna kontrola svake taÄke</p>
+            <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Visualna kontrola svake tačke</p>
             <motion.div 
                initial="hidden"
                whileInView="visible"
@@ -711,10 +711,10 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             >
               {[
                 { done: true, text: "Uvjerenje o izmirenim porezima (PDV)" },
-                { done: true, text: "Popunjena izjava o podobnosti uÄesnika" },
+                { done: true, text: "Popunjena izjava o podobnosti učesnika" },
                 { done: true, text: "Referentna lista (min. 3 proc.) validirana" },
-                { done: false, text: "Bankarska garancija za ozbiljnost â† HITNO" },
-                { done: true, text: "Dokaz o tehniÄkoj specifikaciji" },
+                { done: false, text: "Bankarska garancija za ozbiljnost ← HITNO" },
+                { done: true, text: "Dokaz o tehničkoj specifikaciji" },
                 { done: false, text: "UJP potvrda (stara potvrda je istekla!)" },
               ].map((item) => (
                 <motion.div 
@@ -730,7 +730,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </motion.div>
               ))}
             </motion.div>
-            <p className="mt-6 text-[15px] font-medium text-slate-400">Sistem Vam ne dopuÅ¡ta da napravite greÅ¡ku i radi za Vas.</p>
+            <p className="mt-6 text-[15px] font-medium text-slate-400">Sistem Vam ne dopušta da napravite grešku i radi za Vas.</p>
           </motion.div>
         </div>
       </div>
@@ -738,7 +738,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   );
 }
 
-// â”€â”€â”€ Pricing Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Pricing Section ─────────────────────────────────────────────────────────
 function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <section id="cijene" className="relative bg-slate-100 px-4 sm:px-6 py-16 sm:py-24 border-b border-slate-200 overflow-hidden">
@@ -764,7 +764,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             transition={{ duration: 0.6 }}
             className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
           >
-            Jasni paketi. Bez iznenaÄ‘enja.
+            Jasni paketi. Bez iznenađenja.
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -773,7 +773,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-3 text-lg text-slate-700"
           >
-            Odaberite paket prema vaÅ¡em obimu rada. Nema skrivenih troÅ¡kova ni ugovornih zamki.
+            Odaberite paket prema vašem obimu rada. Nema skrivenih troškova ni ugovornih zamki.
           </motion.p>
         </div>
 
@@ -787,7 +787,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           {/* Osnovni */}
           <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-slate-300 hover:bg-white hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Osnovni</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">PraÄ‡enje svih tendera. PlaÄ‡ate jednokratno ako Å¾elite pripremu.</p>
+            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Praćenje svih tendera. Plaćate jednokratno ako želite pripremu.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
               <span className="font-heading text-4xl font-bold text-slate-900">49</span>
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
@@ -795,7 +795,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <p className="mt-1.5 text-[14px] text-amber-600 font-bold tracking-tight">+ 15 KM po svakoj pripremi ponude</p>
             <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6">
               {[
-                "Svi tenderi iz vaÅ¡e djelatnosti",
+                "Svi tenderi iz vaše djelatnosti",
                 "Email obavijesti i pregledi",
                 "Uvid u relevantnost dokumenta",
                 "Priprema ponude dostupna",
@@ -811,26 +811,26 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </Link>
           </motion.div>
 
-          {/* Puni Paket â€” highlighted */}
+          {/* Puni Paket — highlighted */}
           <motion.div variants={fadeUpItem} className="relative rounded-[1.5rem] border-2 border-primary bg-white/95 p-6 sm:p-8 shadow-xl shadow-blue-500/15 backdrop-blur-md lg:scale-[1.05] z-10 transition-all duration-300 hover:shadow-[0_20px_40px_rgb(59,130,246,0.25)] hover:-translate-y-2 lg:hover:-translate-y-4 hover:border-blue-500 flex flex-col">
             <div className="absolute -top-4 inset-x-0 flex justify-center">
               <span className="rounded-full bg-primary px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-white shadow-sm">
-                NajÄeÅ¡Ä‡i izbor
+                Najčešći izbor
               </span>
             </div>
             <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Puni Paket</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Predajete bez greÅ¡ke. Priprema i pregled ukljuÄena potpuno besplatno.</p>
+            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Predajete bez greške. Priprema i pregled uključena potpuno besplatno.</p>
             <div className="mt-5 flex items-baseline gap-1.5">
               <span className="font-heading text-5xl font-bold text-slate-900">99</span>
               <span className="text-base font-semibold text-slate-600">KM / mj.</span>
             </div>
-            <p className="mt-1.5 text-[14px] text-emerald-600 font-bold tracking-tight">KonaÄna cijena, nema doplata</p>
+            <p className="mt-1.5 text-[14px] text-emerald-600 font-bold tracking-tight">Konačna cijena, nema doplata</p>
             <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6 flex-grow">
               {[
                 "Sve iz Osnovnog paketa",
                 "Besplatna priprema svake ponude",
-                "PraÄ‡enje i provjera dokumentacije",
-                "Aktivno praÄ‡enje konkurencije",
+                "Praćenje i provjera dokumentacije",
+                "Aktivno praćenje konkurencije",
               ].map((f, i) => (
                 <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "text-slate-500 font-semibold" : "text-slate-800 font-bold"}`}>
                   <CheckCircle className={`mt-0.5 size-5 shrink-0 ${i === 0 ? "text-slate-400" : "text-primary"}`} />
@@ -855,8 +855,8 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6 flex-grow">
               {[
                 "Sve pogodnosti Punog paketa",
-                "VoÄ‘enje viÅ¡e firmi odjednom",
-                "Zasebni logiÄki profili klijenata",
+                "Vođenje više firmi odjednom",
+                "Zasebni logički profili klijenata",
                 "Uspostavljanje centralne kontrole",
               ].map((f, i) => (
                 <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "text-slate-500 font-semibold" : "text-slate-700"}`}>
@@ -879,30 +879,30 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
            className="mt-12 text-center text-[14px] font-medium text-slate-500 flex items-center justify-center gap-2"
         >
           <ShieldCheck className="size-5 text-emerald-500" />
-          Pretplatu moÅ¾ete otkazati bilo kada. Bez vezivanja dugoroÄnim ugovorom.
+          Pretplatu možete otkazati bilo kada. Bez vezivanja dugoročnim ugovorom.
         </motion.div>
       </div>
     </section>
   );
 }
 
-// â”€â”€â”€ FAQ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
 const FAQ_ITEMS = [
   {
     q: "Da li postoji ugovorna obaveza ili penali otkazivanja?",
-    a: "Ne. Licenca se obnavlja iskljuÄivo mjeseÄno, a moÅ¾ete je otkazati u bilo koje vrijeme s jednim klikom.",
+    a: "Ne. Licenca se obnavlja isključivo mjesečno, a možete je otkazati u bilo koje vrijeme s jednim klikom.",
   },
   {
-    q: "Å ta ako nisam siguran da aplikacija donosi posao?",
-    a: "Tokom prvog mjeseca aplikaciju moÅ¾ete prekinuti bez ijednog dodatnog pitanja ukoliko zakljuÄite da vas ne ubrzava u radu i ne pridonosi redu.",
+    q: "Šta ako nisam siguran da aplikacija donosi posao?",
+    a: "Tokom prvog mjeseca aplikaciju možete prekinuti bez ijednog dodatnog pitanja ukoliko zaključite da vas ne ubrzava u radu i ne pridonosi redu.",
   },
   {
     q: "Kakva je sigurnost mojih prenesenih dokumenata?",
-    a: "Svi dokumenti su striktno izolovani kroz AWS enterprise sigurnosne protokole (AES-256). Nitko osim vas nema pristup vaÅ¡oj bazi.",
+    a: "Svi dokumenti su striktno izolovani kroz AWS enterprise sigurnosne protokole (AES-256). Nitko osim vas nema pristup vašoj bazi.",
   },
   {
-    q: "Da li vi piÅ¡ete i printate moju ponudu?",
-    a: "Ne. Mi nudimo softverski nadzor â€” vi printate papire i odluÄujete cijene. Aplikacija sluÅ¾i da vas osigura da niste neÅ¡to pogreÅ¡no spakovali i da vas alarmira ukoliko papir fali.",
+    q: "Da li vi pišete i printate moju ponudu?",
+    a: "Ne. Mi nudimo softverski nadzor — vi printate papire i odlučujete cijene. Aplikacija služi da vas osigura da niste nešto pogrešno spakovali i da vas alarmira ukoliko papir fali.",
   },
 ] as const;
 
@@ -917,7 +917,7 @@ function FAQSection() {
            transition={{ duration: 0.6 }}
            className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center mb-10"
         >
-          ÄŒesta pitanja (FAQ)
+          Česta pitanja (FAQ)
         </motion.h2>
         <motion.div 
            initial="hidden"
@@ -943,7 +943,7 @@ function FAQSection() {
   );
 }
 
-// â”€â”€â”€ Final CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Final CTA ───────────────────────────────────────────────────────────────
 function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <section className="relative overflow-hidden bg-slate-900 px-4 sm:px-6 py-20 sm:py-24 text-center">
@@ -961,10 +961,10 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
          className="relative z-10 mx-auto max-w-3xl"
       >
         <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          PoÄnite raditi prije nego propustite sljedeÄ‡i posao.
+          Počnite raditi prije nego propustite sljedeći posao.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-[1.125rem] text-slate-300 leading-relaxed font-medium">
-          Dopustite sistemu da obavi teÅ¡ki, dosadni rad umjesto Vas, te da vas vodi kroz Äitav postupak.
+          Dopustite sistemu da obavi teški, dosadni rad umjesto Vas, te da vas vodi kroz čitav postupak.
         </p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <PrimaryCTA isLoggedIn={isLoggedIn} label="Besplatno osigurajte svoju firmu" className="!bg-white !text-slate-900 hover:!bg-slate-100 !shadow-white/10" />
@@ -974,7 +974,7 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
   );
 }
 
-// â”€â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Footer ──────────────────────────────────────────────────────────────────
 function Footer() {
   return (
     <footer className="bg-slate-50 px-4 sm:px-6 py-10">
@@ -982,13 +982,13 @@ function Footer() {
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div>
             <TenderSistemLogo href="/" size="sm" />
-            <p className="mt-1 text-[14px] font-semibold text-slate-500 text-center sm:text-left">Â© 2026 Sva prava zadrÅ¾ana.</p>
+            <p className="mt-1 text-[14px] font-semibold text-slate-500 text-center sm:text-left">© 2026 Sva prava zadržana.</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-[15px] font-bold text-slate-600">
             <Link href="/prilike" className="hover:text-primary transition-colors">Prilike i poticaji</Link>
             <Link href="/zakon" className="hover:text-primary transition-colors">Zakon o nabavkama</Link>
             <Link href="/privacy" className="hover:text-primary transition-colors">Politika privatnosti</Link>
-            <Link href="/terms" className="hover:text-primary transition-colors">Uslovi koriÅ¡tenja</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Uslovi korištenja</Link>
             <Link href="/contact" className="hover:text-primary transition-colors">Kontakt</Link>
           </div>
         </div>
@@ -997,7 +997,7 @@ function Footer() {
   );
 }
 
-// â”€â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Page ────────────────────────────────────────────────────────────────────
 export function LandingPage({ isLoggedIn, recentOpportunities, recentLegalUpdates }: LandingPageProps) {
   return (
     <div className="min-h-screen">
@@ -1013,4 +1013,3 @@ export function LandingPage({ isLoggedIn, recentOpportunities, recentLegalUpdate
     </div>
   );
 }
-

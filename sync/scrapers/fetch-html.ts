@@ -4,7 +4,7 @@
  */
 
 const DEFAULT_TIMEOUT_MS = 15_000;
-const USER_AGENT = "TenderSistem.com/1.0 (javne-nabavke-info; +https://tendersistem.com)";
+const USER_AGENT = "Tendersistem.com/1.0 (javne-nabavke-info; +https://tendersistem.com)";
 
 export async function fetchHtml(url: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<string | null> {
   try {

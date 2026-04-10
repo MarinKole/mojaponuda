@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const category = getCategoryBySlug(slug);
-  if (!category) return { title: "Kategorija | TenderSistem.com" };
+  if (!category) return { title: "Kategorija | Tendersistem.com" };
 
   return {
     title: category.metaTitle,
@@ -51,7 +51,7 @@ export default async function KategorijaPage({ params }: PageProps) {
     .order("deadline", { ascending: true, nullsFirst: false })
     .limit(40);
 
-  // showAll categories (e.g. svi-poticaji) show everything â€” no category filter
+  // showAll categories (e.g. svi-poticaji) show everything — no category filter
   if (!category.showAll && category.dbCategories.length > 0) {
     query = query.in("category", category.dbCategories);
   }
@@ -90,7 +90,7 @@ export default async function KategorijaPage({ params }: PageProps) {
             {category.description}
           </p>
           <PublicCta
-            text="Pratite prilike prilagoÄ‘ene vaÅ¡oj firmi"
+            text="Pratite prilike prilagođene vašoj firmi"
             href="/signup"
             className="mt-6"
           />
@@ -99,14 +99,14 @@ export default async function KategorijaPage({ params }: PageProps) {
         {filtered.length === 0 ? (
           <div className="mb-16 rounded-2xl border border-dashed border-slate-200 bg-white py-20 text-center">
             <p className="text-slate-500 mb-2">Trenutno nema aktivnih prilike u ovoj kategoriji.</p>
-            <p className="text-sm text-slate-400">Prilike se aÅ¾uriraju svakodnevno. Prijavite se za obavijesti.</p>
+            <p className="text-sm text-slate-400">Prilike se ažuriraju svakodnevno. Prijavite se za obavijesti.</p>
             <div className="flex justify-center mt-6">
               <PublicCta text="Primajte obavijesti" href="/signup" />
             </div>
           </div>
         ) : (
           <>
-            {/* â”€â”€ Rok uskoro (deadline â‰¤ 7 days) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Rok uskoro (deadline ≤ 7 days) ─────────────────────── */}
             {(() => {
               const soon = filtered.filter((o) => {
                 if (!o.deadline) return false;
@@ -118,9 +118,9 @@ export default async function KategorijaPage({ params }: PageProps) {
                 <section className="mb-10">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                      â° Rok uskoro
+                      ⏰ Rok uskoro
                     </span>
-                    <span className="text-xs text-slate-400">Prijava istiÄe u 7 dana</span>
+                    <span className="text-xs text-slate-400">Prijava ističe u 7 dana</span>
                   </div>
                   <div className="space-y-3">
                     {soon.map((o) => <OpportunityCard key={o.id} opportunity={o} />)}
@@ -129,7 +129,7 @@ export default async function KategorijaPage({ params }: PageProps) {
               );
             })()}
 
-            {/* â”€â”€ NajvaÅ¾nije (highest value with ai_summary) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Najvažnije (highest value with ai_summary) ──────────── */}
             {(() => {
               const soonIds = new Set(
                 filtered.filter((o) => {
@@ -147,9 +147,9 @@ export default async function KategorijaPage({ params }: PageProps) {
                 <section className="mb-10">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                      â­ NajvaÅ¾nije
+                      ⭐ Najvažnije
                     </span>
-                    <span className="text-xs text-slate-400">NajveÄ‡a vrijednost ili najrelevantniji pozivi</span>
+                    <span className="text-xs text-slate-400">Najveća vrijednost ili najrelevantniji pozivi</span>
                   </div>
                   <div className="space-y-3">
                     {top.map((o) => <OpportunityCard key={o.id} opportunity={o} />)}
@@ -158,7 +158,7 @@ export default async function KategorijaPage({ params }: PageProps) {
               );
             })()}
 
-            {/* â”€â”€ Lako za dobiti (ai_difficulty = lako) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Lako za dobiti (ai_difficulty = lako) ───────────────── */}
             {(() => {
               const soonIds = new Set(
                 filtered.filter((o) => {
@@ -182,7 +182,7 @@ export default async function KategorijaPage({ params }: PageProps) {
                 <section className="mb-10">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      âœ“ Lako za dobiti
+                      ✓ Lako za dobiti
                     </span>
                     <span className="text-xs text-slate-400">Niska konkurencija, jednostavna prijava</span>
                   </div>
@@ -193,7 +193,7 @@ export default async function KategorijaPage({ params }: PageProps) {
               );
             })()}
 
-            {/* â”€â”€ Sve prilike (remainder) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Sve prilike (remainder) ──────────────────────────────── */}
             {(() => {
               const soonIds = new Set(
                 filtered.filter((o) => {
@@ -236,16 +236,16 @@ export default async function KategorijaPage({ params }: PageProps) {
           </>
         )}
 
-        {/* â”€â”€ CTA mid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── CTA mid ─────────────────────────────────────────────────── */}
         <div className="mb-10 rounded-2xl border border-blue-100 bg-blue-50 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
           <div>
             <p className="font-semibold text-slate-900 text-sm">Pratite nove prilike u ovoj kategoriji</p>
-            <p className="text-xs text-slate-500 mt-0.5">Registrujte se besplatno i budite prvi obavijeÅ¡teni.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Registrujte se besplatno i budite prvi obaviješteni.</p>
           </div>
-          <PublicCta text="Kreirajte besplatan raÄun" href={`/signup?ref=category&cat=${slug}`} className="shrink-0" />
+          <PublicCta text="Kreirajte besplatan račun" href={`/signup?ref=category&cat=${slug}`} className="shrink-0" />
         </div>
 
-        {/* â”€â”€ Related categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Related categories ───────────────────────────────────────── */}
         <section>
           <h2 className="font-heading text-xl font-bold text-slate-900 mb-4">
             Ostale kategorije
