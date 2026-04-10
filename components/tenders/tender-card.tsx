@@ -105,29 +105,32 @@ export function TenderCard({ tender, locked = false, clientNames, href }: Tender
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_34%)] opacity-80" />
         <div className="flex flex-col gap-5 pl-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${typeColor}`}>
-                {tender.contract_type ?? "Ostalo"}
-              </span>
-              {clientNames?.map((name) => (
-                <span
-                  key={name}
-                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/12 px-2.5 py-1 text-[11px] font-semibold text-violet-100"
-                >
-                  <Users className="size-3 shrink-0" />
-                  <span className="truncate">{name}</span>
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-4 flex items-start gap-4">
+            <div className="flex items-start gap-4">
               <div className="hidden size-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-slate-100 sm:flex">
                 <FileText className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className={`line-clamp-2 text-lg font-semibold leading-7 sm:text-[1.15rem] ${locked ? "blur-sm select-none" : "text-white"}`}>
-                  {locked ? `Tender #${tender.id.slice(0, 4)} - ${tender.contract_type ?? "Javna nabavka"}` : tender.title}
-                </h3>
+                <div className="flex flex-wrap items-start gap-2">
+                  <span className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${typeColor}`}>
+                    {tender.contract_type ?? "Ostalo"}
+                  </span>
+                  <h3 className={`min-w-[220px] flex-1 line-clamp-2 text-lg font-semibold leading-7 sm:text-[1.15rem] ${locked ? "blur-sm select-none" : "text-white"}`}>
+                    {locked ? `Tender #${tender.id.slice(0, 4)} - ${tender.contract_type ?? "Javna nabavka"}` : tender.title}
+                  </h3>
+                </div>
+                {clientNames?.length ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {clientNames.map((name) => (
+                      <span
+                        key={name}
+                        className="inline-flex max-w-full items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/12 px-2.5 py-1 text-[11px] font-semibold text-violet-100"
+                      >
+                        <Users className="size-3 shrink-0" />
+                        <span className="truncate">{name}</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-300">
                   <span className={`inline-flex max-w-full items-center gap-2 ${locked ? "blur-sm select-none" : ""}`}>
                     <Building2 className="size-4 shrink-0 text-slate-500" />

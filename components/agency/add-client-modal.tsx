@@ -500,6 +500,7 @@ function Field({
       <label className="mb-2 block text-sm font-semibold text-slate-700">{label}</label>
       <input
         type={type}
+        lang={type === "date" ? "bs-BA" : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

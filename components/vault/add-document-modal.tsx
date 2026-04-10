@@ -195,6 +195,7 @@ export function AddDocumentModal({ onSuccess, trigger, initialType }: AddDocumen
                 <Input
                   id="doc-expires"
                   type="date"
+                  lang="bs-BA"
                   value={expiresAt}
                   onChange={(e) => setExpiresAt(e.target.value)}
                   disabled={loading}
@@ -285,4 +286,3 @@ export function AddDocumentModal({ onSuccess, trigger, initialType }: AddDocumen
     </>
   );
 }
-

@@ -2,10 +2,15 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
-import { Filter, RotateCcw, Search } from "lucide-react";
+import {
+  CalendarDays,
+  Filter,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RegionMultiSelect } from "@/components/ui/region-multi-select";
 import {
   Select,
@@ -25,18 +30,18 @@ const CONTRACT_TYPES = [
 const PROCEDURE_TYPES = [
   { value: "all", label: "Sve procedure" },
   { value: "Otvoreni postupak", label: "Otvoreni" },
-  { value: "Ograničeni postupak", label: "Ograničeni" },
-  { value: "Pregovarački postupak", label: "Pregovarački" },
+  { value: "Ograni\u010deni postupak", label: "Ograni\u010deni" },
+  { value: "Pregovara\u010dki postupak", label: "Pregovara\u010dki" },
   { value: "Konkurentski zahtjev", label: "Konkurentski" },
   { value: "Direktni sporazum", label: "Direktni" },
 ];
 
 const RECOMMENDED_SORT_OPTIONS = [
   { value: "recommended", label: "Najrelevantniji" },
-  { value: "nearest", label: "Najbliži lokaciji firme" },
+  { value: "nearest", label: "Najbli\u017ei lokaciji firme" },
   { value: "deadline_asc", label: "Rok najskoriji" },
   { value: "deadline_desc", label: "Rok najkasniji" },
-  { value: "value_desc", label: "Najveća vrijednost" },
+  { value: "value_desc", label: "Najve\u0107a vrijednost" },
   { value: "value_asc", label: "Najmanja vrijednost" },
   { value: "newest", label: "Najnovije objavljeno" },
 ];
@@ -44,7 +49,7 @@ const RECOMMENDED_SORT_OPTIONS = [
 const ALL_TENDERS_SORT_OPTIONS = [
   { value: "deadline_asc", label: "Rok najskoriji" },
   { value: "deadline_desc", label: "Rok najkasniji" },
-  { value: "value_desc", label: "Najveća vrijednost" },
+  { value: "value_desc", label: "Najve\u0107a vrijednost" },
   { value: "value_asc", label: "Najmanja vrijednost" },
   { value: "newest", label: "Najnovije objavljeno" },
 ];
@@ -53,22 +58,32 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("tab") === "all" ? "all" : "recommended";
-  const sortOptions = activeTab === "recommended" ? RECOMMENDED_SORT_OPTIONS : ALL_TENDERS_SORT_OPTIONS;
+  const sortOptions =
+    activeTab === "recommended" ? RECOMMENDED_SORT_OPTIONS : ALL_TENDERS_SORT_OPTIONS;
   const defaultSort = activeTab === "recommended" ? "recommended" : "deadline_asc";
 
   const [keyword, setKeyword] = useState(searchParams.get("q") || "");
-  const [contractType, setContractType] = useState(searchParams.get("contract_type") || "all");
-  const [procedureType, setProcedureType] = useState(searchParams.get("procedure_type") || "all");
-  const [deadlineFrom, setDeadlineFrom] = useState(searchParams.get("deadline_from") || "");
+  const [contractType, setContractType] = useState(
+    searchParams.get("contract_type") || "all"
+  );
+  const [procedureType, setProcedureType] = useState(
+    searchParams.get("procedure_type") || "all"
+  );
+  const [deadlineFrom, setDeadlineFrom] = useState(
+    searchParams.get("deadline_from") || ""
+  );
   const [deadlineTo, setDeadlineTo] = useState(searchParams.get("deadline_to") || "");
   const [valueMin, setValueMin] = useState(searchParams.get("value_min") || "");
   const [valueMax, setValueMax] = useState(searchParams.get("value_max") || "");
   const [sort, setSort] = useState(searchParams.get("sort") || defaultSort);
-  const [locations, setLocations] = useState<string[]>(searchParams.getAll("location"));
+  const [locations, setLocations] = useState<string[]>(
+    searchParams.getAll("location")
+  );
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
     const currentTab = searchParams.get("tab");
+
     if (currentTab) params.set("tab", currentTab);
     if (keyword.trim()) params.set("q", keyword.trim());
     if (contractType !== "all") params.set("contract_type", contractType);
@@ -81,7 +96,21 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
     locations.forEach((location) => params.append("location", location));
     params.set("page", "1");
     router.push(`${basePath}?${params.toString()}`);
-  }, [basePath, contractType, deadlineFrom, deadlineTo, defaultSort, keyword, locations, procedureType, router, searchParams, sort, valueMax, valueMin]);
+  }, [
+    basePath,
+    contractType,
+    deadlineFrom,
+    deadlineTo,
+    defaultSort,
+    keyword,
+    locations,
+    procedureType,
+    router,
+    searchParams,
+    sort,
+    valueMax,
+    valueMin,
+  ]);
 
   function resetFilters() {
     setKeyword("");
@@ -93,6 +122,7 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
     setValueMax("");
     setSort(defaultSort);
     setLocations([]);
+
     const currentTab = searchParams.get("tab");
     const params = new URLSearchParams();
     if (currentTab) params.set("tab", currentTab);
@@ -103,167 +133,154 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
     if (event.key === "Enter") applyFilters();
   }
 
+  const compactTriggerClassName =
+    "h-11 min-w-[140px] rounded-2xl border-white/10 bg-white/5 px-3 text-sm text-white hover:bg-white/8";
+  const compactContentClassName =
+    "rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl";
+  const compactItemClassName =
+    "rounded-xl px-3 py-2 text-slate-100 data-[highlighted]:bg-white/10 data-[highlighted]:text-white";
+  const locationContentClassName =
+    "rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl [&_[data-slot=command]]:bg-slate-950 [&_[data-slot=command]]:text-slate-100 [&_[data-slot=command-input-wrapper]]:border-b [&_[data-slot=command-input-wrapper]]:border-white/10 [&_[data-slot=command-input-wrapper]]:bg-slate-950 [&_[data-slot=command-group]]:text-slate-100 [&_[data-slot=command-group]_[cmdk-group-heading]]:text-slate-400 [&_[data-slot=command-input]]:text-slate-100 [&_[data-slot=command-input]::placeholder]:text-slate-500 [&_[data-slot=command-item]]:text-slate-100 [&_[data-slot=command-item][data-selected=true]]:bg-white/10 [&_[data-slot=command-item][data-selected=true]]:text-white";
+
   return (
-    <section className="mb-6 rounded-[1.75rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)]">
-      <div className="mb-5 flex items-center gap-3 border-b border-white/10 pb-5">
-        <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sky-300">
-          <Filter className="size-4" />
-        </div>
-        <div>
-          <h3 className="font-heading text-lg font-bold text-white">Pretraga i filteri</h3>
-          <p className="text-sm text-slate-400">Složeni tako da ostanu čitljivi i na desktopu i na manjim ekranima.</p>
-        </div>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-2 lg:col-span-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Ključna riječ
-          </Label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
-            <Input
-              placeholder="Npr. računari, izgradnja puta, čišćenje..."
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-              onKeyDown={handleKeyDown}
-              className="h-12 rounded-2xl border-white/10 bg-white/5 pl-10 text-sm text-white placeholder:text-slate-500 focus-visible:border-sky-400/40 focus-visible:ring-sky-400/20"
-            />
-          </div>
+    <section className="mb-6 rounded-[1.4rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-3.5 text-white shadow-[0_22px_50px_-38px_rgba(2,6,23,0.82)]">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[260px] flex-[1_1_340px]">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+          <Input
+            placeholder="Pretra\u017ei naziv, naru\u010dioca ili opis tendera..."
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            onKeyDown={handleKeyDown}
+            className="h-11 rounded-2xl border-white/10 bg-white/5 pl-10 text-sm text-white placeholder:text-slate-500 focus-visible:border-sky-400/40 focus-visible:ring-sky-400/20"
+          />
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Poredaj po
-          </Label>
-          <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="h-12 rounded-2xl border-white/10 bg-white/5 text-sm text-white">
+        <div className="min-w-[240px] flex-[1_1_280px]">
+          <RegionMultiSelect
+            selectedRegions={locations}
+            onChange={setLocations}
+            placeholder="Lokacija tendera"
+            triggerClassName="min-h-[44px] rounded-2xl border-white/10 bg-white/5 px-3 text-white hover:bg-white/8"
+            contentClassName={locationContentClassName}
+            chipClassName="border border-sky-500/20 bg-sky-500/10 text-sky-100"
+            placeholderClassName="text-slate-400"
+          />
+        </div>
+
+        <Select value={contractType} onValueChange={setContractType}>
+          <SelectTrigger className={compactTriggerClassName}>
+            <SelectValue placeholder="Tip ugovora" />
+          </SelectTrigger>
+          <SelectContent className={compactContentClassName}>
+            {CONTRACT_TYPES.map((item) => (
+              <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={procedureType} onValueChange={setProcedureType}>
+          <SelectTrigger className={compactTriggerClassName}>
+            <SelectValue placeholder="Procedura" />
+          </SelectTrigger>
+          <SelectContent className={compactContentClassName}>
+            {PROCEDURE_TYPES.map((item) => (
+              <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className={compactTriggerClassName}>
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="size-3.5 text-slate-400" />
               <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl border-slate-700 bg-slate-950 text-slate-200">
-              {sortOptions.map((item) => (
-                <SelectItem key={item.value} value={item.value} className="rounded-xl focus:bg-white/10 focus:text-white">
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            </div>
+          </SelectTrigger>
+          <SelectContent className={compactContentClassName}>
+            {sortOptions.map((item) => (
+              <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Tip ugovora
-          </Label>
-          <Select value={contractType} onValueChange={setContractType}>
-            <SelectTrigger className="h-12 rounded-2xl border-white/10 bg-white/5 text-sm text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl border-slate-700 bg-slate-950 text-slate-200">
-              {CONTRACT_TYPES.map((item) => (
-                <SelectItem key={item.value} value={item.value} className="rounded-xl focus:bg-white/10 focus:text-white">
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Procedura
-          </Label>
-          <Select value={procedureType} onValueChange={setProcedureType}>
-            <SelectTrigger className="h-12 rounded-2xl border-white/10 bg-white/5 text-sm text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl border-slate-700 bg-slate-950 text-slate-200">
-              {PROCEDURE_TYPES.map((item) => (
-                <SelectItem key={item.value} value={item.value} className="rounded-xl focus:bg-white/10 focus:text-white">
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div className="flex h-11 min-w-[172px] items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3">
+          <CalendarDays className="size-3.5 text-slate-400" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
             Rok od
-          </Label>
+          </span>
           <Input
             type="date"
             value={deadlineFrom}
             onChange={(event) => setDeadlineFrom(event.target.value)}
-            className="h-12 rounded-2xl border-white/10 bg-white/5 text-sm text-white focus-visible:border-sky-400/40 focus-visible:ring-sky-400/20"
+            className="h-9 border-0 bg-transparent px-0 text-sm text-white focus-visible:border-0 focus-visible:ring-0"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <div className="flex h-11 min-w-[172px] items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3">
+          <CalendarDays className="size-3.5 text-slate-400" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
             Rok do
-          </Label>
+          </span>
           <Input
             type="date"
             value={deadlineTo}
             onChange={(event) => setDeadlineTo(event.target.value)}
-            className="h-12 rounded-2xl border-white/10 bg-white/5 text-sm text-white focus-visible:border-sky-400/40 focus-visible:ring-sky-400/20"
+            className="h-9 border-0 bg-transparent px-0 text-sm text-white focus-visible:border-0 focus-visible:ring-0"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Vrijednost od
-          </Label>
+        <div className="flex h-11 min-w-[146px] items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            KM od
+          </span>
           <Input
             type="number"
             min="0"
             step="1000"
             value={valueMin}
             onChange={(event) => setValueMin(event.target.value)}
-            placeholder="npr. 50000"
-            className="h-12 rounded-2xl border-white/10 bg-white/5 text-sm text-white placeholder:text-slate-500 focus-visible:border-sky-400/40 focus-visible:ring-sky-400/20"
+            placeholder="50000"
+            className="h-9 border-0 bg-transparent px-0 text-sm text-white placeholder:text-slate-500 focus-visible:border-0 focus-visible:ring-0"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Vrijednost do
-          </Label>
+        <div className="flex h-11 min-w-[146px] items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            KM do
+          </span>
           <Input
             type="number"
             min="0"
             step="1000"
             value={valueMax}
             onChange={(event) => setValueMax(event.target.value)}
-            placeholder="npr. 500000"
-            className="h-12 rounded-2xl border-white/10 bg-white/5 text-sm text-white placeholder:text-slate-500 focus-visible:border-sky-400/40 focus-visible:ring-sky-400/20"
+            placeholder="500000"
+            className="h-9 border-0 bg-transparent px-0 text-sm text-white placeholder:text-slate-500 focus-visible:border-0 focus-visible:ring-0"
           />
         </div>
-      </div>
 
-      <div className="mt-5 grid gap-4 border-t border-white/10 pt-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Lokacija tendera
-          </Label>
-          <RegionMultiSelect selectedRegions={locations} onChange={setLocations} />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             onClick={resetFilters}
-            className="h-12 rounded-2xl border-white/10 bg-white/5 px-5 text-sm font-semibold text-slate-200 hover:bg-white/10 hover:text-white"
+            className="h-11 rounded-2xl border-white/10 bg-white/5 px-4 text-sm font-semibold text-slate-200 hover:bg-white/10 hover:text-white"
           >
             <RotateCcw className="mr-2 size-4" />
             Resetuj
           </Button>
           <Button
             onClick={applyFilters}
-            className="h-12 rounded-2xl bg-white px-6 text-sm font-semibold text-slate-950 hover:bg-slate-100"
+            className="h-11 rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-slate-100"
           >
-            <Search className="mr-2 size-4" />
-            Pretraži
+            <Filter className="mr-2 size-4" />
+            Primijeni
           </Button>
         </div>
       </div>

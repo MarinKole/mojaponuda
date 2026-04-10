@@ -9,9 +9,19 @@ import { Button } from "@/components/ui/button"
 export function RegionMultiSelect({
   selectedRegions,
   onChange,
+  placeholder = "Odaberite gradove, općine ili kantone...",
+  triggerClassName,
+  contentClassName,
+  chipClassName,
+  placeholderClassName,
 }: {
   selectedRegions: string[]
   onChange: (regions: string[]) => void
+  placeholder?: string
+  triggerClassName?: string
+  contentClassName?: string
+  chipClassName?: string
+  placeholderClassName?: string
 }) {
   const [open, setOpen] = React.useState(false)
   const expandedSelectedRegions = React.useMemo(
@@ -49,14 +59,14 @@ export function RegionMultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-auto min-h-10 px-3 py-2 rounded-xl"
+          className={cn("w-full justify-between h-auto min-h-10 px-3 py-2 rounded-xl", triggerClassName)}
         >
           <div className="flex flex-wrap gap-1">
             {selectionLabels.length > 0 ? (
               selectionLabels.map((region) => (
                 <div
                   key={region}
-                  className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-xs"
+                  className={cn("flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-xs", chipClassName)}
                 >
                   {region}
                   <div
@@ -89,13 +99,13 @@ export function RegionMultiSelect({
                 </div>
               ))
             ) : (
-              <span className="text-muted-foreground font-normal">Odaberite gradove, općine ili kantone...</span>
+              <span className={cn("text-muted-foreground font-normal", placeholderClassName)}>{placeholder}</span>
             )}
           </div>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[440px] p-0" align="start">
+      <PopoverContent className={cn("w-[440px] p-0", contentClassName)} align="start">
         <Command>
           <CommandInput placeholder="Pretraži grad, općinu ili kanton..." />
           <CommandList>

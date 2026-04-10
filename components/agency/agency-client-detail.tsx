@@ -6,20 +6,12 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
-  Briefcase,
   Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  CreditCard,
-  FileText,
   Loader2,
   MapPin,
   Pencil,
   Plus,
   Save,
-  Trash2,
-  X,
 } from "lucide-react";
 import { parseCompanyProfile, getProfileOptionLabel } from "@/lib/company-profile";
 
@@ -29,14 +21,6 @@ const CRM_STAGE_CONFIG: Record<string, { label: string; color: string }> = {
   active: { label: "Aktivan", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   paused: { label: "Pauziran", color: "bg-slate-100 text-slate-600 border-slate-200" },
   churned: { label: "Otkazan", color: "bg-red-50 text-red-700 border-red-200" },
-};
-
-const BID_STATUS: Record<string, { label: string; color: string }> = {
-  draft: { label: "U pripremi", color: "bg-slate-100 text-slate-700" },
-  in_review: { label: "U pregledu", color: "bg-amber-50 text-amber-700" },
-  submitted: { label: "Predato", color: "bg-blue-50 text-blue-700" },
-  won: { label: "Dobijeno", color: "bg-emerald-50 text-emerald-700" },
-  lost: { label: "Izgubljeno", color: "bg-red-50 text-red-700" },
 };
 
 function formatDate(d: string | null) {
@@ -103,7 +87,6 @@ export function AgencyClientDetail({
   bids,
   docs,
   notes: initialNotes,
-  recentTenders,
 }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "crm">("overview");
@@ -115,6 +98,11 @@ export function AgencyClientDetail({
   const [monthlyFee, setMonthlyFee] = useState(client.monthly_fee?.toString() ?? "");
   const [contractStart, setContractStart] = useState(client.contract_start ?? "");
   const [contractEnd, setContractEnd] = useState(client.contract_end ?? "");
+  const [expiringDocsThreshold] = useState(() => {
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() + 60);
+    return threshold;
+  });
 
   const parsedProfile = useMemo(() => parseCompanyProfile(company.industry), [company.industry]);
 
@@ -126,7 +114,7 @@ export function AgencyClientDetail({
   const expiringDocs = docs.filter((d) => {
     if (!d.expires_at) return false;
     const exp = new Date(d.expires_at);
-    return exp < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+    return exp < expiringDocsThreshold;
   });
 
   async function saveCrm() {
@@ -381,11 +369,11 @@ export function AgencyClientDetail({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">Početak</label>
-                  <input type="date" value={contractStart} onChange={(e) => setContractStart(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" />
+                  <input type="date" lang="bs-BA" value={contractStart} onChange={(e) => setContractStart(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">Kraj</label>
-                  <input type="date" value={contractEnd} onChange={(e) => setContractEnd(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" />
+                  <input type="date" lang="bs-BA" value={contractEnd} onChange={(e) => setContractEnd(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm" />
                 </div>
               </div>
               <button
