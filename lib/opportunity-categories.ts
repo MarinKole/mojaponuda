@@ -6,7 +6,7 @@
  * AI kategorije koje se dodjeljuju novim postovima:
  *   "Poticaji i grantovi" | "EU grantovi" | "Poticaji za MSP" |
  *   "Poticaji za poljoprivredu" | "Poticaji za izvoznike" |
- *   "Digitalizacija" | "Energetika" | "ZapoÅ¡ljavanje" |
+ *   "Digitalizacija" | "Energetika" | "Zapošljavanje" |
  *   "Inovacije" | "Turizam"
  */
 
@@ -58,12 +58,12 @@ export const OPPORTUNITY_CATEGORIES: OpportunityCategory[] = [
   },
   {
     slug: "poticaji-za-zaposlavanje",
-    title: "ZapoÅ¡ljavanje",
+    title: "Zapošljavanje",
     h1: "Poticaji za zapoÅ¡ljavanje u BiH",
     description: "Subvencije, grantovi i programi podrÅ¡ke za zapoÅ¡ljavanje novih radnika i struÄno osposobljavanje u BiH.",
     metaTitle: "Poticaji za zapoÅ¡ljavanje BiH 2026 â€” Subvencije za radna mjesta | TenderSistem.com",
     metaDescription: "PronaÄ‘ite poticaje za zapoÅ¡ljavanje u BiH. Subvencije za nova radna mjesta, obuke i struÄno osposobljavanje.",
-    dbCategories: ["ZapoÅ¡ljavanje", "HR", "StruÄno osposobljavanje", "Obrazovanje i zapoÅ¡ljavanje"],
+    dbCategories: ["Zapošljavanje", "HR", "StruÄno osposobljavanje", "Obrazovanje i zapošljavanje"],
     type: "poticaj",
   },
   {
@@ -150,7 +150,7 @@ export const AI_CATEGORY_VALUES = [
   "Poticaji i grantovi",
   "EU grantovi",
   "Poticaji za MSP",
-  "ZapoÅ¡ljavanje",
+  "Zapošljavanje",
   "Poticaji za poljoprivredu",
   "Poticaji za izvoznike",
   "Digitalizacija",
