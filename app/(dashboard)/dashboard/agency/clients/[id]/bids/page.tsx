@@ -116,120 +116,125 @@ export default async function AgencyClientBidsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
-  if (plan.id !== "agency") redirect("/dashboard");
-
-  const { data: agencyClient, error: agencyClientError } = await supabase
-    .from("agency_clients")
-    .select("id, company_id, companies (id, name)")
-    .eq("id", id)
-    .eq("agency_user_id", user.id)
-    .maybeSingle();
-
-  if (agencyClientError) {
-    console.error("Agency client bids page client lookup error:", agencyClientError);
-    return <AgencyClientBidsFallback />;
-  }
-
-  if (!agencyClient) notFound();
-
-  const company = normalizeCompanyRelation(
-    agencyClient.companies as CompanyRelation | CompanyRelation[] | null
-  );
-
-  if (!company) notFound();
-
   try {
-    const { data: bidsData, error: bidsError } = await supabase
-      .from("bids")
-      .select("id, status, created_at, tenders(id, title, contracting_authority, deadline)")
-      .eq("company_id", company.id)
-      .order("created_at", { ascending: false });
+    const { id } = await params;
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (bidsError) {
-      console.error("Agency client bids page - bids query error:", bidsError);
-      throw bidsError;
+    if (!user) redirect("/login");
+
+    const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
+    if (plan.id !== "agency") redirect("/dashboard");
+
+    const { data: agencyClient, error: agencyClientError } = await supabase
+      .from("agency_clients")
+      .select("id, company_id, companies (id, name)")
+      .eq("id", id)
+      .eq("agency_user_id", user.id)
+      .maybeSingle();
+
+    if (agencyClientError) {
+      console.error("Agency client bids page client lookup error:", agencyClientError);
+      return <AgencyClientBidsFallback />;
     }
 
-    console.log("Agency client bids page - raw bids data count:", bidsData?.length ?? 0);
+    if (!agencyClient) notFound();
 
-    // Safely process bids with extra error handling
-    const bids: BidRow[] = [];
-    const rawBids = (bidsData as BidWithTender[] | null) ?? [];
-    
-    for (const bid of rawBids) {
-      try {
-        if (!isValidBid(bid)) {
-          console.log("Filtered out invalid bid:", bid.id);
+    const company = normalizeCompanyRelation(
+      agencyClient.companies as CompanyRelation | CompanyRelation[] | null
+    );
+
+    if (!company) notFound();
+
+    try {
+      const { data: bidsData, error: bidsError } = await supabase
+        .from("bids")
+        .select("id, status, created_at, tenders(id, title, contracting_authority, deadline)")
+        .eq("company_id", company.id)
+        .order("created_at", { ascending: false });
+
+      if (bidsError) {
+        console.error("Agency client bids page - bids query error:", bidsError);
+        throw bidsError;
+      }
+
+      console.log("Agency client bids page - raw bids data count:", bidsData?.length ?? 0);
+
+      // Safely process bids with extra error handling
+      const bids: BidRow[] = [];
+      const rawBids = (bidsData as BidWithTender[] | null) ?? [];
+      
+      for (const bid of rawBids) {
+        try {
+          if (!isValidBid(bid)) {
+            console.log("Filtered out invalid bid:", bid.id);
+            continue;
+          }
+          
+          const normalizedTender = normalizeBidTender(bid.tenders);
+          bids.push({
+            id: bid.id,
+            status: bid.status,
+            created_at: bid.created_at,
+            tender: normalizedTender,
+          });
+        } catch (bidError) {
+          console.error("Error processing bid:", bid.id, bidError);
+          // Skip this bid and continue with others
           continue;
         }
-        
-        const normalizedTender = normalizeBidTender(bid.tenders);
-        bids.push({
-          id: bid.id,
-          status: bid.status,
-          created_at: bid.created_at,
-          tender: normalizedTender,
-        });
-      } catch (bidError) {
-        console.error("Error processing bid:", bid.id, bidError);
-        // Skip this bid and continue with others
-        continue;
       }
-    }
 
-    console.log("Agency client bids page - processed bids count:", bids.length);
+      console.log("Agency client bids page - processed bids count:", bids.length);
 
-    const { data: tendersData, error: tendersError } = await supabase
-      .from("tenders")
-      .select("id, title, contracting_authority")
-      .order("created_at", { ascending: false })
-      .limit(500);
+      const { data: tendersData, error: tendersError } = await supabase
+        .from("tenders")
+        .select("id, title, contracting_authority")
+        .order("created_at", { ascending: false })
+        .limit(500);
 
-    if (tendersError) {
-      throw tendersError;
-    }
+      if (tendersError) {
+        throw tendersError;
+      }
 
-    const tenders = (tendersData ?? []) as Array<{
-      id: string;
-      title: string;
-      contracting_authority: string | null;
-    }>;
+      const tenders = (tendersData ?? []) as Array<{
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+      }>;
 
-    return (
-      <div className="space-y-8 max-w-[1200px] mx-auto">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
-              Ponude — {company.name}
-            </h1>
-            <p className="mt-1 text-base text-slate-500">
-              Sve ponude ovog klijenta na jednom mjestu.
-            </p>
+      return (
+        <div className="space-y-8 max-w-[1200px] mx-auto">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">
+                Ponude — {company.name}
+              </h1>
+              <p className="mt-1 text-base text-slate-500">
+                Sve ponude ovog klijenta na jednom mjestu.
+              </p>
+            </div>
+            <NewBidModal
+              tenders={tenders}
+              agencyClientId={id}
+              bidPathBase={`/dashboard/agency/clients/${id}/bids`}
+            />
           </div>
-          <NewBidModal
-            tenders={tenders}
-            agencyClientId={id}
-            bidPathBase={`/dashboard/agency/clients/${id}/bids`}
+
+          <BidsTable
+            bids={bids}
+            getBidHref={(bid) => `/dashboard/agency/clients/${id}/bids/${bid.id}`}
           />
         </div>
-
-        <BidsTable
-          bids={bids}
-          getBidHref={(bid) => `/dashboard/agency/clients/${id}/bids/${bid.id}`}
-        />
-      </div>
-    );
+      );
+    } catch (error) {
+      console.error("Agency client bids page error:", error);
+      return <AgencyClientBidsFallback />;
+    }
   } catch (error) {
-    console.error("Agency client bids page error:", error);
+    console.error("Agency client bids page - top level error:", error);
     return <AgencyClientBidsFallback />;
   }
 }
