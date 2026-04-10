@@ -23,19 +23,19 @@ const sizeStyles: Record<
   }
 > = {
   sm: {
-    wrapper: "gap-2.5",
+    wrapper: "gap-2",
     icon: "h-9 w-9",
     title: "text-lg",
     subtitle: "text-[10px]",
   },
   md: {
-    wrapper: "gap-3",
+    wrapper: "gap-2.5",
     icon: "h-12 w-12",
     title: "text-2xl",
     subtitle: "text-[11px]",
   },
   lg: {
-    wrapper: "gap-4",
+    wrapper: "gap-3.5",
     icon: "h-14 w-14",
     title: "text-3xl",
     subtitle: "text-xs",
@@ -55,7 +55,7 @@ export function TenderSistemLogo({
 
   const content = (
     <>
-      <span className={cn("relative block shrink-0 overflow-hidden", styles.icon)}>
+      <span className={cn("relative block shrink-0 overflow-hidden drop-shadow-[0_8px_18px_rgba(21,93,252,0.18)]", styles.icon)}>
         <Image
           src="/images/tendersistem-logo.png"
           alt="Tendersistem logo"
@@ -68,14 +68,21 @@ export function TenderSistemLogo({
       <span className="flex min-w-0 flex-col">
         <span
           className={cn(
-            "font-heading flex items-baseline gap-0 font-bold tracking-tight leading-none",
+            "font-heading flex items-baseline gap-0 font-bold tracking-[-0.045em] leading-none antialiased",
             styles.title,
             isDark ? "text-white" : "text-slate-900",
           )}
         >
-          <span>Tender</span>
-          <span className="text-blue-600">sistem</span>
-          <span className={cn("font-semibold", isDark ? "text-slate-200" : "text-slate-700")}>.com</span>
+          <span className={cn("font-bold", isDark ? "text-white" : "text-slate-800")}>Tender</span>
+          <span className="bg-gradient-to-r from-[#43d8e6] to-[#155dfc] bg-clip-text text-transparent">sistem</span>
+          <span
+            className={cn(
+              "ml-[0.05em] text-[0.72em] font-semibold tracking-[-0.03em]",
+              isDark ? "text-slate-100" : "text-slate-700",
+            )}
+          >
+            .com
+          </span>
         </span>
         {subtitle ? (
           <span
