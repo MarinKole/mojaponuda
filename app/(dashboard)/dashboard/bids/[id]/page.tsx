@@ -66,7 +66,7 @@ export default async function BidWorkspacePage({
     .eq("id", id)
     .single();
 
-  const bid = bidData as (Bid & { tenders: Tender }) | null;
+  const bid = bidData as (Bid & { tenders: Tender | null }) | null;
 
   if (!bid || bid.company_id !== access.companyId) {
     redirect("/dashboard/bids");
@@ -125,8 +125,8 @@ export default async function BidWorkspacePage({
     <div className="mx-auto max-w-[1400px] space-y-6">
       <TopBar
         bidId={id}
-        tenderTitle={bid.tenders.title}
-        contractingAuthority={bid.tenders.contracting_authority}
+        tenderTitle={bid.tenders?.title ?? "Tender nije dostupan"}
+        contractingAuthority={bid.tenders?.contracting_authority ?? null}
         currentStatus={bid.status as BidStatus}
         initialRiskFlags={extractRiskFlags(bid.ai_analysis)}
         hasMissingItems={hasMissingItems}

@@ -65,7 +65,7 @@ export default async function AgencyClientBidWorkspacePage({
     .eq("id", bidId)
     .single();
 
-  const bid = bidData as (Bid & { tenders: Tender }) | null;
+  const bid = bidData as (Bid & { tenders: Tender | null }) | null;
 
   if (!bid) {
     notFound();
@@ -117,8 +117,8 @@ export default async function AgencyClientBidWorkspacePage({
     <div className="mx-auto max-w-[1400px] space-y-6">
       <TopBar
         bidId={bidId}
-        tenderTitle={bid.tenders.title}
-        contractingAuthority={bid.tenders.contracting_authority}
+        tenderTitle={bid.tenders?.title ?? "Tender nije dostupan"}
+        contractingAuthority={bid.tenders?.contracting_authority ?? null}
         currentStatus={bid.status as BidStatus}
         initialRiskFlags={extractRiskFlags(bid.ai_analysis)}
         hasMissingItems={hasMissingItems}
