@@ -33,7 +33,7 @@ interface BidRow {
     title: string;
     contracting_authority: string | null;
     deadline: string | null;
-  };
+  } | null;
   clientName?: string;
   clientId?: string;
 }
@@ -160,19 +160,19 @@ export function BidsTable({
                     </div>
 
                     <h3 className="mt-4 line-clamp-2 text-lg font-semibold leading-7 text-white">
-                      {bid.tender.title}
+                      {bid.tender?.title ?? "Tender nije dostupan"}
                     </h3>
 
                     <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-300">
                       <span className="inline-flex max-w-full items-center gap-2">
                         <Building2 className="size-4 shrink-0 text-slate-500" />
-                        <span className="truncate" title={bid.tender.contracting_authority ?? ""}>
-                          {bid.tender.contracting_authority ?? "Nepoznat narucilac"}
+                        <span className="truncate" title={bid.tender?.contracting_authority ?? ""}>
+                          {bid.tender?.contracting_authority ?? "Nepoznat naručilac"}
                         </span>
                       </span>
                       <span className="inline-flex items-center gap-2">
                         <Calendar className="size-4 shrink-0 text-slate-500" />
-                        {formatDate(bid.tender.deadline)}
+                        {formatDate(bid.tender?.deadline ?? null)}
                       </span>
                     </div>
                   </div>

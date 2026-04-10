@@ -9,12 +9,43 @@ interface BidWithTender {
   id: string;
   status: BidStatus;
   created_at: string;
-  tenders: {
-    id: string;
-    title: string;
-    contracting_authority: string | null;
-    deadline: string | null;
-  };
+  tenders:
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }[]
+    | null;
+}
+
+function normalizeBidTender(
+  tender:
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }[]
+    | null
+) {
+  if (Array.isArray(tender)) {
+    return tender[0] ?? null;
+  }
+
+  return tender;
 }
 
 export default async function AgencyClientBidsPage({
@@ -52,7 +83,7 @@ export default async function AgencyClientBidsPage({
     id: b.id,
     status: b.status,
     created_at: b.created_at,
-    tender: b.tenders,
+    tender: normalizeBidTender(b.tenders),
   }));
 
   const { data: tendersData } = await supabase

@@ -13,12 +13,43 @@ interface BidWithTender {
   status: BidStatus;
   created_at: string;
   company_id: string;
-  tenders: {
-    id: string;
-    title: string;
-    contracting_authority: string | null;
-    deadline: string | null;
-  };
+  tenders:
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }[]
+    | null;
+}
+
+function normalizeBidTender(
+  tender:
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }
+    | {
+        id: string;
+        title: string;
+        contracting_authority: string | null;
+        deadline: string | null;
+      }[]
+    | null
+) {
+  if (Array.isArray(tender)) {
+    return tender[0] ?? null;
+  }
+
+  return tender;
 }
 
 export default async function BidsPage() {
@@ -76,7 +107,7 @@ export default async function BidsPage() {
         id: bid.id,
         status: bid.status,
         created_at: bid.created_at,
-        tender: bid.tenders,
+        tender: normalizeBidTender(bid.tenders),
         clientName: companyMetaMap.get(bid.company_id)?.companyName ?? "Nepoznat",
         clientId: companyMetaMap.get(bid.company_id)?.agencyClientId ?? "",
       }));
@@ -133,7 +164,7 @@ export default async function BidsPage() {
     id: bid.id,
     status: bid.status,
     created_at: bid.created_at,
-    tender: bid.tenders,
+    tender: normalizeBidTender(bid.tenders),
   }));
 
   const displayBids = bids.length > 0
