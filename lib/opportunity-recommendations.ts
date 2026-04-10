@@ -420,7 +420,7 @@ export async function fetchPublishedGrantCandidates<
     .order("deadline", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
-  return (data ?? []) as TOpportunity[];
+  return (data ?? []) as unknown as TOpportunity[];
 }
 
 export async function getPersonalizedOpportunityRecommendations<
