@@ -74,7 +74,7 @@ export function TenderSistemLogo({
           )}
         >
           <span>Tender</span>
-          <span className="text-[#31C5FF]">sistem</span>
+          <span className="text-blue-600">sistem</span>
           <span className={cn("font-semibold", isDark ? "text-slate-200" : "text-slate-700")}>.com</span>
         </span>
         {subtitle ? (
