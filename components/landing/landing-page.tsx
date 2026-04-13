@@ -194,20 +194,21 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         {/* 3 Stat Cards */}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeUpContainer} className="mt-10 grid gap-4 md:grid-cols-3">
           {[
-            { metric: "3–5 sati", label: "ručnog rada po tenderu", desc: "Mi to radimo za vas za 30 sekundi.", icon: Clock, iconBg: "bg-red-100", iconColor: "text-red-500", metricColor: "text-red-600", tagBg: "bg-red-50 border-red-100", tagText: "text-red-600" },
-            { metric: "1 papir", label: "dovoljan za odbijanje ponude", desc: "Sistem provjeri svaki zahtjev prije slanja.", icon: FileText, iconBg: "bg-amber-100", iconColor: "text-amber-600", metricColor: "text-amber-600", tagBg: "bg-amber-50 border-amber-100", tagText: "text-amber-700" },
-            { metric: "47.000+", label: "tendera godišnje u BiH", desc: "Koliko ste ih propustili jer niste provjerili portal?", icon: TrendingUp, iconBg: "bg-blue-100", iconColor: "text-blue-600", metricColor: "text-blue-700", tagBg: "bg-blue-50 border-blue-100", tagText: "text-blue-700" },
+            { metric: "3-5 sati", label: "ručnog rada po tenderu", desc: "Mi to radimo za vas za 30 sekundi.", icon: Clock },
+            { metric: "1 papir", label: "dovoljan za odbijanje ponude", desc: "Sistem provjeri svaki zahtjev prije slanja.", icon: FileText },
+            { metric: "47.000+", label: "tendera godišnje u BiH", desc: "Koliko ste ih propustili jer niste provjerili portal?", icon: TrendingUp },
           ].map((item) => (
-            <motion.div variants={fadeUpItem} key={item.label} className="group flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_12px_40px_rgba(15,23,42,0.09)]">
-              <div className="flex items-center justify-between">
-                <div className={`flex size-10 items-center justify-center rounded-xl ${item.iconBg}`}><item.icon className={`size-5 ${item.iconColor}`} /></div>
-                <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${item.tagBg} ${item.tagText}`}>stat</span>
+            <motion.div variants={fadeUpItem} key={item.label} className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_12px_40px_rgba(37,99,235,0.12)]">
+              <div className="flex items-start gap-4">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 shadow-inner shadow-blue-200/60">
+                  <item.icon className="size-5 text-blue-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-heading text-[2.25rem] font-extrabold leading-none tracking-tight text-blue-600">{item.metric}</p>
+                  <p className="mt-2 text-[0.95rem] font-semibold leading-snug text-slate-800">{item.label}</p>
+                </div>
               </div>
-              <div className="mt-4">
-                <p className={`font-heading text-[2.25rem] font-extrabold leading-none tracking-tight ${item.metricColor}`}>{item.metric}</p>
-                <p className="mt-1.5 text-[0.9rem] font-semibold leading-snug text-slate-700">{item.label}</p>
-              </div>
-              <div className="my-4 h-px bg-slate-100" />
+              <div className="my-4 h-px bg-gradient-to-r from-blue-100 via-slate-100 to-transparent" />
               <p className="text-[13.5px] leading-relaxed text-slate-500">{item.desc}</p>
             </motion.div>
           ))}
@@ -470,85 +471,118 @@ function MoneySection() {
 // ─── Pricing Section ─────────────────────────────────────────────────────────
 function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
-    <section id="cijene" className="relative bg-slate-100 px-4 sm:px-6 py-16 sm:py-24 border-b border-slate-200 overflow-hidden">
-      <div className="absolute inset-0 opacity-60 -z-20 mix-blend-multiply"><Image src="/images/pricing-bg.png" alt="Premium Pricing Abstract Background" fill className="object-cover" /></div>
-      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] -z-10" />
+    <section id="cijene" className="relative overflow-hidden border-b border-slate-200 bg-slate-100 px-4 py-16 sm:px-6 sm:py-24">
+      <div className="absolute inset-0 -z-20 opacity-60 mix-blend-multiply">
+        <Image src="/images/pricing-bg.png" alt="Premium Pricing Abstract Background" fill className="object-cover" />
+      </div>
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(191,219,254,0.85),_rgba(255,255,255,0.78)_38%,_rgba(248,250,252,0.95)_100%)]" />
 
-      <div className="mx-auto max-w-6xl relative z-10">
-        <div className="text-center mb-12">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 mb-5 shadow-sm">
-            <span className="text-[13px] font-bold text-slate-600 uppercase tracking-widest">Za profesionalce</span>
-          </motion.div>
-          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Jasni paketi. Bez iznenađenja.
-          </motion.h2>
-          <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="mt-3 text-lg text-slate-700">
-            Odaberite paket prema vašem obimu rada. Nema skrivenih troškova ni ugovornih zamki.
-          </motion.p>
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/70 px-6 py-10 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:px-10 sm:py-12 lg:px-12">
+          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-blue-100/80 via-white/0 to-transparent" />
+          <div className="absolute -left-20 top-20 size-64 rounded-full bg-blue-200/35 blur-3xl" />
+          <div className="absolute -right-20 bottom-0 size-72 rounded-full bg-sky-200/30 blur-3xl" />
+          <div className="absolute inset-x-10 top-[9.25rem] h-px bg-gradient-to-r from-transparent via-blue-200/80 to-transparent" />
+
+          <div className="relative">
+            <div className="mb-12 text-center">
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-white/90 px-4 py-1.5 shadow-[0_10px_30px_rgba(59,130,246,0.10)]">
+                <span className="text-[13px] font-bold uppercase tracking-widest text-slate-700">Za profesionalce</span>
+              </motion.div>
+              <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                Jasni paketi. Bez iznenađenja.
+              </motion.h2>
+              <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="mx-auto mt-3 max-w-2xl text-lg leading-relaxed text-slate-600">
+                Odaberite paket prema vašem obimu rada. Nema skrivenih troškova ni ugovornih zamki.
+              </motion.p>
+            </div>
+
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeUpContainer} className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8">
+              {/* Osnovni */}
+              <motion.div variants={fadeUpItem} className="flex h-full flex-col rounded-[1.75rem] border border-white/80 bg-white/92 p-6 shadow-[0_16px_45px_rgba(15,23,42,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-[0_22px_55px_rgba(37,99,235,0.12)] sm:p-8">
+                <div className="inline-flex w-fit rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Paket</div>
+                <h3 className="mt-5 font-heading text-xl font-bold text-slate-900 sm:text-2xl">Osnovni</h3>
+                <p className="mt-2 min-h-[52px] text-base leading-relaxed text-slate-600">Praćenje svih tendera. Plaćate jednokratno ako želite pripremu.</p>
+                <div className="mt-6 flex items-end gap-2">
+                  <span className="font-heading text-4xl font-bold text-slate-900">49</span>
+                  <span className="pb-1 text-base font-semibold text-slate-500">KM / mj.</span>
+                </div>
+                <p className="mt-2 text-[14px] font-bold tracking-tight text-blue-600">+ 15 KM po svakoj pripremi ponude</p>
+                <div className="mt-6 h-px bg-gradient-to-r from-blue-100 via-slate-100 to-transparent" />
+                <div className="mt-6 space-y-4">
+                  {["Svi tenderi iz vaše djelatnosti", "Email obavijesti i pregledi", "Uvid u relevantnost dokumenta", "Priprema ponude dostupna"].map((f) => (
+                    <div key={f} className="flex items-start gap-3 text-base text-slate-700">
+                      <CheckCircle className="mt-0.5 size-5 shrink-0 text-blue-500" />
+                      <span className="leading-snug">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex h-[3.25rem] w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/60 hover:shadow-[0_10px_24px_rgba(37,99,235,0.10)] active:scale-95">
+                  Odaberi ovaj paket
+                </Link>
+              </motion.div>
+
+              {/* Puni Paket — highlighted */}
+              <motion.div variants={fadeUpItem} className="relative z-10 flex h-full flex-col rounded-[1.9rem] border border-blue-400/70 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.90))] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.28)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_30px_80px_rgba(30,64,175,0.28)] sm:p-8 lg:scale-[1.035]">
+                <div className="absolute inset-x-0 -top-4 flex justify-center">
+                  <span className="rounded-full border border-blue-300/60 bg-blue-500 px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-white shadow-[0_8px_24px_rgba(59,130,246,0.35)]">
+                    Najčešći izbor
+                  </span>
+                </div>
+                <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/80 to-transparent" />
+                <div className="inline-flex w-fit rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-blue-200">Premium</div>
+                <h3 className="mt-5 font-heading text-xl font-bold text-white sm:text-2xl">Puni Paket</h3>
+                <p className="mt-2 min-h-[52px] text-base leading-relaxed text-slate-300">Predajete bez greške. Priprema i pregled uključena potpuno besplatno.</p>
+                <div className="mt-6 flex items-end gap-2">
+                  <span className="font-heading text-5xl font-bold text-white">99</span>
+                  <span className="pb-1 text-base font-semibold text-blue-100">KM / mj.</span>
+                </div>
+                <p className="mt-2 text-[14px] font-bold tracking-tight text-blue-300">Konačna cijena, nema doplata</p>
+                <div className="mt-6 h-px bg-gradient-to-r from-blue-400/40 via-white/10 to-transparent" />
+                <div className="mt-6 flex-grow space-y-4">
+                  {["Sve iz Osnovnog paketa", "Besplatna priprema svake ponude", "Praćenje i provjera dokumentacije", "Aktivno praćenje konkurencije"].map((f, i) => (
+                    <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "font-semibold text-blue-100" : "font-bold text-white"}`}>
+                      <CheckCircle className={`mt-0.5 size-5 shrink-0 ${i === 0 ? "text-blue-300" : "text-blue-400"}`} />
+                      <span className="leading-snug">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex h-[3.5rem] w-full items-center justify-center rounded-xl bg-white px-6 text-[16px] font-bold text-slate-900 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-50 hover:shadow-[0_18px_30px_rgba(59,130,246,0.20)] active:scale-95">
+                  Kreni bez limita
+                </Link>
+              </motion.div>
+
+              {/* Agencijski */}
+              <motion.div variants={fadeUpItem} className="flex h-full flex-col rounded-[1.75rem] border border-white/80 bg-white/92 p-6 shadow-[0_16px_45px_rgba(15,23,42,0.08)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-200 hover:shadow-[0_22px_55px_rgba(37,99,235,0.12)] sm:p-8">
+                <div className="inline-flex w-fit rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Timovi</div>
+                <h3 className="mt-5 font-heading text-xl font-bold text-slate-900 sm:text-2xl">Agencijski</h3>
+                <p className="mt-2 min-h-[52px] text-base leading-relaxed text-slate-600">Za agencije koje profesionalno vode tender apliciranje za klijente.</p>
+                <div className="mt-6 flex items-end gap-2">
+                  <span className="font-heading text-4xl font-bold text-slate-900">149+</span>
+                  <span className="pb-1 text-base font-semibold text-slate-500">KM / mj.</span>
+                </div>
+                <p className="mt-2 text-[14px] font-bold tracking-tight text-blue-600">+25 KM za svaku dodatnu firmu</p>
+                <div className="mt-6 h-px bg-gradient-to-r from-blue-100 via-slate-100 to-transparent" />
+                <div className="mt-6 flex-grow space-y-4">
+                  {["Sve pogodnosti Punog paketa", "Vođenje više firmi odjednom", "Zasebni logički profili klijenata", "Uspostavljanje centralne kontrole"].map((f, i) => (
+                    <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "font-semibold text-slate-500" : "text-slate-700"}`}>
+                      <CheckCircle className="mt-0.5 size-5 shrink-0 text-blue-500" />
+                      <span className="leading-snug">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/contact" className="mt-8 flex h-[3.25rem] w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/60 hover:shadow-[0_10px_24px_rgba(37,99,235,0.10)] active:scale-95">
+                  Kontakt za agencije
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.5 }} className="mt-12 flex items-center justify-center gap-2 text-center text-[14px] font-medium text-slate-500">
+              <ShieldCheck className="size-5 text-blue-500" />
+              Pretplatu možete otkazati bilo kada. Bez vezivanja dugoročnim ugovorom.
+            </motion.div>
+          </div>
         </div>
-
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeUpContainer} className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8">
-          {/* Osnovni */}
-          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-slate-300 hover:bg-white hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
-            <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Osnovni</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Praćenje svih tendera. Plaćate jednokratno ako želite pripremu.</p>
-            <div className="mt-5 flex items-baseline gap-1.5">
-              <span className="font-heading text-4xl font-bold text-slate-900">49</span>
-              <span className="text-base font-semibold text-slate-600">KM / mj.</span>
-            </div>
-            <p className="mt-1.5 text-[14px] text-amber-600 font-bold tracking-tight">+ 15 KM po svakoj pripremi ponude</p>
-            <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6">
-              {["Svi tenderi iz vaše djelatnosti", "Email obavijesti i pregledi", "Uvid u relevantnost dokumenta", "Priprema ponude dostupna"].map((f) => (
-                <div key={f} className="flex items-start gap-3 text-base text-slate-700"><CheckCircle className="mt-0.5 size-5 shrink-0 text-slate-400" /><span className="leading-snug">{f}</span></div>
-              ))}
-            </div>
-            <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all duration-300 hover:bg-slate-50 hover:border-slate-400 hover:shadow-[0_4px_20px_rgb(15,23,42,0.08)] hover:-translate-y-0.5 active:scale-95">Odaberi ovaj paket</Link>
-          </motion.div>
-
-          {/* Puni Paket — highlighted */}
-          <motion.div variants={fadeUpItem} className="relative rounded-[1.5rem] border-2 border-primary bg-white/95 p-6 sm:p-8 shadow-xl shadow-blue-500/15 backdrop-blur-md lg:scale-[1.05] z-10 transition-all duration-300 hover:shadow-[0_20px_40px_rgb(59,130,246,0.25)] hover:-translate-y-2 lg:hover:-translate-y-4 hover:border-blue-500 flex flex-col">
-            <div className="absolute -top-4 inset-x-0 flex justify-center"><span className="rounded-full bg-primary px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider text-white shadow-sm">Najčešći izbor</span></div>
-            <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Puni Paket</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Predajete bez greške. Priprema i pregled uključena potpuno besplatno.</p>
-            <div className="mt-5 flex items-baseline gap-1.5">
-              <span className="font-heading text-5xl font-bold text-slate-900">99</span>
-              <span className="text-base font-semibold text-slate-600">KM / mj.</span>
-            </div>
-            <p className="mt-1.5 text-[14px] text-emerald-600 font-bold tracking-tight">Konačna cijena, nema doplata</p>
-            <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6 flex-grow">
-              {["Sve iz Osnovnog paketa", "Besplatna priprema svake ponude", "Praćenje i provjera dokumentacije", "Aktivno praćenje konkurencije"].map((f, i) => (
-                <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "text-slate-500 font-semibold" : "text-slate-800 font-bold"}`}>
-                  <CheckCircle className={`mt-0.5 size-5 shrink-0 ${i === 0 ? "text-slate-400" : "text-primary"}`} /><span className="leading-snug">{f}</span>
-                </div>
-              ))}
-            </div>
-            <Link href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-8 flex w-full h-[3.5rem] items-center justify-center rounded-xl bg-primary px-6 text-[16px] font-bold text-white transition-all duration-300 hover:bg-blue-600 hover:shadow-[0_0_30px_rgb(59,130,246,0.5)] hover:-translate-y-0.5 active:scale-95">Kreni bez limita</Link>
-          </motion.div>
-
-          {/* Agencijski */}
-          <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-slate-300 hover:bg-white hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
-            <h3 className="font-heading text-xl font-bold text-slate-900 sm:text-2xl">Agencijski</h3>
-            <p className="mt-2 text-base text-slate-600 min-h-[44px]">Za agencije koje profesionalno vode tender apliciranje za klijente.</p>
-            <div className="mt-5 flex items-baseline gap-1.5">
-              <span className="font-heading text-4xl font-bold text-slate-900">149+</span>
-              <span className="text-base font-semibold text-slate-600">KM / mj.</span>
-            </div>
-            <p className="mt-1.5 text-[14px] text-slate-500 font-bold tracking-tight">+25 KM za svaku dodatnu firmu</p>
-            <div className="mt-6 space-y-4 border-t border-slate-200/60 pt-6 flex-grow">
-              {["Sve pogodnosti Punog paketa", "Vođenje više firmi odjednom", "Zasebni logički profili klijenata", "Uspostavljanje centralne kontrole"].map((f, i) => (
-                <div key={f} className={`flex items-start gap-3 text-base ${i === 0 ? "text-slate-500 font-semibold" : "text-slate-700"}`}>
-                  <CheckCircle className="mt-0.5 size-5 shrink-0 text-slate-400" /><span className="leading-snug">{f}</span>
-                </div>
-              ))}
-            </div>
-            <Link href="/contact" className="mt-8 flex w-full h-[3.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-base font-bold text-slate-800 transition-all duration-300 hover:bg-slate-50 hover:border-slate-400 hover:shadow-[0_4px_20px_rgb(15,23,42,0.08)] hover:-translate-y-0.5 active:scale-95">Kontakt za agencije</Link>
-          </motion.div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.5 }} className="mt-12 text-center text-[14px] font-medium text-slate-500 flex items-center justify-center gap-2">
-          <ShieldCheck className="size-5 text-emerald-500" />
-          Pretplatu možete otkazati bilo kada. Bez vezivanja dugoročnim ugovorom.
-        </motion.div>
       </div>
     </section>
   );
@@ -599,7 +633,7 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
         <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">Počnite raditi prije nego propustite sljedeći posao.</h2>
         <p className="mx-auto mt-5 max-w-2xl text-[1.125rem] text-slate-300 leading-relaxed font-medium">Dopustite sistemu da obavi teški, dosadni rad umjesto Vas, te da vas vodi kroz čitav postupak.</p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <PrimaryCTA isLoggedIn={isLoggedIn} label="Besplatno osigurajte svoju firmu" className="!bg-white !text-slate-900 hover:!bg-slate-100 !shadow-white/10" />
+          <PrimaryCTA isLoggedIn={isLoggedIn} label="Isprobajte besplatno" className="!bg-white !text-slate-900 hover:!bg-slate-100 !shadow-white/10" />
         </div>
       </motion.div>
     </section>

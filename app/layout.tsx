@@ -24,6 +24,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Tendersistem.com — Upravljanje ponudama u javnim nabavkama",
   description: "Tendersistem je Vaš recept za uspjeh. Alat za upravljanje ponudama u javnim nabavkama u Bosni i Hercegovini.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
