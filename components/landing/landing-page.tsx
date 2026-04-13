@@ -105,7 +105,7 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   });
 
   return (
-    <motion.nav 
+    <motion.nav
       variants={{
         visible: { y: 0, opacity: 1 },
         hidden: { y: "-100%", opacity: 0 }
@@ -156,6 +156,89 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full -z-10" />
 
       <div className="relative mx-auto max-w-7xl">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,0.98fr)] lg:gap-12">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpContainer}
+            className="flex max-w-2xl flex-col items-start text-left"
+          >
+            <motion.h1
+              variants={fadeUpItem}
+              className="font-heading text-4xl font-extrabold leading-[1.02] tracking-tight text-slate-900 sm:text-5xl lg:text-[4.15rem]"
+            >
+              Vaš sljedeći ugovor počinje ovdje.
+            </motion.h1>
+
+            <motion.p
+              variants={fadeUpItem}
+              className="mt-6 max-w-2xl text-[1.05rem] leading-relaxed text-slate-700 sm:text-[1.2rem]"
+            >
+              Unesite šta vaša firma radi — za 30 sekundi vidite sve tendere koji su za vas. Kliknete na tender, učitate dokumentaciju i sistem vam automatski izvlači točno šta trebate priložiti.
+            </motion.p>
+
+            <motion.p
+              variants={fadeUpItem}
+              className="mt-5 text-[0.97rem] text-slate-500 sm:text-base"
+            >
+              Koriste firme iz građevinarstva, IT-a i medicinske opreme širom BiH.
+            </motion.p>
+
+            <motion.div
+              variants={fadeUpItem}
+              className="mt-8 flex w-full flex-col items-start gap-3"
+            >
+              <PrimaryCTA
+                isLoggedIn={false}
+                label="Isprobajte besplatno 7 dana"
+                className="h-[3.9rem] w-full border border-blue-600 text-lg shadow-2xl shadow-blue-500/35 sm:w-auto sm:px-12"
+              />
+              <p className="text-[14px] font-medium text-slate-500">
+                Bez kartice. Bez obaveza. Otkažite kada želite.
+              </p>
+              <Link
+                href="#kako-radi"
+                className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-700 transition-colors hover:text-primary"
+              >
+                Pogledaj kako radi
+                <ArrowRight className="size-4" />
+              </Link>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 36, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto w-full max-w-[560px]"
+          >
+            <div className="absolute inset-0 rounded-[2rem] bg-blue-500/10 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.14)] backdrop-blur-sm sm:p-5">
+              <div className="rounded-[1.6rem] border border-slate-700/80 bg-[#111111] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-4">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#1a1a1a] shadow-[0_18px_45px_rgba(15,23,42,0.28)]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_35%)]" />
+                  <div className="absolute inset-x-0 top-0 flex h-14 items-center gap-2 border-b border-white/10 bg-white/[0.03] px-4">
+                    <span className="size-2.5 rounded-full bg-white/20" />
+                    <span className="size-2.5 rounded-full bg-white/20" />
+                    <span className="size-2.5 rounded-full bg-white/20" />
+                    <div className="ml-3 h-2.5 w-24 rounded-full bg-white/10" />
+                  </div>
+
+                  <div className="relative flex h-full flex-col items-center justify-center px-8 pt-14 text-center">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.26em] text-slate-400">
+                      VIDEO / GIF DEMO
+                    </p>
+                    <p className="mt-4 max-w-[18rem] text-xl font-semibold leading-snug text-white sm:text-2xl">
+                      Placeholder — dodati snimku ekrana platforme
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="hidden">
         <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] lg:gap-12">
           <motion.div
             initial="hidden"
@@ -298,14 +381,14 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </div>
           </motion.div>
         </div>
-
+        </div>
 
         {/* Trust & Scale Indicators - Professional SaaS context */}
-        <motion.div 
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ duration: 1, delay: 0.6 }}
-           className="mx-auto mt-16 max-w-4xl border-t border-slate-200/60 pt-10"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.6 }}
+          className="mx-auto mt-16 max-w-4xl border-t border-slate-200/60 pt-10"
         >
           <p className="text-[14px] font-bold text-slate-500 uppercase tracking-widest mb-6">Pouzdano praćenje sa svih ključnih bh. izvora</p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-600 font-bold text-[15px]">
@@ -317,29 +400,29 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         </motion.div>
 
         {/* 3 Metric-driven Cards */}
-        <motion.div 
-           initial="hidden"
-           whileInView="visible"
-           viewport={{ once: true, margin: "-50px" }}
-           variants={fadeUpContainer}
-           className="mt-16 grid gap-5 text-left md:grid-cols-3"
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpContainer}
+          className="mt-16 grid gap-5 text-left md:grid-cols-3"
         >
           {[
             { metric: "3x", title: "više tendera", desc: "Sistem filtrira tržište i izdvaja samo one prilike koje bi vjerovatno propustili ručnim traženjem." },
             { metric: "10x", title: "brža priprema", desc: "Automatska analiza obimne dokumentacije uklanja desetine sati dosadnog ručnog čitanja." },
             { metric: "2x", title: "veća potencijalna zarada", desc: "Bez propuštenih prilika i bez odbačenih prijava zbog sitnih grešaka koje bi napravili da radite sami." },
           ].map((item) => (
-             <motion.div 
-               variants={fadeUpItem}
-               key={item.title} 
-               className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-[0_8px_30px_rgb(59,130,246,0.12)] hover:-translate-y-1"
-             >
-               <div className="flex flex-wrap items-baseline gap-2">
-                 <span className="font-heading text-[2.5rem] font-extrabold tracking-tight text-blue-600">{item.metric}</span>
-                 <span className="text-[1.125rem] font-bold text-slate-900 leading-tight">{item.title}</span>
-               </div>
-               <p className="text-[15px] text-slate-600 leading-relaxed mt-1">{item.desc}</p>
-             </motion.div>
+            <motion.div
+              variants={fadeUpItem}
+              key={item.title}
+              className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-[0_8px_30px_rgb(59,130,246,0.12)] hover:-translate-y-1"
+            >
+              <div className="flex flex-wrap items-baseline gap-2">
+                <span className="font-heading text-[2.5rem] font-extrabold tracking-tight text-blue-600">{item.metric}</span>
+                <span className="text-[1.125rem] font-bold text-slate-900 leading-tight">{item.title}</span>
+              </div>
+              <p className="text-[15px] text-slate-600 leading-relaxed mt-1">{item.desc}</p>
+            </motion.div>
           ))}
         </motion.div>
       </div>
@@ -385,7 +468,7 @@ function HowItWorksSection() {
 
       <div className="mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-12">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -394,7 +477,7 @@ function HowItWorksSection() {
           >
             Sistematiziran proces prijave
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -405,20 +488,20 @@ function HowItWorksSection() {
           </motion.p>
         </div>
 
-        <motion.div 
-           initial="hidden"
-           whileInView="visible"
-           viewport={{ once: true, margin: "-50px" }}
-           variants={fadeUpContainer}
-           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative"
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpContainer}
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative"
         >
           {/* Subtle connection line for desktop */}
           <div className="hidden lg:block absolute top-12 left-10 right-10 h-0.5 border-t-2 border-dashed border-slate-200 -z-0" />
 
           {steps.map((s) => (
-            <motion.div 
+            <motion.div
               variants={fadeUpItem}
-              key={s.title} 
+              key={s.title}
               className="relative rounded-2xl border border-white/80 bg-white/90 p-6 shadow-sm shadow-blue-500/5 transition-all duration-300 hover:border-blue-200/60 hover:bg-white hover:shadow-[0_8px_30px_rgb(59,130,246,0.15)] z-10 backdrop-blur-md hover:-translate-y-1"
             >
               <div className="flex justify-between items-start mb-4">
@@ -435,7 +518,7 @@ function HowItWorksSection() {
           ))}
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -450,10 +533,10 @@ function HowItWorksSection() {
 }
 
 // ─── Opportunities Preview ───────────────────────────────────────────────────
-function OpportunitiesPreviewSection({ 
-  recentOpportunities, 
-  recentLegalUpdates 
-}: { 
+function OpportunitiesPreviewSection({
+  recentOpportunities,
+  recentLegalUpdates
+}: {
   recentOpportunities?: LandingPageProps['recentOpportunities'];
   recentLegalUpdates?: LandingPageProps['recentLegalUpdates'];
 }) {
@@ -466,7 +549,7 @@ function OpportunitiesPreviewSection({
     <section className="bg-slate-50 px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-200 overflow-hidden">
       <div className="mx-auto max-w-7xl">
         <div className="text-center mb-12">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -475,7 +558,7 @@ function OpportunitiesPreviewSection({
           >
             Aktivne prilike i pravne izmjene
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -504,8 +587,8 @@ function OpportunitiesPreviewSection({
                   <OpportunityCard key={opportunity.id} opportunity={opportunity} />
                 ))}
               </div>
-              <Link 
-                href="/prilike" 
+              <Link
+                href="/prilike"
                 className="mt-6 inline-flex items-center gap-2 text-base font-bold text-primary hover:text-blue-700 transition-colors group"
               >
                 Vidi sve prilike
@@ -528,7 +611,7 @@ function OpportunitiesPreviewSection({
               </h3>
               <div className="space-y-4">
                 {recentLegalUpdates.slice(0, 3).map((update) => (
-                  <div 
+                  <div
                     key={update.id}
                     className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
                   >
@@ -541,10 +624,10 @@ function OpportunitiesPreviewSection({
                           {update.published_date && (
                             <span className="text-[11px] text-slate-500 flex items-center gap-1">
                               <Calendar className="size-3" />
-                              {new Date(update.published_date).toLocaleDateString('bs-BA', { 
-                                day: 'numeric', 
-                                month: 'short', 
-                                year: 'numeric' 
+                              {new Date(update.published_date).toLocaleDateString('bs-BA', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
                               })}
                             </span>
                           )}
@@ -557,9 +640,9 @@ function OpportunitiesPreviewSection({
                         )}
                         <p className="text-xs text-slate-500 mt-2">{update.source}</p>
                         {update.source_url && (
-                          <a 
-                            href={update.source_url} 
-                            target="_blank" 
+                          <a
+                            href={update.source_url}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs text-primary hover:text-blue-700 mt-2 font-semibold"
                           >
@@ -572,8 +655,8 @@ function OpportunitiesPreviewSection({
                   </div>
                 ))}
               </div>
-              <Link 
-                href="/zakon" 
+              <Link
+                href="/zakon"
                 className="mt-6 inline-flex items-center gap-2 text-base font-bold text-primary hover:text-blue-700 transition-colors group"
               >
                 Prati pravne izmjene
@@ -593,7 +676,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     <section id="usporedba" className="bg-white px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-100 overflow-hidden">
       <div className="mx-auto max-w-5xl">
         <div className="text-center mb-12">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -602,7 +685,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           >
             Koliko vremena gubite na jedan tender?
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -615,7 +698,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Bez aplikacije */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-50px" }}
@@ -632,18 +715,18 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <p className="font-heading text-2xl font-bold text-slate-900">3–5 sati po tenderu</p>
               </div>
             </div>
-            
+
             <div className="mb-6 space-y-2 relative">
               <div className="flex justify-between text-[13px] font-bold text-slate-600">
                 <span>Utrošeno vrijeme procesa</span>
                 <span className="text-red-500">100%</span>
               </div>
               <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
                   whileInView={{ width: "100%" }}
                   transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-                  className="h-full rounded-full bg-red-400" 
+                  className="h-full rounded-full bg-red-400"
                 />
               </div>
             </div>
@@ -665,7 +748,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </motion.div>
 
           {/* Sa aplikacijom */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-50px" }}
@@ -689,11 +772,11 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <span className="text-emerald-700">-90% kraće (10x brže)</span>
               </div>
               <div className="h-2 w-full rounded-full bg-emerald-200/50 overflow-hidden">
-                <motion.div 
-                   initial={{ width: 0 }}
-                   whileInView={{ width: "10%" }}
-                   transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-                   className="h-full rounded-full bg-emerald-500" 
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: "10%" }}
+                  transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+                  className="h-full rounded-full bg-emerald-500"
                 />
               </div>
             </div>
@@ -704,7 +787,7 @@ function BeforeAfterSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 "Jasan pregled onoga što je kritično za tender",
                 "Tačan grafički spisak dokumentacije koja vam treba",
                 "Sigurnosne provjere ispravnosti prije predaje",
-                "Vidite tržište, analizu i konkurenciju",
+                "Pratite najnovije poticaje i grantove za Vas",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-base text-slate-800 font-semibold">
                   <CheckCircle className="mt-0.5 size-5 shrink-0 text-emerald-600" />
@@ -731,7 +814,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
       <div className="relative z-10 mx-auto max-w-5xl">
         <div className="grid gap-12 lg:grid-cols-2 items-center">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -748,7 +831,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               Firme gube poslove zbog bizarnih administrativnih grešaka. Nevažeća porezna potvrda, zaboravljen aneks... to više nije vaš problem. Gubitak stotina hiljada KM zbog papira je neprihvatljiv.
             </p>
 
-            <motion.div 
+            <motion.div
               className="mt-8 space-y-4"
               initial="hidden"
               whileInView="visible"
@@ -775,22 +858,22 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </div>
           </motion.div>
 
-          <motion.div 
-             initial={{ opacity: 0, scale: 0.95 }}
-             whileInView={{ opacity: 1, scale: 1 }}
-             viewport={{ once: true }}
-             transition={{ duration: 0.7, delay: 0.2 }}
-             className="rounded-[1.5rem] border border-white/10 bg-white/5 p-8 sm:p-10 backdrop-blur-sm shadow-2xl"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="rounded-[1.5rem] border border-white/10 bg-white/5 p-8 sm:p-10 backdrop-blur-sm shadow-2xl"
           >
             <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Visualna kontrola svake tačke</p>
-            <motion.div 
-               initial="hidden"
-               whileInView="visible"
-               viewport={{ once: true }}
-               variants={{
-                 visible: { transition: { staggerChildren: 0.1 } }
-               }}
-               className="space-y-3"
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={{
+                visible: { transition: { staggerChildren: 0.1 } }
+              }}
+              className="space-y-3"
             >
               {[
                 { done: true, text: "Uvjerenje o izmirenim porezima (PDV)" },
@@ -800,10 +883,10 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 { done: true, text: "Dokaz o tehničkoj specifikaciji" },
                 { done: false, text: "UJP potvrda (stara potvrda je istekla!)" },
               ].map((item) => (
-                <motion.div 
-                   variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
-                   key={item.text} 
-                   className={`flex items-center gap-3.5 rounded-xl p-4 transition-colors ${item.done ? "border border-white/10 bg-white/5" : "border border-red-500/40 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]"}`}
+                <motion.div
+                  variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }}
+                  key={item.text}
+                  className={`flex items-center gap-3.5 rounded-xl p-4 transition-colors ${item.done ? "border border-white/10 bg-white/5" : "border border-red-500/40 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.15)]"}`}
                 >
                   {item.done
                     ? <CheckCircle className="size-5 shrink-0 text-emerald-400" />
@@ -832,7 +915,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
       <div className="mx-auto max-w-6xl relative z-10">
         <div className="text-center mb-12">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -840,7 +923,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           >
             <span className="text-[13px] font-bold text-slate-600 uppercase tracking-widest">Za profesionalce</span>
           </motion.div>
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -849,7 +932,7 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           >
             Jasni paketi. Bez iznenađenja.
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -860,12 +943,12 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </motion.p>
         </div>
 
-        <motion.div 
-           initial="hidden"
-           whileInView="visible"
-           viewport={{ once: true, margin: "-50px" }}
-           variants={fadeUpContainer}
-           className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8"
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          variants={fadeUpContainer}
+          className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3 lg:items-start lg:gap-8"
         >
           {/* Osnovni */}
           <motion.div variants={fadeUpItem} className="rounded-[1.5rem] border border-white/80 bg-white/90 p-6 sm:p-8 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-slate-300 hover:bg-white hover:shadow-xl hover:-translate-y-1.5 flex flex-col">
@@ -953,13 +1036,13 @@ function PricingSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </Link>
           </motion.div>
         </motion.div>
-        
-        <motion.div 
-           initial={{ opacity: 0, y: 15 }}
-           whileInView={{ opacity: 1, y: 0 }}
-           viewport={{ once: true }}
-           transition={{ duration: 0.6, delay: 0.5 }}
-           className="mt-12 text-center text-[14px] font-medium text-slate-500 flex items-center justify-center gap-2"
+
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mt-12 text-center text-[14px] font-medium text-slate-500 flex items-center justify-center gap-2"
         >
           <ShieldCheck className="size-5 text-emerald-500" />
           Pretplatu možete otkazati bilo kada. Bez vezivanja dugoročnim ugovorom.
@@ -993,21 +1076,21 @@ function FAQSection() {
   return (
     <section className="bg-white px-4 sm:px-6 py-16 sm:py-20 border-b border-slate-100">
       <div className="mx-auto max-w-3xl">
-        <motion.h2 
-           initial={{ opacity: 0, y: 20 }}
-           whileInView={{ opacity: 1, y: 0 }}
-           viewport={{ once: true }}
-           transition={{ duration: 0.6 }}
-           className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center mb-10"
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl text-center mb-10"
         >
           Česta pitanja (FAQ)
         </motion.h2>
-        <motion.div 
-           initial="hidden"
-           whileInView="visible"
-           viewport={{ once: true }}
-           variants={fadeUpContainer}
-           className="space-y-4"
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeUpContainer}
+          className="space-y-4"
         >
           {FAQ_ITEMS.map((item) => (
             <motion.details variants={fadeUpItem} key={item.q} className="group rounded-2xl border border-slate-200 bg-slate-50 transition-colors hover:bg-slate-100">
@@ -1036,12 +1119,12 @@ function FinalCTA({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-slate-900/10 -z-10" />
       <div className="absolute inset-0 bg-primary/10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[800px] rounded-full bg-primary/20 blur-[120px] -z-10 mix-blend-screen" />
-      <motion.div 
-         initial={{ opacity: 0, scale: 0.95, y: 20 }}
-         whileInView={{ opacity: 1, scale: 1, y: 0 }}
-         viewport={{ once: true }}
-         transition={{ duration: 0.8, ease: "easeOut" }}
-         className="relative z-10 mx-auto max-w-3xl"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        whileInView={{ opacity: 1, scale: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 mx-auto max-w-3xl"
       >
         <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Počnite raditi prije nego propustite sljedeći posao.

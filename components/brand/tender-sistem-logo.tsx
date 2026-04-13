@@ -25,19 +25,19 @@ const sizeStyles: Record<
   sm: {
     wrapper: "gap-2",
     icon: "h-9 w-9",
-    title: "text-lg",
+    title: "text-[1.22rem]",
     subtitle: "text-[10px]",
   },
   md: {
     wrapper: "gap-2.5",
     icon: "h-12 w-12",
-    title: "text-2xl",
+    title: "text-[1.6rem]",
     subtitle: "text-[11px]",
   },
   lg: {
     wrapper: "gap-3.5",
     icon: "h-14 w-14",
-    title: "text-3xl",
+    title: "text-[2rem]",
     subtitle: "text-xs",
   },
 };
@@ -68,16 +68,16 @@ export function TenderSistemLogo({
       <span className="flex min-w-0 flex-col">
         <span
           className={cn(
-            "font-heading flex items-baseline gap-0 font-bold tracking-[-0.045em] leading-none antialiased",
+            "font-heading flex items-baseline gap-0 font-bold tracking-[-0.035em] leading-none antialiased",
             styles.title,
             isDark ? "text-white" : "text-slate-900",
           )}
         >
           <span className={cn("font-bold", isDark ? "text-white" : "text-slate-800")}>Tender</span>
-          <span className="bg-gradient-to-r from-[#43d8e6] to-[#155dfc] bg-clip-text text-transparent">sistem</span>
+          <span className="bg-gradient-to-r from-[#38bdf8] via-[#2ea8ef] to-[#2563eb] bg-clip-text text-transparent">sistem</span>
           <span
             className={cn(
-              "ml-[0.05em] text-[0.72em] font-semibold tracking-[-0.03em]",
+              "ml-[0.06em] text-[0.72em] font-semibold tracking-[-0.015em]",
               isDark ? "text-slate-100" : "text-slate-700",
             )}
           >
