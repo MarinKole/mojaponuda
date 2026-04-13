@@ -155,74 +155,157 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       </div>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full -z-10" />
 
-      <div className="relative mx-auto max-w-4xl text-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1.5 mb-5"
-        >
-          <span className="flex size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-          <span className="text-[13px] font-bold uppercase tracking-wide text-blue-700">
-            Sve javne nabavke u BiH — na jednom mjestu
-          </span>
-        </motion.div>
+      <div className="relative mx-auto max-w-7xl">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] lg:gap-12">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpContainer}
+            className="flex max-w-2xl flex-col items-start text-left"
+          >
+            <motion.div
+              variants={fadeUpItem}
+              className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/60 px-3 py-1.5"
+            >
+              <span className="flex size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+              <span className="text-[13px] font-bold uppercase tracking-wide text-blue-700">
+                Sve javne nabavke u BiH — na jednom mjestu
+              </span>
+            </motion.div>
 
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-          className="font-heading text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[4rem] mb-5"
-        >
-          Više tendera. Brže prijave.<br className="hidden md:block" /> Manje odbijenica.
-        </motion.h1>
+            <motion.h1
+              variants={fadeUpItem}
+              className="font-heading text-4xl font-extrabold leading-[1.02] tracking-tight text-slate-900 sm:text-5xl lg:text-[4.25rem]"
+            >
+              Pronalazimo tendere.
+              <br />
+              Čitamo zahtjeve.
+              <br />
+              Slažemo dobitnu ponudu.
+            </motion.h1>
 
-        <motion.p 
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-           className="mx-auto max-w-3xl text-[1.1rem] leading-relaxed text-slate-700 sm:text-[1.25rem] mb-7"
-        >
-          Automatski <strong>pronalazimo</strong> najbolje tendere za vašu djelatnost, izdvajamo <strong>šta tačno treba predati</strong> i vodimo vas kroz prijavu — bez gubljenja vremena i <strong>bez grešaka</strong>.
-        </motion.p>
+            <motion.p
+              variants={fadeUpItem}
+              className="mt-6 max-w-xl text-[1.05rem] leading-relaxed text-slate-700 sm:text-[1.2rem]"
+            >
+              Za vašu djelatnost izdvajamo samo relevantne prilike, jasno označavamo šta naručilac traži i pretvaramo komplikovanu dokumentaciju u konkretne korake za sigurnu prijavu.
+            </motion.p>
 
-        {/* Digitalni zaposlenik blok */}
-        <motion.div 
-           initial={{ opacity: 0, scale: 0.95 }}
-           animate={{ opacity: 1, scale: 1 }}
-           transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-           className="mx-auto max-w-2xl mb-8 flex items-start gap-4 rounded-2xl bg-blue-50/50 border border-blue-100/80 p-5 text-left transition-colors hover:bg-blue-50"
-        >
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-            <Bot className="size-6" />
-          </div>
-          <p className="text-base leading-snug text-slate-700 mt-0.5">
-            Sistem Vam daje vrijednost zaposlenika koji košta preko <strong className="text-slate-900">1.500 KM mjesečno</strong> — prati tendere, filtrira najbolje prilike i vodi Vas kroz prijavu bez ijednog propuštenog dokumenta.
-          </p>
-        </motion.div>
+            <motion.div
+              variants={fadeUpItem}
+              className="mt-6 flex w-full flex-col gap-3 rounded-[1.75rem] border border-blue-100/80 bg-white/85 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:p-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <Bot className="size-6" />
+                </div>
+                <p className="text-base leading-relaxed text-slate-700">
+                  Umjesto dodatnog zaposlenika od <strong className="text-slate-900">1.500+ KM mjesečno</strong>, dobijate sistem koji prati objave, upozorava na rokove i vodi Vas prema kompletnoj ponudi bez skupih propusta.
+                </p>
+              </div>
 
-        {/* CTA */}
-        <motion.div 
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-           className="flex flex-col items-center justify-center gap-3 w-full max-w-sm mx-auto sm:max-w-none mb-16"
-        >
-          <PrimaryCTA 
-            isLoggedIn={isLoggedIn} 
-            className="w-full sm:w-auto h-[3.75rem] sm:px-12 text-lg shadow-2xl shadow-blue-500/40 border border-blue-600" 
-          />
-          <p className="text-[14px] font-medium text-slate-600 rounded-full bg-blue-50/50 px-4 py-1.5 border border-blue-100/50 whitespace-nowrap mt-1">
-            Postoje aktivni tenderi za vašu firmu — provjerite za <span className="font-bold text-slate-800">30 sekundi</span>
-          </p>
-        </motion.div>
+              <div className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2">
+                  <CheckCircle className="size-4 text-blue-600" />
+                  Samo relevantni tenderi
+                </div>
+                <div className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2">
+                  <ShieldCheck className="size-4 text-blue-600" />
+                  Jasni zahtjevi i rokovi
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              variants={fadeUpItem}
+              className="mt-8 flex w-full flex-col items-start gap-3"
+            >
+              <PrimaryCTA
+                isLoggedIn={isLoggedIn}
+                className="h-[3.9rem] w-full border border-blue-600 text-lg shadow-2xl shadow-blue-500/35 sm:w-auto sm:px-12"
+              />
+              <p className="rounded-full border border-blue-100/70 bg-blue-50/60 px-4 py-1.5 text-[14px] font-medium text-slate-600">
+                Aktivne prilike za vašu firmu možete provjeriti za <span className="font-bold text-slate-800">30 sekundi</span>
+              </p>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 36, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mx-auto w-full max-w-[560px]"
+          >
+            <div className="absolute inset-0 rounded-[2rem] bg-blue-500/10 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.14)] backdrop-blur-sm sm:p-5">
+              <div className="rounded-[1.6rem] border border-dashed border-blue-200 bg-[linear-gradient(180deg,rgba(239,246,255,0.95),rgba(248,250,252,0.98))] p-5 sm:p-6">
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">Mjesto za sliku</p>
+                    <p className="mt-1 text-sm text-slate-600">Ubaci screenshot platforme ili branded ilustraciju.</p>
+                  </div>
+                  <div className="rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+                    Omjer 4:5
+                  </div>
+                </div>
+
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.35rem] border border-white/80 bg-white shadow-inner">
+                  <div className="absolute inset-x-0 top-0 flex h-14 items-center gap-2 border-b border-slate-200 bg-slate-50 px-4">
+                    <span className="size-2.5 rounded-full bg-rose-300" />
+                    <span className="size-2.5 rounded-full bg-amber-300" />
+                    <span className="size-2.5 rounded-full bg-emerald-300" />
+                    <div className="ml-3 h-2.5 w-28 rounded-full bg-slate-200" />
+                  </div>
+
+                  <div className="absolute inset-0 top-14 p-4 sm:p-5">
+                    <div className="h-full rounded-[1rem] border border-blue-100 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.18),transparent_36%),linear-gradient(180deg,#ffffff_0%,#eff6ff_100%)] p-4 sm:p-5">
+                      <div className="flex h-full flex-col justify-between rounded-[0.9rem] border border-white/80 bg-white/80 p-4 shadow-sm">
+                        <div className="space-y-3">
+                          <div className="h-3 w-24 rounded-full bg-blue-100" />
+                          <div className="h-8 w-4/5 rounded-2xl bg-slate-200" />
+                          <div className="grid gap-3">
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                              <div className="h-3 w-20 rounded-full bg-blue-100" />
+                              <div className="mt-3 h-3 w-full rounded-full bg-slate-100" />
+                              <div className="mt-2 h-3 w-5/6 rounded-full bg-slate-100" />
+                              <div className="mt-4 flex gap-2">
+                                <div className="h-8 w-24 rounded-full bg-blue-600/15" />
+                                <div className="h-8 w-20 rounded-full bg-slate-200" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div className="h-3 w-16 rounded-full bg-slate-200" />
+                                <div className="mt-3 h-10 rounded-2xl bg-slate-100" />
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div className="h-3 w-16 rounded-full bg-slate-200" />
+                                <div className="mt-3 h-10 rounded-2xl bg-slate-100" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3 text-center">
+                          <p className="text-sm font-semibold text-slate-700">Preporučena veličina slike</p>
+                          <p className="mt-1 text-lg font-extrabold tracking-tight text-slate-900">1200 × 1500 px</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
 
         {/* Trust & Scale Indicators - Professional SaaS context */}
         <motion.div 
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
            transition={{ duration: 1, delay: 0.6 }}
-           className="mx-auto max-w-4xl border-t border-slate-200/60 pt-10"
+           className="mx-auto mt-16 max-w-4xl border-t border-slate-200/60 pt-10"
         >
           <p className="text-[14px] font-bold text-slate-500 uppercase tracking-widest mb-6">Pouzdano praćenje sa svih ključnih bh. izvora</p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-slate-600 font-bold text-[15px]">
