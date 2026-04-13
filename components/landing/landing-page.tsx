@@ -148,7 +148,7 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
 // ─── Hero ────────────────────────────────────────────────────────────────────
 function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
-    <section className="relative overflow-hidden bg-white px-4 sm:px-6 pb-12 pt-28 sm:pb-16 sm:pt-36 border-b border-slate-200">
+    <section className="relative overflow-hidden bg-white px-4 sm:px-6 pb-12 pt-22 sm:pb-16 sm:pt-28 border-b border-slate-200">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       <div className="absolute top-0 right-0 h-[800px] w-[800px] blur-[1px] opacity-[0.25] -z-10 mix-blend-multiply translate-x-1/4 -translate-y-1/4 pointer-events-none select-none">
         <Image src="/images/premium-glass-hero.png" alt="Premium Abstract Glass Background" fill className="object-contain" priority />
@@ -408,20 +408,20 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           className="mt-16 grid gap-5 text-left md:grid-cols-3"
         >
           {[
-            { metric: "4-6 sati", title: "toliko traje ručno pretraživanje jednog tendera", desc: "Mi to radimo za vas za 30 sekundi." },
+            { metric: "3-5 sati", title: "toliko traje ručno pretraživanje tendera", desc: "Mi to radimo za vas za 30 sekundi." },
             { metric: "1 papir", title: "dovoljan da vam odbiju cijelu ponudu", desc: "Sistem provjeri svaki zahtjev prije nego pošaljete." },
             { metric: "47.000+", title: "tendera godišnje u BiH", desc: "Koliko ste ih propustili jer niste stigli provjeriti portal tog dana?" },
           ].map((item) => (
             <motion.div
               variants={fadeUpItem}
               key={item.title}
-              className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-[0_8px_30px_rgb(59,130,246,0.12)] hover:-translate-y-1"
+              className="flex h-full flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-[0_8px_30px_rgb(59,130,246,0.12)] hover:-translate-y-1"
             >
-              <div className="flex flex-wrap items-baseline gap-2">
+              <div className="flex min-h-[5.5rem] flex-col justify-start">
                 <span className="font-heading text-[2.5rem] font-extrabold tracking-tight text-blue-600">{item.metric}</span>
-                <span className="text-[1.125rem] font-bold text-slate-900 leading-tight">{item.title}</span>
+                <span className="mt-1 text-[1.125rem] font-bold leading-tight text-slate-900">{item.title}</span>
               </div>
-              <p className="text-[15px] text-slate-600 leading-relaxed mt-1">{item.desc}</p>
+              <p className="mt-auto text-[15px] leading-relaxed text-slate-600">{item.desc}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -447,8 +447,8 @@ function HowItWorksSection() {
     },
     {
       icon: FileText,
-      badge: "ČITANJE",
-      title: "Priložite dokument — mi čitamo",
+      badge: "ANALIZA",
+      title: "Priložite dokument — naš sistem analizira.",
       desc: "Kliknete na tender, priložite dokumentaciju sa portala i sistem vam za tren izvuče listu svega što trebate pripremiti.",
     },
     {
@@ -865,7 +865,7 @@ function MoneySection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="rounded-[1.5rem] border border-white/10 bg-white/5 p-8 sm:p-10 backdrop-blur-sm shadow-2xl"
           >
-            <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Visualna kontrola svake tačke</p>
+            <p className="text-[14px] font-bold uppercase tracking-wider text-blue-300 mb-6">Vizualna kontrola svake tačke</p>
             <motion.div
               initial="hidden"
               whileInView="visible"
