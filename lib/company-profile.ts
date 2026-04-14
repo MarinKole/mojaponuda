@@ -809,6 +809,206 @@ const OFFERING_CATEGORY_CPV_CODES: Record<string, string[]> = {
   printing_marketing_events: ["79340000", "79800000", "79952000"],
 };
 
+const PRIMARY_INDUSTRY_RETRIEVAL_ALIASES: Record<string, string[]> = {
+  construction: [
+    "gradjevinski radovi",
+    "izvodjenje radova",
+    "rekonstrukcija objekta",
+    "sanacija objekta",
+    "niskogradnja",
+  ],
+  it: [
+    "software",
+    "programska rjesenja",
+    "informacioni sistem",
+    "ict",
+    "digitalna platforma",
+  ],
+  equipment: [
+    "isporuka opreme",
+    "tehnicka oprema",
+    "nabavka opreme",
+    "potrosni materijal",
+  ],
+  medical: [
+    "medicinska oprema",
+    "medicinski materijal",
+    "zdravstvena oprema",
+    "laboratorijska oprema",
+  ],
+  maintenance: [
+    "servis i odrzavanje",
+    "tehnicka podrska",
+    "preventivno odrzavanje",
+    "maintenance",
+  ],
+  consulting: [
+    "konsultantske usluge",
+    "savjetodavne usluge",
+    "izrada studije",
+    "strucni nadzor",
+  ],
+  logistics: [
+    "transportne usluge",
+    "prevoz",
+    "nabavka vozila",
+    "logisticka podrska",
+  ],
+  security_energy: [
+    "video nadzor",
+    "fizicka zastita",
+    "gorivo i energenti",
+    "elektroenergetski sistem",
+  ],
+  facilities_hospitality: [
+    "usluge ciscenja",
+    "higijenski materijal",
+    "catering usluge",
+    "prehrambeni proizvodi",
+  ],
+  communications_media: [
+    "stampani materijal",
+    "promotivni materijal",
+    "marketinske usluge",
+    "organizacija dogadjaja",
+  ],
+};
+
+const OFFERING_CATEGORY_RETRIEVAL_ALIASES: Record<string, string[]> = {
+  software_licenses: [
+    "software",
+    "program",
+    "programska rjesenja",
+    "informacioni sistem",
+  ],
+  it_hardware: [
+    "laptop",
+    "desktop",
+    "storage",
+    "network equipment",
+  ],
+  telecom_av: [
+    "video konferencija",
+    "ip telefonija",
+    "multimedijalna oprema",
+    "conference system",
+  ],
+  cloud_cyber_data: [
+    "cloud services",
+    "backup solution",
+    "cyber security",
+    "data center",
+  ],
+  construction_works: [
+    "gradjevinski radovi",
+    "izvodjenje radova",
+    "rekonstrukcija objekta",
+    "sanacija objekta",
+  ],
+  electro_mechanical: [
+    "elektro radovi",
+    "masinske instalacije",
+    "hvac systems",
+    "jaka i slaba struja",
+  ],
+  design_supervision: [
+    "projektna dokumentacija",
+    "glavni projekat",
+    "strucni nadzor",
+    "izrada elaborata",
+  ],
+  maintenance_support: [
+    "service support",
+    "tehnicka podrska",
+    "odrzavanje sistema",
+    "preventivno odrzavanje",
+  ],
+  office_school_equipment: [
+    "uredska oprema",
+    "skolska oprema",
+    "kancelarijski materijal",
+    "namjestaj",
+  ],
+  industrial_tools_machinery: [
+    "industrijska oprema",
+    "radionicka oprema",
+    "masine i alati",
+    "rezervni dijelovi",
+  ],
+  furniture_interior: [
+    "kancelarijski namjestaj",
+    "skolski namjestaj",
+    "enterijerska oprema",
+    "namjestaj po mjeri",
+  ],
+  medical_supplies: [
+    "medicinski potrosni materijal",
+    "medicinska oprema",
+    "hirurski materijal",
+    "zdravstveni materijal",
+  ],
+  laboratory_diagnostics: [
+    "laboratorijski materijal",
+    "reagensi i testovi",
+    "dijagnosticka oprema",
+    "laboratorijski analizator",
+  ],
+  vehicles_transport: [
+    "nabavka vozila",
+    "servis vozila",
+    "autodijelovi",
+    "prevoz putnika",
+  ],
+  utility_waste_winter: [
+    "odvoz otpada",
+    "zimsko odrzavanje",
+    "komunalne usluge",
+    "javna higijena",
+  ],
+  cleaning_hygiene: [
+    "usluge ciscenja",
+    "sredstva za ciscenje",
+    "higijenski materijal",
+    "dezinfekcija",
+  ],
+  food_catering: [
+    "prehrambeni proizvodi",
+    "catering usluge",
+    "priprema obroka",
+    "osnovne zivotne namirnice",
+  ],
+  security_video: [
+    "video surveillance",
+    "alarmni sistem",
+    "kontrola pristupa",
+    "zastitarske usluge",
+  ],
+  fuel_energy: [
+    "gorivo i energenti",
+    "loz ulje",
+    "elektroenergetska oprema",
+    "toplotna pumpa",
+  ],
+  legal_finance_consulting: [
+    "pravne usluge",
+    "racunovodstvene usluge",
+    "revizorske usluge",
+    "poslovno savjetovanje",
+  ],
+  training_research: [
+    "edukacije i obuke",
+    "strucno usavrsavanje",
+    "istrazivanje trzista",
+    "anketiranje",
+  ],
+  printing_marketing_events: [
+    "stampani materijal",
+    "promotivni materijal",
+    "organizacija konferencije",
+    "branding",
+  ],
+};
+
 const SEARCH_KEYWORD_STOP_WORDS = new Set([
   "firma",
   "firme",
@@ -1215,6 +1415,23 @@ export function buildProfileKeywordSeeds(profile: ParsedCompanyProfile): string[
     ...buildCategoryKeywordSeeds(profile),
     ...extractDescriptionKeywordTerms(profile.companyDescription ?? profile.legacyIndustryText),
   ]);
+}
+
+export function buildProfileKeywordAliases(profile: ParsedCompanyProfile): string[] {
+  const derivedPrimaryIndustry = derivePrimaryIndustry(
+    profile.offeringCategories,
+    profile.primaryIndustry
+  );
+
+  return sanitizeSearchKeywords([
+    ...(derivedPrimaryIndustry
+      ? PRIMARY_INDUSTRY_RETRIEVAL_ALIASES[derivedPrimaryIndustry] ?? []
+      : []),
+    ...profile.offeringCategories.flatMap(
+      (item) => OFFERING_CATEGORY_RETRIEVAL_ALIASES[item] ?? []
+    ),
+    ...buildSelectedSpecializationKeywordSeeds(profile),
+  ]).slice(0, 24);
 }
 
 export function buildProfileContextText({

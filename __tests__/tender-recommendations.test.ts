@@ -72,4 +72,55 @@ describe("tender recommendations", () => {
       "local-weaker",
     ]);
   });
+
+  it("keeps broad profile signals available alongside strict keywords", () => {
+    const profileContext = buildRecommendationContext({
+      industry: JSON.stringify({
+        version: 1,
+        primaryIndustry: "it",
+        offeringCategories: ["software_licenses"],
+        specializationIds: [],
+        preferredTenderTypes: [],
+        companyDescription: "Razvijamo poslovni softver za institucije.",
+        manualKeywords: ["erp"],
+      }),
+      keywords: ["erp"],
+      cpv_codes: [],
+      operating_regions: [],
+    });
+
+    expect(profileContext.keywords).toContain("erp");
+    expect(profileContext.keywords).toContain("softver");
+    expect(profileContext.retrievalKeywords).toContain("software");
+    expect(profileContext.cpvPrefixes).toContain("48000");
+  });
+
+  it("matches cross-variant software titles for the same profile", () => {
+    const profileContext = buildRecommendationContext({
+      industry: JSON.stringify({
+        version: 1,
+        primaryIndustry: "it",
+        offeringCategories: ["software_licenses"],
+        specializationIds: [],
+        preferredTenderTypes: [],
+        companyDescription: "Implementacija i odrzavanje poslovnog softvera.",
+        manualKeywords: [],
+      }),
+      keywords: [],
+      cpv_codes: [],
+      operating_regions: [],
+    });
+
+    const scored = scoreTenderRecommendation(
+      createTender({
+        id: "software-fit",
+        title: "Nabavka software platforme za upravljanje dokumentima",
+        raw_description: "Implementation of business software platform",
+      }),
+      profileContext
+    );
+
+    expect(scored.qualifies).toBe(true);
+    expect(scored.titleMatches).toContain("software");
+  });
 });

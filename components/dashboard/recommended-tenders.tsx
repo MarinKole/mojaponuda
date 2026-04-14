@@ -3,7 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfileOptionLabel } from "@/lib/company-profile";
 import { formatCurrencyKM } from "@/lib/currency";
 import { getPersonalizedTenderRecommendations } from "@/lib/personalized-tenders";
-import { buildRecommendationContext } from "@/lib/tender-recommendations";
+import {
+  buildRecommendationContext,
+  RECOMMENDATION_SUMMARY_MINIMUM_RESULTS,
+} from "@/lib/tender-recommendations";
+import type { Json } from "@/types/database";
 import { Sparkles, ArrowRight, Briefcase } from "lucide-react";
 
 interface RecommendationCardTender {
@@ -15,6 +19,8 @@ interface RecommendationCardTender {
   contracting_authority_jib: string | null;
   contract_type: string | null;
   raw_description: string | null;
+  cpv_code?: string | null;
+  ai_analysis?: Json | null;
   authority_city?: string | null;
   authority_municipality?: string | null;
   authority_canton?: string | null;
@@ -40,7 +46,9 @@ export async function RecommendedTenders() {
   const recommendationResult = company
     ? await getPersonalizedTenderRecommendations<RecommendationCardTender>(supabase, {
         company,
-        select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description",
+        select:
+          "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description, cpv_code, ai_analysis",
+        minimumResults: RECOMMENDATION_SUMMARY_MINIMUM_RESULTS,
         limit: 3,
         shortlistSize: 6,
       })
@@ -86,7 +94,43 @@ export async function RecommendedTenders() {
 
   const tenders = recommendationResult?.recommendations ?? [];
 
-  if (tenders.length === 0) return null;
+  if (tenders.length === 0) {
+    return (
+      <section className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.18)]">
+        <div className="flex items-start justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/70 px-3 py-1">
+              <Sparkles className="size-5 text-blue-600" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700">Pametne preporuke</span>
+            </div>
+            <h3 className="text-2xl font-heading font-bold text-slate-950">
+              Profil je spreman, ali trenutno nemamo dovoljno jakih podudaranja
+            </h3>
+            <p className="max-w-xl text-sm leading-6 text-slate-600">
+              Sistem sada pregledava širi skup kandidata, ali za ovaj trenutak nema tendera koji se dovoljno jasno poklapaju s vašim profilom. Možete otvoriti sve tendere ili dodatno izoštriti profil da preporuke budu još preciznije.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link
+                href="/dashboard/tenders?tab=all"
+                className="inline-flex h-10 items-center rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition-all hover:border-blue-200 hover:text-blue-700"
+              >
+                Pregledaj sve tendere
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                className="inline-flex h-10 items-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-700"
+              >
+                Doradi profil
+              </Link>
+            </div>
+          </div>
+          <div className="hidden rounded-[1.5rem] border border-blue-100 bg-blue-50/70 p-5 text-blue-300 sm:block">
+            <Sparkles className="size-12" />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-[1.75rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.18)]">

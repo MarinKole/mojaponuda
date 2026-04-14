@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  buildProfileCpvSeeds,
+  buildProfileKeywordAliases,
   buildRecommendationKeywords,
   buildStrictRecommendationCpvCodes,
   buildStrictRecommendationKeywords,
@@ -34,6 +36,7 @@ export interface RecommendationContext {
   profile: ParsedCompanyProfile;
   focusIndustry: string | null;
   keywords: string[];
+  retrievalKeywords: string[];
   negativeSignals: string[];
   preferredContractTypes: string[];
   regionTerms: string[];
@@ -95,6 +98,7 @@ interface FetchRecommendedTenderCandidatesOptions {
   limit?: number;
   nowIso?: string;
   select?: string;
+  includeUndated?: boolean;
 }
 
 export const RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT = 1200;
@@ -273,6 +277,45 @@ function normalizeSignalTerm(value: string | null | undefined): string | null {
   return normalized;
 }
 
+function normalizeRecommendationKeyword(value: string | null | undefined): string | null {
+  const normalized = value?.trim().toLowerCase();
+
+  if (!normalized || normalized.length < 3) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function foldRecommendationKeyword(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "dj")
+    .replace(/Đ/g, "Dj");
+}
+
+function buildKeywordVariantSet(terms: Array<string | null | undefined>): string[] {
+  const variants = new Set<string>();
+
+  for (const term of terms) {
+    const normalized = normalizeRecommendationKeyword(term);
+
+    if (!normalized) {
+      continue;
+    }
+
+    variants.add(normalized);
+
+    const folded = normalizeRecommendationKeyword(foldRecommendationKeyword(normalized));
+    if (folded) {
+      variants.add(folded);
+    }
+  }
+
+  return [...variants];
+}
+
 function buildNegativeSignals(profile: ParsedCompanyProfile, focusIndustry: string | null): string[] {
   return uniqueStrings(
     [
@@ -407,6 +450,14 @@ function getLocationPriority(scope: RecommendationLocationScope): number {
   }
 }
 
+function getRecommendationDeadlineSortValue(deadline: string | null): number {
+  if (!deadline) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return new Date(deadline).getTime();
+}
+
 function compareScoredRecommendations<TTender extends RecommendationTenderInput>(
   a: ScoredTenderRecommendation<TTender>,
   b: ScoredTenderRecommendation<TTender>
@@ -423,7 +474,10 @@ function compareScoredRecommendations<TTender extends RecommendationTenderInput>
     return a.locationPriority - b.locationPriority;
   }
 
-  return new Date(a.tender.deadline ?? 0).getTime() - new Date(b.tender.deadline ?? 0).getTime();
+  return (
+    getRecommendationDeadlineSortValue(a.tender.deadline) -
+    getRecommendationDeadlineSortValue(b.tender.deadline)
+  );
 }
 
 function dedupeScoredRecommendations<TTender extends RecommendationTenderInput>(
@@ -492,19 +546,29 @@ export function buildRecommendationContext(
     explicitCpvCodes: source.cpv_codes ?? [],
     profile,
   });
+  const broadKeywords = buildRecommendationKeywords({
+    explicitKeywords: source.keywords ?? [],
+    profile,
+  });
+  const aliasKeywords = buildProfileKeywordAliases(profile);
+  const scoringKeywords = [...new Set([
+    ...strictKeywords,
+    ...broadKeywords,
+    ...aliasKeywords,
+  ])].slice(0, 24);
+  const retrievalKeywords = buildKeywordVariantSet([
+    ...scoringKeywords,
+    ...aliasKeywords,
+  ]).slice(0, 28);
+  const profileCpvCodes = buildProfileCpvSeeds(profile);
 
   const anchor = getAnchorCoords(selectedRegions);
 
   return {
     profile,
     focusIndustry,
-    keywords:
-      strictKeywords.length > 0
-        ? strictKeywords
-        : buildRecommendationKeywords({
-            explicitKeywords: source.keywords ?? [],
-            profile,
-          }),
+    keywords: scoringKeywords,
+    retrievalKeywords,
     negativeSignals: buildNegativeSignals(profile, focusIndustry),
     preferredContractTypes: getPreferredContractTypes(profile.preferredTenderTypes),
     regionTerms: buildRegionSearchTerms(selectedRegions),
@@ -515,23 +579,29 @@ export function buildRecommendationContext(
       buildNeighboringGroupRegionFallback(selectedRegions)
     ),
     regionLabels: getRegionSelectionLabels(selectedRegions),
-    cpvPrefixes: buildCpvPrefixes(
-      strictCpvCodes.length > 0 ? strictCpvCodes : (source.cpv_codes ?? [])
-    ),
+    cpvPrefixes: buildCpvPrefixes([
+      ...strictCpvCodes,
+      ...(source.cpv_codes ?? []),
+      ...profileCpvCodes,
+    ]),
     anchorLat: anchor?.lat ?? null,
     anchorLng: anchor?.lng ?? null,
   };
 }
 
 export function buildRecommendationSearchCondition(context: RecommendationContext): string {
-  const keywordConditions = context.keywords.flatMap((term) => {
+  const keywordConditions = context.retrievalKeywords.flatMap((term) => {
     const safeTerm = escapePostgrestLikeValue(term);
 
     if (!safeTerm) {
       return [];
     }
 
-    return [`title.ilike.%${safeTerm}%`, `raw_description.ilike.%${safeTerm}%`];
+    return [
+      `title.ilike.%${safeTerm}%`,
+      `raw_description.ilike.%${safeTerm}%`,
+      `contracting_authority.ilike.%${safeTerm}%`,
+    ];
   });
 
   return keywordConditions.join(",");
@@ -539,7 +609,7 @@ export function buildRecommendationSearchCondition(context: RecommendationContex
 
 export function hasRecommendationSignals(context: RecommendationContext): boolean {
   return (
-    context.keywords.length > 0 ||
+    context.retrievalKeywords.length > 0 ||
     context.cpvPrefixes.length > 0 ||
     context.preferredContractTypes.length > 0 ||
     context.regionTerms.length > 0
@@ -560,6 +630,7 @@ export async function fetchRecommendedTenderCandidates<
   const nowIso = options.nowIso ?? new Date().toISOString();
   const limit = options.limit ?? RECOMMENDATION_SUMMARY_CANDIDATE_LIMIT;
   const select = options.select ?? "*";
+  const includeUndated = options.includeUndated !== false;
   const keywordConditions = buildRecommendationSearchCondition(context)
     .split(",")
     .filter(Boolean);
@@ -572,41 +643,81 @@ export async function fetchRecommendedTenderCandidates<
     (conditions) => conditions.length > 0
   );
 
-  const runCandidateQuery = async (conditions: string[]): Promise<TTender[]> => {
-    let query = supabase
+  const dedupeCandidateRows = (rows: TTender[]): TTender[] => {
+    const deduped = new Map<string, TTender>();
+
+    for (const row of rows) {
+      if (!deduped.has(row.id)) {
+        deduped.set(row.id, row);
+      }
+    }
+
+    return [...deduped.values()].sort(
+      (first, second) =>
+        getRecommendationDeadlineSortValue(first.deadline) -
+        getRecommendationDeadlineSortValue(second.deadline)
+    );
+  };
+
+  const runCandidateQuery = async (
+    conditions: string[],
+    queryLimit: number
+  ): Promise<TTender[]> => {
+    let futureQuery = supabase
       .from("tenders")
       .select(select)
       .gt("deadline", nowIso);
 
     if (conditions.length > 0) {
-      query = query.or(conditions.join(","));
+      futureQuery = futureQuery.or(conditions.join(","));
     }
 
-    const { data } = await query
+    const futurePromise = futureQuery
       .order("deadline", { ascending: true, nullsFirst: false })
-      .limit(limit);
+      .limit(queryLimit);
 
-    return (data ?? []) as unknown as TTender[];
+    const undatedPromise = includeUndated
+      ? (() => {
+          let undatedQuery = supabase
+            .from("tenders")
+            .select(select)
+            .is("deadline", null);
+
+          if (conditions.length > 0) {
+            undatedQuery = undatedQuery.or(conditions.join(","));
+          }
+
+          return undatedQuery
+            .order("created_at", { ascending: false })
+            .limit(Math.max(12, Math.min(Math.ceil(queryLimit / 3), queryLimit)));
+        })()
+      : Promise.resolve({ data: [] as TTender[] | null });
+
+    const [{ data: futureRows }, { data: undatedRows }] = await Promise.all([
+      futurePromise,
+      undatedPromise,
+    ]);
+
+    return dedupeCandidateRows([
+      ...(((futureRows ?? []) as unknown as TTender[])),
+      ...(((undatedRows ?? []) as unknown as TTender[])),
+    ]);
   };
 
   const resultGroups =
     conditionGroups.length > 0
-      ? await Promise.all(conditionGroups.map((conditions) => runCandidateQuery(conditions)))
-      : [await runCandidateQuery([])];
-  const dedupedRows = new Map<string, TTender>();
+      ? await Promise.all(conditionGroups.map((conditions) => runCandidateQuery(conditions, limit)))
+      : [await runCandidateQuery([], limit)];
+  let combinedRows = dedupeCandidateRows(resultGroups.flat());
+  const fallbackThreshold = Math.max(18, Math.min(limit, Math.floor(limit / 3)));
 
-  for (const rows of resultGroups) {
-    for (const row of rows) {
-      if (!dedupedRows.has(row.id)) {
-        dedupedRows.set(row.id, row);
-      }
-    }
+  if (conditionGroups.length > 0 && combinedRows.length < fallbackThreshold) {
+    const fallbackRows = await runCandidateQuery(
+      [],
+      Math.min(Math.max(fallbackThreshold * 2, 120), limit)
+    );
+    combinedRows = dedupeCandidateRows([...combinedRows, ...fallbackRows]);
   }
-
-  const combinedRows = [...dedupedRows.values()].sort(
-    (first, second) =>
-      new Date(first.deadline ?? 0).getTime() - new Date(second.deadline ?? 0).getTime()
-  );
 
   return enrichTendersWithAuthorityGeo(supabase, combinedRows);
 }
