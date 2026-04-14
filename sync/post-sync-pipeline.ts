@@ -9,6 +9,7 @@ import { scrapeLegalUpdates } from "./scrapers/scraper-legal-updates";
 import type { ExecutionLayer } from "./scrapers/scraper-orchestrator";
 import { processOpportunitiesWithHashing } from "./scrapers/content-hasher";
 import { filterOpportunities } from "./scrapers/quality-filter";
+import { filterLegalUpdates } from "./scrapers/legal-quality-filter";
 import { scoreOpportunity, generateSlug, PUBLISH_THRESHOLD } from "./opportunity-scorer";
 import { generateOpportunityContent, generateLegalSummary, aiReviewOpportunity } from "./ai-content-generator";
 import { categorizeOpportunity } from "@/lib/category-classifier";
@@ -272,7 +273,15 @@ export async function runPostSyncPipeline(layer: ExecutionLayer = "layer1"): Pro
     for (const result of legalResults[0].value) {
       if (result.error) errors.push(`legal ${result.source}: ${result.error}`);
 
-      for (const item of result.items) {
+      const { filtered, rejected } = filterLegalUpdates(result.items);
+
+      if (rejected.length > 0) {
+        console.warn(
+          `[PostSync] Odbačeno ${rejected.length} pravnih objava sa izvora ${result.source}`
+        );
+      }
+
+      for (const item of filtered) {
         legalProcessed++;
         try {
           const { data: existing } = await supabase

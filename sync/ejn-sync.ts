@@ -143,6 +143,7 @@ const DEFAULT_NIGHTLY_MAINTENANCE_MAX_CYCLES = 6;
 const DEFAULT_NIGHTLY_MAINTENANCE_TIME_BUDGET_MS = 210000;
 const SARAJEVO_TIME_ZONE = "Europe/Sarajevo";
 const MORNING_SYNC_ENDPOINT = "MorningSync4AM";
+const MORNING_SYNC_ALLOWED_HOURS = new Set([4, 5]);
 
 function createServiceClient() {
   return createClient(
@@ -1722,7 +1723,7 @@ export async function runFullSync(): Promise<{
   return runFullSyncWithOptions();
 }
 
-export async function runAdminPortalSync(): Promise<{
+async function runOperationalPortalRefresh(): Promise<{
   results: SyncResult[];
   duration_ms: number;
   total_added: number;
@@ -1730,42 +1731,41 @@ export async function runAdminPortalSync(): Promise<{
   status: "ok" | "partial";
 }> {
   const start = Date.now();
+  const supabase = createServiceClient();
   const { results } = await runFullSyncWithOptions({
+    authorityBackfillTarget: DEFAULT_AUTHORITY_BACKFILL_TARGET,
+    authorityScanBatchSize: DEFAULT_AUTHORITY_SCAN_BATCH_SIZE,
+    authorityScanLimit: DEFAULT_AUTHORITY_SCAN_LIMIT,
     runAuthorityMaintenanceAfterSync: false,
+    tenderAreaBackfillTarget: DEFAULT_TENDER_AREA_BACKFILL_TARGET,
+    tenderAreaScanBatchSize: DEFAULT_TENDER_AREA_SCAN_BATCH_SIZE,
+    tenderAreaScanLimit: DEFAULT_TENDER_AREA_SCAN_LIMIT,
     runTenderAreaMaintenanceAfterSync: false,
   });
 
-  const supabase = createServiceClient();
-  const maintenanceResults: SyncResult[] = [];
-
-  maintenanceResults.push(
-    await runContractingAuthorityMaintenance({
-      supabase,
-      endpoint: "ContractingAuthorityMaintenance4AM",
-      targetUpdates: 25,
-      scanBatchSize: 100,
-      maxScanRows: 250,
-      writeLog: true,
-      allowAi: false,
-    })
-  );
-
-  maintenanceResults.push(
-    await runTenderAreaMaintenance({
-      supabase,
-      endpoint: "TenderAreaMaintenance4AM",
-      targetUpdates: 25,
-      scanBatchSize: 100,
-      maxScanRows: 250,
-      writeLog: true,
-    })
-  );
+  const maintenanceResults = await runNightlyMaintenanceSweep({
+    supabase,
+    authorityTarget: DEFAULT_AUTHORITY_BACKFILL_TARGET,
+    authorityScanBatchSize: DEFAULT_AUTHORITY_SCAN_BATCH_SIZE,
+    authorityScanLimit: DEFAULT_AUTHORITY_SCAN_LIMIT,
+    tenderTarget: DEFAULT_TENDER_AREA_BACKFILL_TARGET,
+    tenderScanBatchSize: DEFAULT_TENDER_AREA_SCAN_BATCH_SIZE,
+    tenderScanLimit: DEFAULT_TENDER_AREA_SCAN_LIMIT,
+    maxCycles: DEFAULT_NIGHTLY_MAINTENANCE_MAX_CYCLES,
+    timeBudgetMs: DEFAULT_NIGHTLY_MAINTENANCE_TIME_BUDGET_MS,
+  });
 
   const combinedResults = [...results, ...maintenanceResults];
   const totalAdded = combinedResults.reduce((sum, result) => sum + result.added, 0);
   const totalUpdated = combinedResults.reduce((sum, result) => sum + result.updated, 0);
 
-  await writeSyncLog(supabase, MORNING_SYNC_ENDPOINT, new Date().toISOString(), totalAdded, totalUpdated);
+  await writeSyncLog(
+    supabase,
+    MORNING_SYNC_ENDPOINT,
+    new Date().toISOString(),
+    totalAdded,
+    totalUpdated
+  );
 
   return {
     results: combinedResults,
@@ -1776,6 +1776,16 @@ export async function runAdminPortalSync(): Promise<{
   };
 }
 
+export async function runAdminPortalSync(): Promise<{
+  results: SyncResult[];
+  duration_ms: number;
+  total_added: number;
+  total_updated: number;
+  status: "ok" | "partial";
+}> {
+  return runOperationalPortalRefresh();
+}
+
 export async function runAdminMaintenanceSweep(): Promise<{
   results: SyncResult[];
   duration_ms: number;
@@ -1783,16 +1793,7 @@ export async function runAdminMaintenanceSweep(): Promise<{
   status: "ok" | "partial";
 }> {
   const start = Date.now();
-  const results = await runNightlyMaintenanceSweep({
-    authorityTarget: 30,
-    authorityScanBatchSize: 100,
-    authorityScanLimit: 300,
-    tenderTarget: 30,
-    tenderScanBatchSize: 100,
-    tenderScanLimit: 300,
-    maxCycles: 2,
-    timeBudgetMs: 75_000,
-  });
+  const results = await runNightlyMaintenanceSweep();
 
   const totalUpdated = results.reduce((sum, r) => sum + r.added + r.updated, 0);
 
@@ -1920,10 +1921,10 @@ export async function runMorningSyncAtSarajevo4AM(): Promise<{
   const now = new Date();
   const localTime = getSarajevoLocalParts(now);
 
-  if (localTime.hour !== 4) {
+  if (!MORNING_SYNC_ALLOWED_HOURS.has(localTime.hour)) {
     return {
       status: "skipped",
-      reason: "Outside 04:00 Europe/Sarajevo window.",
+      reason: "Outside scheduled morning sync window for Europe/Sarajevo.",
       duration_ms: 0,
       local_day: localTime.dayKey,
       local_hour: localTime.hour,
@@ -1942,37 +1943,13 @@ export async function runMorningSyncAtSarajevo4AM(): Promise<{
     };
   }
 
-  const start = Date.now();
-  const { results, duration_ms } = await runFullSyncWithOptions({
-    authorityBackfillTarget: DEFAULT_AUTHORITY_BACKFILL_TARGET,
-    authorityScanBatchSize: DEFAULT_AUTHORITY_SCAN_BATCH_SIZE,
-    authorityScanLimit: DEFAULT_AUTHORITY_SCAN_LIMIT,
-    runAuthorityMaintenanceAfterSync: false,
-    tenderAreaBackfillTarget: DEFAULT_TENDER_AREA_BACKFILL_TARGET,
-    tenderAreaScanBatchSize: DEFAULT_TENDER_AREA_SCAN_BATCH_SIZE,
-    tenderAreaScanLimit: DEFAULT_TENDER_AREA_SCAN_LIMIT,
-    runTenderAreaMaintenanceAfterSync: false,
-  });
-  const maintenanceResults = await runNightlyMaintenanceSweep({
-    supabase,
-    authorityTarget: DEFAULT_AUTHORITY_BACKFILL_TARGET,
-    authorityScanBatchSize: DEFAULT_AUTHORITY_SCAN_BATCH_SIZE,
-    authorityScanLimit: DEFAULT_AUTHORITY_SCAN_LIMIT,
-    tenderTarget: DEFAULT_TENDER_AREA_BACKFILL_TARGET,
-    tenderScanBatchSize: DEFAULT_TENDER_AREA_SCAN_BATCH_SIZE,
-    tenderScanLimit: DEFAULT_TENDER_AREA_SCAN_LIMIT,
-  });
-  const combinedResults: SyncResult[] = [...results, ...maintenanceResults];
-  const totalAdded = combinedResults.reduce((sum, result) => sum + result.added, 0);
-  const totalUpdated = combinedResults.reduce((sum, result) => sum + result.updated, 0);
-
-  await writeSyncLog(supabase, MORNING_SYNC_ENDPOINT, new Date().toISOString(), totalAdded, totalUpdated);
+  const result = await runOperationalPortalRefresh();
 
   return {
-    status: combinedResults.some((result) => result.error) ? "partial" : "ok",
-    duration_ms: Math.max(duration_ms, Date.now() - start),
+    status: result.status,
+    duration_ms: result.duration_ms,
     local_day: localTime.dayKey,
     local_hour: localTime.hour,
-    results: combinedResults,
+    results: result.results,
   };
 }

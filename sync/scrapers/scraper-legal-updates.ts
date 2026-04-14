@@ -8,7 +8,16 @@
  * Legal: Official government sources, publicly available.
  */
 
-import { fetchHtml, extractLinks, extractLinksWithText, stripTags, parseDate } from "./fetch-html";
+import {
+  cleanHtml,
+  extractBestDescription,
+  extractLinks,
+  extractLinksWithText,
+  fetchHtml,
+  parseDate,
+  stripTags,
+} from "./fetch-html";
+import { filterLegalUpdates } from "./legal-quality-filter";
 
 export interface ScrapedLegalUpdate {
   external_id: string;
@@ -30,16 +39,6 @@ export interface LegalScraperResult {
 const AJN_BASE = "https://www.javnenabavke.gov.ba";
 const AJN_NEWS_URL = `${AJN_BASE}/bs/novosti`;
 const AJN_LAWS_URL = `${AJN_BASE}/bs/zakonodavstvo`;
-// Fallback URLs in case /bs/ prefix causes 404
-const AJN_LAWS_FALLBACKS = [
-  `${AJN_BASE}/legislation`,
-  `${AJN_BASE}/bs/legislation`,
-  `${AJN_BASE}/zakonodavstvo`,
-];
-const AJN_NEWS_FALLBACKS = [
-  `${AJN_BASE}/news`,
-  `${AJN_BASE}/bs/news`,
-];
 const GLASNIK_BASE = "http://www.sluzbenenovine.ba";
 const PARLAMENT_BASE = "https://www.parlament.ba";
 const VIJECE_BASE = "https://www.vijeceministara.gov.ba";
@@ -164,10 +163,10 @@ async function scrapeAjnNews(): Promise<LegalScraperResult> {
       }
     }
   } catch (err) {
-    return { source, items, error: String(err) };
+    return finalizeLegalResult(source, items, String(err));
   }
 
-  return { source, items };
+  return finalizeLegalResult(source, items);
 }
 
 async function scrapeAjnLaws(): Promise<LegalScraperResult> {
@@ -213,10 +212,10 @@ async function scrapeAjnLaws(): Promise<LegalScraperResult> {
       }
     }
   } catch (err) {
-    return { source, items, error: String(err) };
+    return finalizeLegalResult(source, items, String(err));
   }
 
-  return { source, items };
+  return finalizeLegalResult(source, items);
 }
 
 async function scrapeSluzbenGlasnik(): Promise<LegalScraperResult> {
@@ -234,10 +233,11 @@ async function scrapeSluzbenGlasnik(): Promise<LegalScraperResult> {
       try {
         const pageHtml = await fetchHtml(link);
         if (!pageHtml) continue;
+        const contentHtml = cleanHtml(pageHtml);
 
         // Look for procurement-related laws
-        const procurementMatches = pageHtml.matchAll(
-          /<(?:h[2-4]|div|p)[^>]*>([\s\S]*?(?:javne?\s+nabavk|nabavk|tender|konkurs|poticaj|grant)[\s\S]*?)<\/(?:h[2-4]|div|p)>/gi
+        const procurementMatches = contentHtml.matchAll(
+          /<(?:h[1-4]|div|p|li)[^>]*>([\s\S]*?(?:zakon\s+o\s+javnim\s+nabavk|javne?\s+nabavk|pravilnik|uputstvo|ugovor|ponud|zalb|žalb|tender)[\s\S]*?)<\/(?:h[1-4]|div|p|li)>/gi
         );
 
         for (const match of procurementMatches) {
@@ -259,7 +259,7 @@ async function scrapeSluzbenGlasnik(): Promise<LegalScraperResult> {
             external_id: `glasnik:${lawNumber || Buffer.from(link + text).toString("base64").slice(0, 32)}`,
             type,
             title: lawNumber ? `${lawNumber} - ${title}` : title,
-            summary: extractSummary(pageHtml),
+            summary: extractSummary(pageHtml) ?? buildSnippetSummary(text, title),
             source: "Službeni glasnik FBiH",
             source_url: link,
             published_date,
@@ -276,10 +276,10 @@ async function scrapeSluzbenGlasnik(): Promise<LegalScraperResult> {
       }
     }
   } catch (err) {
-    return { source, items, error: String(err) };
+    return finalizeLegalResult(source, items, String(err));
   }
 
-  return { source, items };
+  return finalizeLegalResult(source, items);
 }
 
 async function scrapeParlament(): Promise<LegalScraperResult> {
@@ -329,10 +329,10 @@ async function scrapeParlament(): Promise<LegalScraperResult> {
       }
     }
   } catch (err) {
-    return { source, items, error: String(err) };
+    return finalizeLegalResult(source, items, String(err));
   }
 
-  return { source, items };
+  return finalizeLegalResult(source, items);
 }
 
 async function scrapeVijeceMinistara(): Promise<LegalScraperResult> {
@@ -382,10 +382,10 @@ async function scrapeVijeceMinistara(): Promise<LegalScraperResult> {
       }
     }
   } catch (err) {
-    return { source, items, error: String(err) };
+    return finalizeLegalResult(source, items, String(err));
   }
 
-  return { source, items };
+  return finalizeLegalResult(source, items);
 }
 
 function extractTitle(html: string): string {
@@ -396,9 +396,45 @@ function extractTitle(html: string): string {
 }
 
 function extractSummary(html: string): string | null {
-  const p = html.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+  const bestDescription = extractBestDescription(html);
+  if (bestDescription) return bestDescription.slice(0, 400);
+
+  const clean = cleanHtml(html);
+  const p = clean.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
   if (p) return stripTags(p[1]).slice(0, 400);
   return null;
+}
+
+function buildSnippetSummary(text: string, title: string): string | null {
+  const snippet = text.trim();
+  const cleanTitle = title.trim();
+
+  if (!snippet || snippet === cleanTitle) {
+    return null;
+  }
+
+  if (snippet.startsWith(cleanTitle)) {
+    const remainder = snippet.slice(cleanTitle.length).trim();
+    return remainder ? remainder.slice(0, 400) : null;
+  }
+
+  return snippet.slice(0, 400);
+}
+
+function finalizeLegalResult(
+  source: string,
+  items: ScrapedLegalUpdate[],
+  error?: string
+): LegalScraperResult {
+  const { filtered, rejected } = filterLegalUpdates(items);
+
+  if (rejected.length > 0) {
+    console.warn(
+      `[LegalScraper:${source}] Odbačeno ${rejected.length} stavki zbog slabog kvaliteta.`
+    );
+  }
+
+  return error ? { source, items: filtered, error } : { source, items: filtered };
 }
 
 function extractTags(text: string): string[] {

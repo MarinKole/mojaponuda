@@ -76,7 +76,9 @@ describe("Legal Updates Scraper", () => {
           // Tags should be from the expected set
           const validTags = [
             "javne-nabavke",
+            "osnovni-zakon",
             "pravilnik",
+            "uputstvo",
             "zakon",
             "izmjena",
             "postupak",

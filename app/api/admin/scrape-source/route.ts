@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SCRAPER_SOURCES } from "@/sync/scrapers/scraper-registry";
 import { filterOpportunities } from "@/sync/scrapers/quality-filter";
+import { filterLegalUpdates } from "@/sync/scrapers/legal-quality-filter";
 import { processOpportunitiesWithHashing } from "@/sync/scrapers/content-hasher";
 import { scoreOpportunity, generateSlug, PUBLISH_THRESHOLD } from "@/sync/opportunity-scorer";
 import { generateOpportunityContent, generateLegalSummary, aiReviewOpportunity } from "@/sync/ai-content-generator";
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
     let itemsSkipped = 0;
     let itemsFiltered = 0;
     let itemsRejectedByAi = 0;
-    let aiRejectReasons: string[] = [];
+    const aiRejectReasons: string[] = [];
     let filterReasons: Record<string, number> = {};
 
     if (source.category === "opportunities") {
@@ -294,8 +295,16 @@ export async function POST(request: NextRequest) {
       for (const result of results) {
         if (result.error) errors.push(`${result.source}: ${result.error}`);
         itemsFound += result.items.length;
+        const { filtered, rejected } = filterLegalUpdates(result.items);
+        itemsFiltered += rejected.length;
 
-        for (const item of result.items) {
+        if (rejected.length > 0) {
+          console.log(
+            `[ScrapeSource:${sourceId}] Odbačeno ${rejected.length} pravnih objava zbog kvaliteta.`
+          );
+        }
+
+        for (const item of filtered) {
           try {
             const { data: existing } = await adminDb
               .from("legal_updates")
