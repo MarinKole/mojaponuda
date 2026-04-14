@@ -39,8 +39,8 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12">
-      <div className="mb-10 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] px-4 py-8 sm:py-12">
+      <div className="mb-8 text-center sm:mb-10">
         <TenderSistemLogo href="/" size="lg" className="mb-6" />
         <h1 className="font-heading text-3xl font-bold text-slate-900">
           Prvo pogledajte tendere koji vam imaju smisla
@@ -58,7 +58,7 @@ export default async function OnboardingPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-xl shadow-blue-500/5">
+      <div className="w-full max-w-6xl rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-xl shadow-blue-500/5 sm:rounded-3xl sm:p-8 lg:p-10">
         <OnboardingValueFirstForm
           companyId={company?.id ?? ""}
           companyName={company?.name ?? user.user_metadata?.company_name ?? demoDefaults?.name ?? ""}

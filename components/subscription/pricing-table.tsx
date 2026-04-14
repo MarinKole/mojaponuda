@@ -32,7 +32,7 @@ export function PricingTable({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-3">
+    <div className="grid gap-4 xl:grid-cols-3 xl:gap-6">
       {visiblePlans.map((plan) => {
         const isCurrent = currentPlanId === plan.id;
         const isPopular = plan.id === "pro";
@@ -43,16 +43,17 @@ export function PricingTable({
           <article
             key={plan.id}
             className={cn(
-              "relative flex flex-col rounded-[1.95rem] border p-7 text-white shadow-[0_30px_72px_-42px_rgba(2,6,23,0.9)]",
+              "relative flex flex-col rounded-[1.65rem] border p-5 text-white shadow-[0_30px_72px_-42px_rgba(2,6,23,0.9)] sm:rounded-[1.95rem] sm:p-7",
               isPopular
                 ? "border-sky-400/35 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_28%),linear-gradient(180deg,#172554_0%,#111827_100%)]"
                 : "border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_24%),linear-gradient(180deg,#111827_0%,#0f172a_100%)]",
               isCurrent && "ring-1 ring-white/10",
+              isPopular && "pt-10 sm:pt-12",
             )}
           >
             {isPopular ? (
-              <div className="absolute inset-x-0 -top-5 z-20 flex justify-center">
-                <span className="rounded-full border border-blue-200/60 bg-blue-600 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white shadow-[0_14px_30px_-18px_rgba(37,99,235,0.85)]">
+              <div className="absolute inset-x-0 top-4 z-20 flex justify-center px-4 sm:-top-5 sm:px-0">
+                <span className="inline-flex max-w-full rounded-full border border-blue-200/60 bg-blue-600 px-3 py-1.5 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_14px_30px_-18px_rgba(37,99,235,0.85)] sm:px-4 sm:text-[11px] sm:tracking-[0.16em]">
                   Najbolji odnos cijene i onoga što dobijate
                 </span>
               </div>
@@ -62,7 +63,7 @@ export function PricingTable({
               <h3 className="font-heading text-xl font-bold text-white">{plan.name}</h3>
               <p className="mt-2 min-h-[48px] text-sm leading-6 text-slate-300">{plan.description}</p>
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="font-heading text-4xl font-bold text-white">{plan.price}</span>
+                <span className="font-heading text-4xl font-bold text-white sm:text-[2.75rem]">{plan.price}</span>
                 <span className="text-sm font-medium text-slate-400">KM / mjesečno</span>
               </div>
             </div>

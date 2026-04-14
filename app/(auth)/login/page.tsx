@@ -70,8 +70,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-xl shadow-blue-500/5">
-      <div className="mb-10 text-center">
+    <div className="w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-xl shadow-blue-500/5 sm:rounded-3xl sm:p-10">
+      <div className="mb-8 text-center sm:mb-10">
         <TenderSistemLogo href="/" size="md" className="mb-6" />
         <h1 className="font-heading text-2xl font-bold text-slate-900">
           Dobrodošli nazad
@@ -81,7 +81,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-6">
+      <form onSubmit={handleLogin} className="space-y-5 sm:space-y-6">
         {(error ?? redirectError) && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
             {error ?? redirectError}

@@ -102,16 +102,37 @@
   }
   body {
     @apply bg-background text-foreground;
+    text-wrap: pretty;
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     letter-spacing: -0.01em;
+    text-wrap: balance;
   }
   code, pre {
     font-family: var(--font-mono);
+  }
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
   }
 }
 
@@ -136,6 +157,10 @@
   
   .hover-lift {
     @apply transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md;
+  }
+
+  .responsive-shell-card {
+    @apply rounded-[1.5rem] sm:rounded-[1.85rem];
   }
 }
 

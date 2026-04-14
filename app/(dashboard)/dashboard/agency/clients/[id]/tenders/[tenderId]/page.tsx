@@ -45,12 +45,12 @@ async function generateAiDescription(
   try {
     const openai = getOpenAIClient();
     const prompt = [
-      "Napisi kratki, informativan opis javne nabavke na bosanskom jeziku (2-3 recenice).",
+      "Napiši kratki, informativan opis javne nabavke na bosanskom jeziku (2-3 rečenice).",
       `Naslov nabavke: ${title}`,
-      authority ? `Narucilac: ${authority}` : null,
+      authority ? `Naručilac: ${authority}` : null,
       contractType ? `Vrsta ugovora: ${contractType}` : null,
       procedureType ? `Vrsta procedure: ${procedureType}` : null,
-      "Opis treba biti konkretan i opisivati sta se tenderom nabavlja, bez ponavljanja naslova doslovno.",
+      "Opis treba biti konkretan i opisivati šta se tenderom nabavlja, bez ponavljanja naslova doslovno.",
     ]
       .filter(Boolean)
       .join("\n");
@@ -161,7 +161,7 @@ export default async function AgencyClientTenderDetailPage({
   const clientBase = `/dashboard/agency/clients/${agencyClientId}`;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-5 sm:space-y-6">
       <div>
         <Link href={`${clientBase}/tenders`}>
           <Button variant="outline" size="sm" className="gap-2 text-slate-600 hover:text-slate-900">
@@ -171,7 +171,7 @@ export default async function AgencyClientTenderDetailPage({
         </Link>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-100 bg-white p-8 shadow-sm">
+      <div className="rounded-[1.6rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[2rem] sm:p-8">
         <div className="mb-3 flex items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-primary">
             {tender.contract_type || "Tender"}
@@ -188,10 +188,10 @@ export default async function AgencyClientTenderDetailPage({
           {tender.title}
         </h1>
 
-        <div className="grid gap-6 border-t border-slate-50 pt-6 sm:grid-cols-3">
+        <div className="grid gap-5 border-t border-slate-50 pt-6 sm:grid-cols-3 sm:gap-6">
           <InfoItem
             icon={<Building2 className="size-4" />}
-            label="Narucilac"
+            label="Naručilac"
             value={tender.contracting_authority || "-"}
             subValue={tender.contracting_authority_jib ? `ID: ${tender.contracting_authority_jib}` : undefined}
           />
@@ -209,14 +209,14 @@ export default async function AgencyClientTenderDetailPage({
         </div>
       </div>
 
-      <div className="rounded-[2rem] bg-slate-950 px-8 py-7 shadow-xl shadow-slate-950/20">
+      <div className="rounded-[1.6rem] bg-slate-950 px-5 py-6 shadow-xl shadow-slate-950/20 sm:rounded-[2rem] sm:px-8 sm:py-7">
         <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="max-w-2xl text-white">
             <p className="text-2xl font-heading font-bold leading-snug text-white">
               {existingBidId ? "Nastavite pripremu ponude" : "Pripremite ponudu profesionalno"}
             </p>
             <p className="mt-2 text-base leading-relaxed text-slate-400">
-              Odmah dobijete pocetnu listu koraka, dokumenata i zahtjeva za klijenta {company.name}, bez rucnog sastavljanja.
+              Odmah dobijete početnu listu koraka, dokumenata i zahtjeva za klijenta {company.name}, bez ručnog sastavljanja.
             </p>
           </div>
           <div className="flex-shrink-0 sm:pl-8">
@@ -235,7 +235,7 @@ export default async function AgencyClientTenderDetailPage({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {aiDescription ? (
-            <div className="rounded-[1.5rem] border border-blue-100 bg-blue-50/40 p-8 shadow-sm">
+            <div className="rounded-[1.35rem] border border-blue-100 bg-blue-50/40 p-5 shadow-sm sm:rounded-[1.5rem] sm:p-8">
               <h3 className="mb-1 flex items-center gap-2 text-lg font-heading font-bold text-slate-900">
                 <Sparkles className="size-5 text-blue-500" />
                 Opis predmeta nabavke
@@ -244,7 +244,7 @@ export default async function AgencyClientTenderDetailPage({
               <p className="text-sm leading-relaxed text-slate-700">{aiDescription}</p>
             </div>
           ) : (
-            <div className="rounded-[1.5rem] border border-slate-100 bg-white p-8 shadow-sm">
+            <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-8">
               <h3 className="mb-3 flex items-center gap-2 text-lg font-heading font-bold text-slate-900">
                 <FileText className="size-5 text-slate-300" />
                 Opis predmeta nabavke
@@ -253,17 +253,17 @@ export default async function AgencyClientTenderDetailPage({
             </div>
           )}
 
-          <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-base font-bold text-slate-900">Sta dobijate odmah</h3>
+          <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-6">
+            <h3 className="mb-4 text-base font-bold text-slate-900">Šta dobijate odmah</h3>
             <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Pocetnu listu dokumentacije bez dodatnog rucnog sastavljanja.
+                Početnu listu dokumentacije bez dodatnog ručnog sastavljanja.
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Povezivanje postojecih dokumenata kada vec imate nesto spremno.
+                Povezivanje postojećih dokumenata kada već imate nešto spremno.
               </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                Prostor za rad i zavrsnu provjeru prije predaje ponude.
+                Prostor za rad i završnu provjeru prije predaje ponude.
               </div>
             </div>
           </div>
@@ -271,10 +271,10 @@ export default async function AgencyClientTenderDetailPage({
 
         <div className="space-y-6">
           {authorityStats ? (
-            <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-6">
               <h3 className="mb-5 flex items-center gap-2 text-lg font-heading font-bold text-slate-900">
                 <BarChart3 className="size-5 text-slate-400" />
-                Historijat narucioca
+                Historijat naručioca
               </h3>
               <div className="space-y-3">
                 <StatRow
@@ -291,7 +291,7 @@ export default async function AgencyClientTenderDetailPage({
               {authorityStats.avgDiscount !== null && authorityStats.totalAwards > 0 ? (
                 <div className="mt-4 border-t border-slate-100 pt-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Prosjecni popust pobjednika
+                    Prosječni popust pobjednika
                   </p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-heading font-bold text-slate-900">
@@ -306,7 +306,7 @@ export default async function AgencyClientTenderDetailPage({
           ) : null}
 
           {tender.portal_url ? (
-            <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-6">
               <h3 className="mb-4 text-base font-bold text-slate-900">Izvorni dokument</h3>
               <a
                 href={tender.portal_url}

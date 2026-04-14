@@ -175,7 +175,7 @@ export default async function TenderDetailPage({
     : null;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-5 sm:space-y-6">
       <div>
         <Link href="/dashboard/tenders">
           <Button variant="outline" size="sm" className="gap-2 text-slate-600 hover:text-slate-900">
@@ -186,7 +186,7 @@ export default async function TenderDetailPage({
       </div>
 
       {isLockedForFree ? (
-        <div className="relative overflow-hidden rounded-[2.5rem] border border-blue-500/20 bg-[linear-gradient(110deg,#1e1b4b_0%,#0f172a_100%)] p-8 text-white shadow-2xl">
+        <div className="relative overflow-hidden rounded-[1.9rem] border border-blue-500/20 bg-[linear-gradient(110deg,#1e1b4b_0%,#0f172a_100%)] p-5 text-white shadow-2xl sm:rounded-[2.5rem] sm:p-8">
           <div className="absolute right-0 top-0 p-8 opacity-10">
             <Lock className="size-32 rotate-12" />
           </div>
@@ -210,7 +210,7 @@ export default async function TenderDetailPage({
       ) : null}
 
       <div className={isLockedForFree ? "pointer-events-none select-none opacity-40 blur-md transition-all" : ""}>
-        <div className="rounded-[2rem] border border-slate-100 bg-white p-8 shadow-sm">
+        <div className="rounded-[1.6rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[2rem] sm:p-8">
           <div className="mb-3 flex items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-primary">
               {tender.contract_type || "Tender"}
@@ -223,7 +223,7 @@ export default async function TenderDetailPage({
             {tender.title}
           </h1>
 
-          <div className="grid gap-6 border-t border-slate-50 pt-6 sm:grid-cols-3">
+          <div className="grid gap-5 border-t border-slate-50 pt-6 sm:grid-cols-3 sm:gap-6">
             <InfoItem
               icon={<Building2 className="size-4" />}
               label="Naručilac"
@@ -245,7 +245,7 @@ export default async function TenderDetailPage({
         </div>
 
         {(company || isAgency) ? (
-          <div className="rounded-[2rem] bg-slate-950 px-8 py-7 shadow-xl shadow-slate-950/20">
+          <div className="rounded-[1.6rem] bg-slate-950 px-5 py-6 shadow-xl shadow-slate-950/20 sm:rounded-[2rem] sm:px-8 sm:py-7">
             <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
               <div className="max-w-2xl text-white">
                 <p className="text-2xl font-heading font-bold leading-snug text-white">
@@ -279,7 +279,7 @@ export default async function TenderDetailPage({
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             {aiDescription ? (
-              <div className="rounded-[1.5rem] border border-blue-100 bg-blue-50/40 p-8 shadow-sm">
+              <div className="rounded-[1.35rem] border border-blue-100 bg-blue-50/40 p-5 shadow-sm sm:rounded-[1.5rem] sm:p-8">
                 <h3 className="mb-1 flex items-center gap-2 text-lg font-heading font-bold text-slate-900">
                   <Sparkles className="size-5 text-blue-500" />
                   Opis predmeta nabavke
@@ -288,7 +288,7 @@ export default async function TenderDetailPage({
                 <p className="text-sm leading-relaxed text-slate-700">{aiDescription}</p>
               </div>
             ) : (
-              <div className="rounded-[1.5rem] border border-slate-100 bg-white p-8 shadow-sm">
+              <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-8">
                 <h3 className="mb-3 flex items-center gap-2 text-lg font-heading font-bold text-slate-900">
                   <FileText className="size-5 text-slate-300" />
                   Opis predmeta nabavke
@@ -297,7 +297,7 @@ export default async function TenderDetailPage({
               </div>
             )}
 
-            <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-6">
               <h3 className="mb-4 text-base font-bold text-slate-900">Šta dobijate odmah</h3>
               <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
@@ -315,7 +315,7 @@ export default async function TenderDetailPage({
 
           <div className="space-y-6">
             {authorityStats ? (
-              <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-6">
                 <h3 className="mb-5 flex items-center gap-2 text-lg font-heading font-bold text-slate-900">
                   <BarChart3 className="size-5 text-slate-400" />
                   Historijat naručioca
@@ -352,7 +352,7 @@ export default async function TenderDetailPage({
             ) : null}
 
             {tender.portal_url ? (
-              <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="rounded-[1.35rem] border border-slate-100 bg-white p-5 shadow-sm sm:rounded-[1.5rem] sm:p-6">
                 <h3 className="mb-4 text-base font-bold text-slate-900">Izvorni dokument</h3>
                 <a
                   href={tender.portal_url}

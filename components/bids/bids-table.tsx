@@ -93,7 +93,7 @@ export function BidsTable({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[1.75rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)]">
+      <section className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-4 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.75rem] sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sky-300">
@@ -101,7 +101,7 @@ export function BidsTable({
             </div>
             <div>
               <h3 className="font-heading text-lg font-bold text-white">Pregled ponuda</h3>
-              <p className="text-sm text-slate-400">Status, rokovi i akcije slozeni za brzi operativni rad.</p>
+              <p className="text-sm text-slate-400">Status, rokovi i akcije složeni za brzi operativni rad.</p>
             </div>
           </div>
           <div className="w-full max-w-[240px]">
@@ -123,7 +123,7 @@ export function BidsTable({
       </section>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[1.75rem] border border-dashed border-white/10 bg-white/5 py-20 text-center">
+        <div className="flex flex-col items-center justify-center rounded-[1.55rem] border border-dashed border-white/10 bg-white/5 py-20 text-center sm:rounded-[1.75rem]">
           <div className="mb-4 flex size-16 items-center justify-center rounded-full border border-white/10 bg-white/5">
             <Briefcase className="size-8 text-slate-400" />
           </div>
@@ -132,8 +132,8 @@ export function BidsTable({
           </h3>
           <p className="max-w-sm text-sm text-slate-400">
             {bids.length === 0
-              ? 'Zapocnite klikom na dugme "Nova ponuda" iznad.'
-              : "Pokusajte promijeniti filtere za pretragu."}
+              ? 'Započnite klikom na dugme "Nova ponuda" iznad.'
+              : "Pokušajte promijeniti filtere za pretragu."}
           </p>
         </div>
       ) : (
@@ -151,7 +151,7 @@ export function BidsTable({
             return (
               <article
                 key={bid.id}
-                className="rounded-[1.5rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)]"
+                className="rounded-[1.35rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-4 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.5rem] sm:p-5"
               >
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0 flex-1">

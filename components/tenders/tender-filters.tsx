@@ -154,7 +154,7 @@ function LocalizedDateFilter({
   }
 
   return (
-    <div className="group flex h-11 min-w-[176px] items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.07] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <div className="group flex h-11 w-full min-w-0 items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.07] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       <div className="min-w-0 flex-1">
         <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-200">
           {label}
@@ -269,7 +269,7 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
   }
 
   const compactTriggerClassName =
-    "h-11 min-w-[140px] rounded-2xl border-white/12 bg-white/[0.07] px-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-white/[0.1] [&_span]:text-white [&_svg]:text-slate-300";
+    "h-11 w-full min-w-0 rounded-2xl border-white/12 bg-white/[0.07] px-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-white/[0.1] [&_span]:text-white [&_svg]:text-slate-300";
   const compactContentClassName =
     "rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl [&_[data-slot=select-item]]:text-slate-100 [&_[data-slot=select-item]_*]:text-inherit [&_[data-slot=select-item][data-highlighted]]:bg-white/10 [&_[data-slot=select-item][data-highlighted]]:text-white [&_[data-slot=select-item][data-highlighted]_*]:text-white [&_[data-slot=select-item][data-state=checked]]:text-white";
   const compactItemClassName = "rounded-xl px-3 py-2";
@@ -278,8 +278,8 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
 
   return (
     <section className="mb-6 rounded-[1.7rem] border border-slate-800/90 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_26%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] p-3.5 text-white shadow-[0_26px_60px_-40px_rgba(2,6,23,0.9)]">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[260px] flex-[1_1_340px]">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-12">
+        <div className="relative md:col-span-2 xl:col-span-4">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
           <Input
             placeholder="Pretraži naziv, naručioca ili opis tendera"
@@ -290,7 +290,7 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
           />
         </div>
 
-        <div className="min-w-[240px] flex-[1_1_280px]">
+        <div className="md:col-span-2 xl:col-span-3">
           <RegionMultiSelect
             selectedRegions={locations}
             onChange={setLocations}
@@ -302,52 +302,63 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
           />
         </div>
 
-        <Select value={contractType} onValueChange={setContractType}>
-          <SelectTrigger className={compactTriggerClassName}>
-            <SelectValue placeholder="Tip ugovora" />
-          </SelectTrigger>
-          <SelectContent className={compactContentClassName}>
-            {CONTRACT_TYPES.map((item) => (
-              <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="xl:col-span-2">
+          <Select value={contractType} onValueChange={setContractType}>
+            <SelectTrigger className={compactTriggerClassName}>
+              <SelectValue placeholder="Tip ugovora" />
+            </SelectTrigger>
+            <SelectContent className={compactContentClassName}>
+              {CONTRACT_TYPES.map((item) => (
+                <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={procedureType} onValueChange={setProcedureType}>
-          <SelectTrigger className={compactTriggerClassName}>
-            <SelectValue placeholder="Procedura" />
-          </SelectTrigger>
-          <SelectContent className={compactContentClassName}>
-            {PROCEDURE_TYPES.map((item) => (
-              <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="xl:col-span-2">
+          <Select value={procedureType} onValueChange={setProcedureType}>
+            <SelectTrigger className={compactTriggerClassName}>
+              <SelectValue placeholder="Procedura" />
+            </SelectTrigger>
+            <SelectContent className={compactContentClassName}>
+              {PROCEDURE_TYPES.map((item) => (
+                <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger className={compactTriggerClassName}>
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="size-3.5 text-slate-200" />
-              <SelectValue />
-            </div>
-          </SelectTrigger>
-          <SelectContent className={compactContentClassName}>
-            {sortOptions.map((item) => (
-              <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="xl:col-span-1">
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className={compactTriggerClassName}>
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="size-3.5 text-slate-200" />
+                <SelectValue />
+              </div>
+            </SelectTrigger>
+            <SelectContent className={compactContentClassName}>
+              {sortOptions.map((item) => (
+                <SelectItem key={item.value} value={item.value} className={compactItemClassName}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <LocalizedDateFilter label="Rok od" value={deadlineFrom} onChange={setDeadlineFrom} />
-        <LocalizedDateFilter label="Rok do" value={deadlineTo} onChange={setDeadlineTo} />
+        <div className="xl:col-span-2">
+          <LocalizedDateFilter label="Rok od" value={deadlineFrom} onChange={setDeadlineFrom} />
+        </div>
 
-        <div className="flex h-11 min-w-[146px] items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.07] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div className="xl:col-span-2">
+          <LocalizedDateFilter label="Rok do" value={deadlineTo} onChange={setDeadlineTo} />
+        </div>
+
+        <div className="flex h-11 min-w-0 items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.07] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] xl:col-span-2">
           <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-200">
             KM od
           </span>
@@ -362,7 +373,7 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
           />
         </div>
 
-        <div className="flex h-11 min-w-[146px] items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.07] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div className="flex h-11 min-w-0 items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.07] px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] xl:col-span-2">
           <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-200">
             KM do
           </span>
@@ -377,18 +388,18 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
           />
         </div>
 
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row md:col-span-2 xl:col-span-12 xl:justify-end">
           <Button
             variant="outline"
             onClick={resetFilters}
-            className="h-11 rounded-2xl border-white/12 bg-white/[0.07] px-4 text-sm font-semibold text-white hover:bg-white/[0.11] hover:text-white"
+            className="h-11 w-full rounded-2xl border-white/12 bg-white/[0.07] px-4 text-sm font-semibold text-white hover:bg-white/[0.11] hover:text-white sm:w-auto"
           >
             <RotateCcw className="mr-2 size-4" />
             Očisti
           </Button>
           <Button
             onClick={applyFilters}
-            className="h-11 rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-slate-100"
+            className="h-11 w-full rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-slate-100 sm:w-auto"
           >
             <Filter className="mr-2 size-4" />
             Primijeni

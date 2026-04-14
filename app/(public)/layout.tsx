@@ -9,20 +9,20 @@ export default async function PublicLayout({ children }: { children: React.React
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <TenderSistemLogo href="/" size="sm" />
-          <nav className="flex items-center gap-6">
+          <nav className="flex items-center gap-3 sm:gap-6">
             {user ? (
               <Link
                 href="/dashboard"
-                className="inline-flex h-9 items-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+                className="inline-flex h-10 items-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
               >
                 Dashboard
               </Link>
             ) : (
               <Link
                 href="/signup"
-                className="inline-flex h-9 items-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+                className="inline-flex h-10 items-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
               >
                 Besplatno
               </Link>
@@ -32,12 +32,12 @@ export default async function PublicLayout({ children }: { children: React.React
       </header>
       {children}
       <footer className="mt-16 border-t border-slate-200 bg-white py-8">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 text-center text-xs text-slate-400">
+        <div className="mx-auto max-w-7xl px-4 text-center text-xs text-slate-400 sm:px-6 lg:px-8">
           <div className="mb-4 flex justify-center">
             <TenderSistemLogo href="/" size="sm" />
           </div>
           <p>© {new Date().getFullYear()} Tendersistem.com — Informativni sadržaj. Uvijek provjerite originalne izvore.</p>
-          <div className="mt-2 flex justify-center gap-4">
+          <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2">
             <Link href="/prilike" className="hover:text-slate-600">Poticaji i grantovi</Link>
             <Link href="/zakon" className="hover:text-slate-600">Zakon o nabavkama</Link>
             <Link href="/privacy" className="hover:text-slate-600">Privatnost</Link>

@@ -8,7 +8,7 @@ import {
   CheckCircle,
   ArrowRight,
   ChevronDown,
-  X,
+  Menu,
   Clock,
   Bell,
   FileText,
@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { TenderSistemLogo } from "@/components/brand/tender-sistem-logo";
 import { OpportunityCard } from "@/components/public/opportunity-card";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface LandingPageProps {
   isLoggedIn?: boolean;
@@ -91,6 +93,7 @@ function PrimaryCTA({
 function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
     if (latest > previous && latest > 150) setHidden(true);
@@ -104,14 +107,14 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
       transition={{ duration: 0.35, ease: "easeInOut" }}
       className="fixed top-0 z-50 w-full border-b border-slate-200/70 bg-white/78 backdrop-blur-2xl"
     >
-      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <TenderSistemLogo href="/" size="sm" className="group" />
         <div className="hidden items-center gap-8 md:flex">
           <a href="#kako-radi" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Kako radi</a>
           <a href="#usporedba" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Poređenje</a>
           <a href="#cijene" className="text-base font-semibold text-slate-600 transition-colors hover:text-primary">Cijene</a>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="hidden items-center gap-3 sm:flex">
           {isLoggedIn ? (
             <Link href="/dashboard" className="rounded-full bg-primary px-5 py-2.5 text-base font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5">Otvori Dashboard</Link>
           ) : (
@@ -121,7 +124,77 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </>
           )}
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-lg"
+          onClick={() => setMobileOpen(true)}
+          className="shrink-0 rounded-2xl border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-950 sm:hidden"
+          aria-label="Otvori meni"
+        >
+          <Menu className="size-5" />
+        </Button>
       </div>
+
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent
+          side="right"
+          showCloseButton
+          className="w-[88vw] max-w-[360px] border-l border-slate-200 bg-white p-0"
+        >
+          <SheetHeader className="border-b border-slate-200 px-5 py-5">
+            <SheetTitle className="sr-only">Glavni meni</SheetTitle>
+            <TenderSistemLogo href="/" size="sm" />
+          </SheetHeader>
+          <div className="flex h-full flex-col px-5 py-5">
+            <nav className="space-y-2">
+              {[
+                { href: "#kako-radi", label: "Kako radi" },
+                { href: "#usporedba", label: "Poređenje" },
+                { href: "#cijene", label: "Cijene" },
+              ].map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-slate-950"
+                >
+                  {item.label}
+                  <ArrowRight className="size-4" />
+                </a>
+              ))}
+            </nav>
+            <div className="mt-6 space-y-3 border-t border-slate-200 pt-5">
+              {isLoggedIn ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-12 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-bold text-white transition-colors hover:bg-blue-700"
+                >
+                  Otvori Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/signup"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex h-12 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-bold text-white transition-colors hover:bg-blue-700"
+                  >
+                    Isprobaj besplatno
+                  </Link>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                  >
+                    Prijava
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </motion.nav>
   );
 }
@@ -129,7 +202,7 @@ function NavBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
 // ─── Hero ────────────────────────────────────────────────────────────────────
 function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
-    <section className="relative overflow-hidden bg-white px-4 sm:px-6 pb-12 pt-24 sm:pb-16 sm:pt-32 border-b border-slate-200">
+    <section className="relative overflow-hidden border-b border-slate-200 bg-white px-4 pb-12 pt-22 sm:px-6 sm:pb-16 sm:pt-30 lg:px-8 lg:pt-32">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       <div className="absolute top-0 right-0 h-[800px] w-[800px] blur-[1px] opacity-[0.25] -z-10 mix-blend-multiply translate-x-1/4 -translate-y-1/4 pointer-events-none select-none">
         <Image src="/images/premium-glass-hero.png" alt="" fill className="object-contain" priority />
@@ -137,13 +210,13 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full -z-10" />
 
       <div className="relative mx-auto max-w-7xl">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,0.98fr)] lg:gap-12">
+        <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,0.98fr)] lg:gap-12">
           {/* LEFT */}
           <motion.div initial="hidden" animate="visible" variants={fadeUpContainer} className="flex max-w-2xl flex-col items-start text-left">
-            <motion.h1 variants={fadeUpItem} className="font-heading text-4xl font-extrabold leading-[1.02] tracking-tight text-slate-900 sm:text-5xl lg:text-[4.15rem]">
+            <motion.h1 variants={fadeUpItem} className="font-heading text-[2.7rem] font-extrabold leading-[0.98] tracking-tight text-slate-900 sm:text-5xl lg:text-[4.15rem]">
               Vaš sljedeći ugovor{"\u00A0"}počinje ovdje.
             </motion.h1>
-            <motion.p variants={fadeUpItem} className="mt-5 max-w-xl text-[1.05rem] leading-relaxed text-slate-600 sm:text-lg">
+            <motion.p variants={fadeUpItem} className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
               Unesite šta vaša firma radi — za 30 sekundi vidite sve tendere koji su za vas. Učitate dokumentaciju i sistem automatski izvlači točno šta trebate priložiti.
             </motion.p>
             <motion.p variants={fadeUpItem} className="mt-3 text-[0.9rem] font-medium text-slate-400">
@@ -160,7 +233,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </motion.div>
 
           {/* RIGHT */}
-          <motion.div initial={{ opacity: 0, x: 36, scale: 0.97 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }} className="relative mx-auto w-full max-w-[540px]">
+          <motion.div initial={{ opacity: 0, x: 36, scale: 0.97 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }} className="relative mx-auto w-full max-w-[540px] lg:justify-self-end">
             <div className="absolute inset-0 rounded-[2rem] bg-blue-500/10 blur-3xl" />
             <div className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.14)] backdrop-blur-sm sm:p-5">
               <div className="rounded-[1.6rem] border border-slate-700/80 bg-[#111] p-3 sm:p-4">
@@ -170,7 +243,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     <span className="size-2.5 rounded-full bg-white/20" /><span className="size-2.5 rounded-full bg-white/20" /><span className="size-2.5 rounded-full bg-white/20" />
                     <div className="ml-3 h-2 w-24 rounded-full bg-white/10" />
                   </div>
-                  <div className="flex h-full flex-col items-center justify-center px-8 pt-12 text-center">
+                  <div className="flex h-full flex-col items-center justify-center px-6 pt-12 text-center sm:px-8">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-500">Demo screenshot / video</p>
                     <p className="mt-3 max-w-[16rem] text-base font-medium leading-snug text-slate-400">Dodajte snimku ekrana vaše platforme ovdje</p>
                   </div>
@@ -181,7 +254,7 @@ function HeroSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         </div>
 
         {/* Source trust bar */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }} className="mx-auto mt-16 max-w-4xl border-t border-slate-200/60 pt-10">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }} className="mx-auto mt-14 max-w-4xl border-t border-slate-200/60 pt-8 sm:pt-10">
           <p className="mb-5 text-center text-[12px] font-bold uppercase tracking-widest text-slate-400">Pouzdano praćenje sa svih ključnih bh. izvora</p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[13.5px] font-semibold text-slate-500">
             <span className="flex items-center gap-2"><Landmark className="size-4 text-slate-400" /> Portal Javnih Nabavki</span>
@@ -358,7 +431,7 @@ function BeforeAfterSection() {
           <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="rounded-3xl border border-red-100 bg-red-50/60 p-6 sm:p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-red-100/50 blur-2xl" />
             <div className="flex items-center gap-4 mb-6 relative">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-red-100 text-red-500"><X className="size-6" /></div>
+              <div className="flex size-12 items-center justify-center rounded-xl bg-red-100 text-red-500"><AlertTriangle className="size-6" /></div>
               <div>
                 <p className="text-[13px] font-bold uppercase tracking-wider text-red-600">Postojeći način</p>
                 <p className="font-heading text-2xl font-bold text-slate-900">3–5 sati po tenderu</p>
@@ -372,7 +445,7 @@ function BeforeAfterSection() {
             </div>
             <ul className="space-y-4 relative">
               {["Ručno pretraživanje portala apsolutno svaki dan", "Pregledanje i čitanje tendera koji nisu za vas", "Čitanje stotina stranica dokumentacije od nule", "Nejasno šta sve tačno prikupiti od papira", "Niste sigurni je li ponuda 100% ispravna za predaju"].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-base text-slate-700"><X className="mt-0.5 size-5 shrink-0 text-red-400" /><span className="leading-snug">{item}</span></li>
+                <li key={item} className="flex items-start gap-3 text-base text-slate-700"><AlertTriangle className="mt-0.5 size-5 shrink-0 text-red-400" /><span className="leading-snug">{item}</span></li>
               ))}
             </ul>
           </motion.div>

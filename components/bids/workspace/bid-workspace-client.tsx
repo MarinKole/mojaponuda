@@ -55,9 +55,9 @@ export function BidWorkspaceLayout({
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-5 xl:grid-cols-5 xl:gap-6">
         {/* Left: Checklist — 3/5 */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="space-y-5 xl:col-span-3 xl:space-y-6">
           {topContent}
           <ChecklistPanel
             bidId={bidId}
@@ -69,9 +69,9 @@ export function BidWorkspaceLayout({
         </div>
 
         {/* Right: PDF Viewer OR Documents — 2/5 */}
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-2">
           {viewerOpen && canView ? (
-            <div className="sticky top-6 h-[calc(100vh-8rem)]">
+            <div className="xl:sticky xl:top-6 xl:h-[calc(100vh-8rem)]">
               <TenderDocViewer
                 fileUrl={`/api/bids/${bidId}/tender-documentation/file`}
                 fileName={tenderDocUpload.file_name}

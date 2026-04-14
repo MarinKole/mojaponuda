@@ -83,7 +83,7 @@ export function SubscriptionCard({
   const displayPlanName = isActive && plan ? plan.name : "Besplatni nalog";
 
   return (
-    <section className="rounded-[1.95rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_24%),linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-8 text-white shadow-[0_30px_72px_-42px_rgba(2,6,23,0.9)]">
+    <section className="rounded-[1.65rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_24%),linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_30px_72px_-42px_rgba(2,6,23,0.9)] sm:rounded-[1.95rem] sm:p-8">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-4">
           <div

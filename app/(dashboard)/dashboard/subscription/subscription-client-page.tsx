@@ -72,7 +72,7 @@ function PreparationUsagePanel({
 
   return (
     <article
-      className={`rounded-[1.65rem] border p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.8)] transition-all ${
+      className={`rounded-[1.5rem] border p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.8)] transition-all sm:rounded-[1.65rem] sm:p-6 ${
         highlighted
           ? "border-blue-400/40 bg-[linear-gradient(180deg,#172554_0%,#111827_100%)] text-white"
           : "border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] text-white"
@@ -134,7 +134,7 @@ function PreparationUsagePanel({
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
           Kupovina dodatnih priprema
         </p>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {summary.packs.map((pack) => {
             const loadingKey = `${account.companyId}:${pack.id}`;
             const loading = loadingPackKey === loadingKey;
@@ -278,8 +278,8 @@ export function SubscriptionClientPage({
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 pb-12">
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.14),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_58%,#0b1120_100%)] p-6 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:p-8">
+    <div className="mx-auto max-w-7xl space-y-6 pb-10 sm:space-y-8 sm:pb-12">
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.14),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_58%,#0b1120_100%)] p-5 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:rounded-[2rem] sm:p-8">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-[size:52px_52px] [mask-image:radial-gradient(circle_at_top_left,#000_15%,transparent_75%)]" />
         <div className="relative max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200">
@@ -315,7 +315,7 @@ export function SubscriptionClientPage({
           </p>
         </section>
       ) : (
-        <section className="space-y-5">
+        <section className="space-y-4 sm:space-y-5">
           <div>
             <h2 className="font-heading text-2xl font-bold text-slate-900">Odaberite paket</h2>
             <p className="mt-2 text-sm text-slate-600">
@@ -331,7 +331,7 @@ export function SubscriptionClientPage({
         </section>
       )}
 
-      <section id="pripreme" className="scroll-mt-24 space-y-5">
+      <section id="pripreme" className="scroll-mt-24 space-y-4 sm:space-y-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="font-heading text-2xl font-bold text-slate-900">Pripreme ponuda</h2>

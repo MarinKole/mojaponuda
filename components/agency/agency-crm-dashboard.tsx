@@ -176,8 +176,8 @@ export function AgencyCRMDashboard({
     });
 
   return (
-    <div className="mx-auto max-w-[1240px] space-y-6 xl:space-y-7">
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_58%,#0b1120_100%)] p-6 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:p-8">
+    <div className="mx-auto max-w-[1360px] space-y-5 xl:space-y-7">
+      <section className="relative overflow-hidden rounded-[1.7rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_58%,#0b1120_100%)] p-5 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:rounded-[2rem] sm:p-8">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-[size:52px_52px] [mask-image:radial-gradient(circle_at_top_left,#000_18%,transparent_75%)]" />
         <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_380px]">
           <div className="space-y-5">
@@ -238,8 +238,8 @@ export function AgencyCRMDashboard({
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:gap-6">
+        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Kontrola</p>
@@ -278,7 +278,7 @@ export function AgencyCRMDashboard({
           </div>
         </div>
 
-        <div className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
+        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Poticaji</p>
@@ -334,14 +334,14 @@ export function AgencyCRMDashboard({
         </div>
       </section>
 
-      <section className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
-        <div className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
+      <section className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
+          <div className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Klijenti</p>
             <h2 className="mt-2 font-heading text-2xl font-bold text-white">Pregled klijenata</h2>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative min-w-[260px] flex-1">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1 sm:min-w-[260px]">
               <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"

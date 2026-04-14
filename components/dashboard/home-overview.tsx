@@ -307,8 +307,8 @@ export function DashboardHomeOverview({
   });
 
   return (
-    <div className="space-y-6 xl:space-y-7">
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_55%,#0b1120_100%)] p-6 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:p-8 lg:p-9">
+    <div className="space-y-5 xl:space-y-7">
+      <section className="relative overflow-hidden rounded-[1.7rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_55%,#0b1120_100%)] p-5 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:rounded-[2rem] sm:p-8 lg:p-9">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-[size:52px_52px] [mask-image:radial-gradient(circle_at_top_left,#000_15%,transparent_75%)]" />
         <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px] xl:items-start">
           <div className="space-y-6">
@@ -330,7 +330,7 @@ export function DashboardHomeOverview({
             </div>
 
             <div className="space-y-3">
-              <h1 className="max-w-4xl font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-[2.9rem]">
+              <h1 className="max-w-4xl font-heading text-[2rem] font-bold tracking-tight text-white sm:text-4xl lg:text-[2.9rem]">
                 Sve što je važno za {companyName}, bez viška informacija.
               </h1>
               <p className="max-w-3xl text-sm leading-7 text-slate-300 sm:text-base lg:text-lg">
@@ -394,8 +394,8 @@ export function DashboardHomeOverview({
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <div className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-6">
+        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Kontrola</p>
@@ -431,7 +431,7 @@ export function DashboardHomeOverview({
           </div>
         </div>
 
-        <div className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
+        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Tenderi</p>
@@ -491,8 +491,8 @@ export function DashboardHomeOverview({
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
-        <div className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] xl:gap-6">
+        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Ponude</p>
@@ -544,7 +544,7 @@ export function DashboardHomeOverview({
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
+          <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Brzi pristup</p>
@@ -575,7 +575,7 @@ export function DashboardHomeOverview({
             </div>
           </div>
 
-          <div className="rounded-[1.85rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-6 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
+          <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</p>
