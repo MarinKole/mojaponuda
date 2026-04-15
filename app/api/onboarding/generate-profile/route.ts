@@ -13,6 +13,12 @@ import {
 
 export const maxDuration = 30;
 
+const SYSTEM_PROMPT_VARIANT_NOTE = `
+Dodatno:
+- Ako se ista roba ili usluga u tenderima realno pojavljuje i pod domacim i pod engleskim nazivom, ukljuci obje varijante.
+- Nemoj koristiti genericke pojmove tipa "oprema", "uredjaj", "materijal", "sistem", "odrzavanje" ili "podrska" kao samostalne keywords osim ako nisu dio precizne viserecne fraze.
+- Prednost daj pojmovima koji opisuju predmet tendera, ne narucioca.`;
+
 const SYSTEM_PROMPT = `Ti si ekspert za javne nabavke i CPV (Common Procurement Vocabulary) kodove.
 Tvoj zadatak je da na osnovu kompletnog profila firme pripremiš profil za pretragu tendera.
 
@@ -86,7 +92,7 @@ export async function POST(request: NextRequest) {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: `${SYSTEM_PROMPT}\n${SYSTEM_PROMPT_VARIANT_NOTE}` },
         {
           role: "user",
           content: `Na osnovu sljedećeg profila firme generiši CPV kodove i ključne riječi za pretragu tendera:\n\n${profileContext}`,

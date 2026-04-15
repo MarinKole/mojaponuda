@@ -1,12 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  buildEffectiveContractTypes,
+  buildProfileCoreKeywordSeeds,
   buildProfileCpvSeeds,
   buildProfileKeywordAliases,
   buildRecommendationKeywords,
   buildStrictRecommendationCpvCodes,
   buildStrictRecommendationKeywords,
   derivePrimaryIndustry,
-  getPreferredContractTypes,
   parseCompanyProfile,
   type ParsedCompanyProfile,
 } from "@/lib/company-profile";
@@ -35,6 +36,7 @@ export interface RecommendationCompanySource {
 export interface RecommendationContext {
   profile: ParsedCompanyProfile;
   focusIndustry: string | null;
+  coreKeywords: string[];
   keywords: string[];
   retrievalKeywords: string[];
   negativeSignals: string[];
@@ -290,9 +292,42 @@ function normalizeRecommendationKeyword(value: string | null | undefined): strin
 function foldRecommendationKeyword(value: string): string {
   return value
     .normalize("NFD")
+    .replace(/đ/g, "dj")
+    .replace(/Đ/g, "Dj")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "dj")
     .replace(/Đ/g, "Dj");
+}
+
+function normalizeRecommendationMatchText(value: string | null | undefined): string {
+  const normalized = normalizeText(value)
+    .replace(/[(),.;:/\\]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return foldRecommendationKeyword(normalized).toLowerCase();
+}
+
+function keywordMatchesRecommendationText(
+  keyword: string,
+  primaryText: string,
+  foldedText: string
+): boolean {
+  const normalizedKeyword = normalizeRecommendationKeyword(keyword);
+
+  if (!normalizedKeyword) {
+    return false;
+  }
+
+  if (primaryText.includes(normalizedKeyword)) {
+    return true;
+  }
+
+  const foldedKeyword = normalizeRecommendationKeyword(
+    foldRecommendationKeyword(normalizedKeyword)
+  );
+
+  return foldedKeyword ? foldedText.includes(foldedKeyword) : false;
 }
 
 function buildKeywordVariantSet(terms: Array<string | null | undefined>): string[] {
@@ -338,10 +373,18 @@ function buildCpvPrefixes(cpvCodes: Array<string | null | undefined>): string[] 
     }
 
     if (normalized.length >= 8) {
-      prefixes.add(normalized.slice(0, 8));
+      const primaryCode = normalized.slice(0, 8);
+      prefixes.add(primaryCode);
+
+      const hierarchicalPrefix = primaryCode.replace(/0+$/g, "");
+      if (hierarchicalPrefix.length >= 2) {
+        prefixes.add(hierarchicalPrefix);
+      }
     }
 
-    prefixes.add(normalized.slice(0, 5));
+    if (normalized.length >= 5) {
+      prefixes.add(normalized.slice(0, 5));
+    }
   }
 
   return [...prefixes];
@@ -551,12 +594,17 @@ export function buildRecommendationContext(
     profile,
   });
   const aliasKeywords = buildProfileKeywordAliases(profile);
+  const coreKeywords = [...new Set([
+    ...buildProfileCoreKeywordSeeds(profile),
+    ...strictKeywords,
+  ])].slice(0, 24);
   const scoringKeywords = [...new Set([
+    ...coreKeywords,
     ...strictKeywords,
     ...broadKeywords,
-    ...aliasKeywords,
   ])].slice(0, 24);
   const retrievalKeywords = buildKeywordVariantSet([
+    ...coreKeywords,
     ...scoringKeywords,
     ...aliasKeywords,
   ]).slice(0, 28);
@@ -567,10 +615,11 @@ export function buildRecommendationContext(
   return {
     profile,
     focusIndustry,
+    coreKeywords,
     keywords: scoringKeywords,
     retrievalKeywords,
     negativeSignals: buildNegativeSignals(profile, focusIndustry),
-    preferredContractTypes: getPreferredContractTypes(profile.preferredTenderTypes),
+    preferredContractTypes: buildEffectiveContractTypes(profile),
     regionTerms: buildRegionSearchTerms(selectedRegions),
     sameGroupRegionTerms: buildRegionSearchTerms(
       buildSameGroupRegionFallback(selectedRegions)
@@ -600,7 +649,6 @@ export function buildRecommendationSearchCondition(context: RecommendationContex
     return [
       `title.ilike.%${safeTerm}%`,
       `raw_description.ilike.%${safeTerm}%`,
-      `contracting_authority.ilike.%${safeTerm}%`,
     ];
   });
 
@@ -769,26 +817,42 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
 ): ScoredTenderRecommendation<TTender> {
   const title = normalizeText(tender.title);
   const description = normalizeText(tender.raw_description);
-  const authority = normalizeText(tender.contracting_authority);
+  const foldedTitle = normalizeRecommendationMatchText(tender.title);
+  const foldedDescription = normalizeRecommendationMatchText(tender.raw_description);
   const normalizedCpvCode = normalizeCpvCode(tender.cpv_code);
 
-  const titleMatches = context.keywords.filter((keyword) => title.includes(keyword.toLowerCase()));
+  const coreTitleMatches = context.coreKeywords.filter((keyword) =>
+    keywordMatchesRecommendationText(keyword, title, foldedTitle)
+  );
+  const coreDescriptionMatches = context.coreKeywords.filter(
+    (keyword) =>
+      !coreTitleMatches.includes(keyword) &&
+      keywordMatchesRecommendationText(keyword, description, foldedDescription)
+  );
+  const titleMatches = context.keywords.filter((keyword) =>
+    keywordMatchesRecommendationText(keyword, title, foldedTitle)
+  );
+  const descriptionMatches = context.keywords.filter(
+    (keyword) =>
+      !titleMatches.includes(keyword) &&
+      keywordMatchesRecommendationText(keyword, description, foldedDescription)
+  );
   const matchedKeywords = uniqueStrings([
+    ...coreTitleMatches,
+    ...coreDescriptionMatches,
     ...titleMatches,
-    ...context.keywords.filter(
-      (keyword) =>
-        !titleMatches.includes(keyword) &&
-        (description.includes(keyword.toLowerCase()) || authority.includes(keyword.toLowerCase()))
-    ),
+    ...descriptionMatches,
   ]);
   const multiWordMatches = matchedKeywords.filter((keyword) => keyword.includes(" "));
-  const negativeTitleMatches = context.negativeSignals.filter((signal) => title.includes(signal));
+  const negativeTitleMatches = context.negativeSignals.filter((signal) =>
+    keywordMatchesRecommendationText(signal, title, foldedTitle)
+  );
   const negativeMatches = uniqueStrings([
     ...negativeTitleMatches,
     ...context.negativeSignals.filter(
       (signal) =>
         !negativeTitleMatches.includes(signal) &&
-        (description.includes(signal) || authority.includes(signal))
+        keywordMatchesRecommendationText(signal, description, foldedDescription)
     ),
   ]);
   const cpvMatch = context.cpvPrefixes.some(
@@ -843,16 +907,18 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
   }
 
   let score = 0;
-  score += titleMatches.length * 5;
-  score += matchedKeywords.length * 2;
+  score += coreTitleMatches.length * 8;
+  score += coreDescriptionMatches.length * 5;
+  score += titleMatches.length * 4;
+  score += descriptionMatches.length * 2;
   score += multiWordMatches.length * 2;
 
   if (cpvMatch) {
-    score += 7;
+    score += 8;
   }
 
   if (context.preferredContractTypes.length > 0 && contractMatch) {
-    score += 2;
+    score += 3;
   }
 
   // No location bonus in score — location only affects sort order via locationPriority
@@ -863,10 +929,20 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
 
   score -= negativePenalty;
 
-  const hasBusinessSignalInProfile = context.keywords.length > 0 || context.cpvPrefixes.length > 0;
-  const hasPositiveSignal = cpvMatch || titleMatches.length > 0 || matchedKeywords.length >= 2;
+  const hasBusinessSignalInProfile =
+    context.coreKeywords.length > 0 ||
+    context.keywords.length > 0 ||
+    context.cpvPrefixes.length > 0;
+  const hasCoreSignal = coreTitleMatches.length > 0 || coreDescriptionMatches.length > 0;
+  const hasBroadSignal =
+    titleMatches.length > 0 ||
+    multiWordMatches.length > 0 ||
+    matchedKeywords.length >= 3;
+  const hasPositiveSignal = cpvMatch || hasCoreSignal || hasBroadSignal;
   const positiveSignalCount =
-    (cpvMatch ? 3 : 0) +
+    (cpvMatch ? 4 : 0) +
+    coreTitleMatches.length * 3 +
+    coreDescriptionMatches.length * 2 +
     titleMatches.length * 2 +
     matchedKeywords.length +
     (contractMatch ? 1 : 0) +
@@ -876,22 +952,40 @@ export function scoreTenderRecommendation<TTender extends RecommendationTenderIn
     context.preferredContractTypes.length > 0 &&
     contractMatch &&
     (!hasLocationPreference || locationScope !== "broad");
-  const blockedByNegativeTitle = negativeTitleMatches.length > 0 && !cpvMatch && titleMatches.length === 0;
+  const blockedByNegativeTitle =
+    negativeTitleMatches.length > 0 &&
+    !cpvMatch &&
+    coreTitleMatches.length === 0 &&
+    titleMatches.length === 0;
   const strongBusinessSignal =
     cpvMatch ||
+    hasCoreSignal ||
     titleMatches.length > 0 ||
     multiWordMatches.length > 0 ||
-    matchedKeywords.length >= 2;
+    matchedKeywords.length >= 3;
   const broadLocationBlocked =
     hasLocationPreference && locationScope === "broad" && !strongBusinessSignal;
   const fallbackEligible =
     !blockedByNegativeTitle &&
     contractMatch &&
     !broadLocationBlocked &&
-    score >= 2 &&
-    (cpvMatch || titleMatches.length > 0 || matchedKeywords.length > 0);
+    score >= 3 &&
+    (cpvMatch || hasCoreSignal || titleMatches.length > 0 || matchedKeywords.length >= 2);
+  const supportOnlyQualified =
+    !hasCoreSignal &&
+    !cpvMatch &&
+    contractMatch &&
+    titleMatches.length > 0 &&
+    matchedKeywords.length >= 2 &&
+    score >= 6;
   const qualifies =
-    ((hasPositiveSignal && score >= (cpvMatch ? 2 : 4)) || fallbackTypeScopedMatch) &&
+    ((hasPositiveSignal &&
+      (cpvMatch ||
+        coreTitleMatches.length > 0 ||
+        (hasCoreSignal && score >= 5) ||
+        supportOnlyQualified) &&
+      score >= (cpvMatch ? 2 : 4)) ||
+      fallbackTypeScopedMatch) &&
     contractMatch &&
     !broadLocationBlocked &&
     !blockedByNegativeTitle;

@@ -740,6 +740,85 @@ const PRIMARY_INDUSTRY_KEYWORDS: Record<string, string[]> = {
   communications_media: ["štamp", "marketing", "brendiranj", "događaj"],
 };
 
+const PRIMARY_INDUSTRY_CORE_KEYWORDS: Record<string, string[]> = {
+  construction: [
+    "gradjevinski radovi",
+    "izvodjenje radova",
+    "rekonstrukcija",
+    "sanacija",
+    "adaptacija",
+    "niskogradnja",
+    "visokogradnja",
+    "izgradnja objekta",
+  ],
+  it: [
+    "softver",
+    "software",
+    "program",
+    "programska rjesenja",
+    "informacioni sistem",
+    "aplikacija",
+    "digitalna platforma",
+    "licence",
+  ],
+  equipment: [
+    "nabavka opreme",
+    "tehnicka oprema",
+    "uredska oprema",
+    "industrijska oprema",
+    "namjestaj",
+  ],
+  medical: [
+    "medicinska oprema",
+    "medicinski materijal",
+    "medicinski potrosni materijal",
+    "laboratorijska oprema",
+    "dijagnosticka oprema",
+    "reagensi",
+    "sanitetski materijal",
+  ],
+  maintenance: [
+    "servis i odrzavanje",
+    "tehnicka podrska",
+    "preventivno odrzavanje",
+    "interventno odrzavanje",
+  ],
+  consulting: [
+    "strucni nadzor",
+    "projektna dokumentacija",
+    "savjetodavne usluge",
+    "izrada studije",
+    "revizorske usluge",
+  ],
+  logistics: [
+    "transportne usluge",
+    "prevoz",
+    "nabavka vozila",
+    "komunalne usluge",
+    "odvoz otpada",
+  ],
+  security_energy: [
+    "video nadzor",
+    "alarmni sistem",
+    "kontrola pristupa",
+    "gorivo i energenti",
+    "energetski sistem",
+  ],
+  facilities_hospitality: [
+    "usluge ciscenja",
+    "higijenski materijal",
+    "dezinfekcija",
+    "catering usluge",
+    "prehrambeni proizvodi",
+  ],
+  communications_media: [
+    "stampani materijal",
+    "promotivni materijal",
+    "marketing usluge",
+    "organizacija dogadjaja",
+  ],
+};
+
 const OFFERING_CATEGORY_KEYWORDS: Record<string, string[]> = {
   software_licenses: ["softver", "licenc", "erp", "dms", "saas", "aplikacij"],
   it_hardware: ["server", "računar", "printer", "switch", "router", "firewall", "mrežna oprema"],
@@ -765,6 +844,156 @@ const OFFERING_CATEGORY_KEYWORDS: Record<string, string[]> = {
   printing_marketing_events: ["štamp", "marketing", "promotivn", "brendiranj", "događaj"],
 };
 
+const OFFERING_CATEGORY_CORE_KEYWORDS: Record<string, string[]> = {
+  software_licenses: [
+    "poslovni softver",
+    "software",
+    "program",
+    "erp",
+    "crm",
+    "dms",
+    "informacioni sistem",
+    "licence",
+  ],
+  it_hardware: [
+    "racunari",
+    "laptopi",
+    "server",
+    "storage",
+    "mrezna oprema",
+    "firewall",
+    "printeri",
+  ],
+  telecom_av: [
+    "ip telefonija",
+    "video konferencija",
+    "konferencijski sistem",
+    "audio video oprema",
+    "multimedijalna oprema",
+  ],
+  cloud_cyber_data: [
+    "cloud services",
+    "cyber security",
+    "backup solution",
+    "data center",
+    "sigurnost podataka",
+  ],
+  construction_works: [
+    "gradjevinski radovi",
+    "izvodjenje radova",
+    "rekonstrukcija objekta",
+    "sanacija objekta",
+    "adaptacija objekta",
+  ],
+  electro_mechanical: [
+    "elektro radovi",
+    "masinske instalacije",
+    "hvac",
+    "grijanje",
+    "hladjenje",
+    "instalaterski radovi",
+  ],
+  design_supervision: [
+    "projektna dokumentacija",
+    "glavni projekat",
+    "strucni nadzor",
+    "izrada elaborata",
+  ],
+  maintenance_support: [
+    "servis i odrzavanje",
+    "tehnicka podrska",
+    "odrzavanje sistema",
+    "preventivno odrzavanje",
+  ],
+  office_school_equipment: [
+    "uredska oprema",
+    "skolska oprema",
+    "kancelarijski materijal",
+    "namjestaj",
+  ],
+  industrial_tools_machinery: [
+    "industrijska oprema",
+    "masine i alati",
+    "radionicka oprema",
+    "rezervni dijelovi",
+  ],
+  furniture_interior: [
+    "kancelarijski namjestaj",
+    "skolski namjestaj",
+    "enterijerska oprema",
+  ],
+  medical_supplies: [
+    "medicinska oprema",
+    "medicinski materijal",
+    "medicinski potrosni materijal",
+    "hirurski materijal",
+    "sanitetski materijal",
+    "medicinski uredjaj",
+  ],
+  laboratory_diagnostics: [
+    "laboratorijska oprema",
+    "laboratorijski materijal",
+    "reagensi",
+    "testovi",
+    "analizator",
+    "dijagnosticka oprema",
+  ],
+  vehicles_transport: [
+    "nabavka vozila",
+    "transportne usluge",
+    "servis vozila",
+    "autodijelovi",
+  ],
+  utility_waste_winter: [
+    "odvoz otpada",
+    "zimsko odrzavanje",
+    "komunalne usluge",
+    "javna higijena",
+  ],
+  cleaning_hygiene: [
+    "usluge ciscenja",
+    "sredstva za ciscenje",
+    "higijenski materijal",
+    "dezinfekcija",
+  ],
+  food_catering: [
+    "prehrambeni proizvodi",
+    "catering usluge",
+    "priprema obroka",
+    "osnovne zivotne namirnice",
+  ],
+  security_video: [
+    "video nadzor",
+    "alarmni sistem",
+    "kontrola pristupa",
+    "zastitarske usluge",
+  ],
+  fuel_energy: [
+    "gorivo i energenti",
+    "loz ulje",
+    "energetska oprema",
+    "toplotna pumpa",
+  ],
+  legal_finance_consulting: [
+    "pravne usluge",
+    "racunovodstvene usluge",
+    "revizorske usluge",
+    "poslovno savjetovanje",
+  ],
+  training_research: [
+    "edukacije i obuke",
+    "strucno usavrsavanje",
+    "istrazivanje trzista",
+    "anketiranje",
+  ],
+  printing_marketing_events: [
+    "stampani materijal",
+    "promotivni materijal",
+    "organizacija konferencije",
+    "branding",
+  ],
+};
+
 const TENDER_TYPE_KEYWORDS: Record<string, string[]> = {
   goods: [],
   services: [],
@@ -772,10 +1001,10 @@ const TENDER_TYPE_KEYWORDS: Record<string, string[]> = {
 };
 
 const PRIMARY_INDUSTRY_CPV_CODES: Record<string, string[]> = {
-  construction: ["45000000", "45200000", "45400000"],
-  it: ["30200000", "32400000", "48000000"],
-  equipment: ["39000000", "42000000", "42600000"],
-  medical: ["33100000", "33140000", "38430000"],
+  construction: ["45000000", "45100000", "45200000", "45300000", "45400000", "45500000"],
+  it: ["30200000", "32400000", "48000000", "48100000", "48200000", "48700000", "72200000", "72500000"],
+  equipment: ["30100000", "30190000", "39000000", "39100000", "42000000", "42600000"],
+  medical: ["33100000", "33140000", "33190000", "33600000", "38430000", "50421000"],
   maintenance: ["50000000", "50300000", "72253000"],
   consulting: ["71200000", "71520000", "79400000"],
   logistics: ["34100000", "60100000", "90500000"],
@@ -785,19 +1014,19 @@ const PRIMARY_INDUSTRY_CPV_CODES: Record<string, string[]> = {
 };
 
 const OFFERING_CATEGORY_CPV_CODES: Record<string, string[]> = {
-  software_licenses: ["48000000", "48218000", "48761000"],
-  it_hardware: ["30200000", "32420000", "48820000"],
-  telecom_av: ["32000000", "32260000", "32321200"],
-  cloud_cyber_data: ["48730000", "72250000", "72317000"],
-  construction_works: ["45000000", "45200000", "45400000"],
+  software_licenses: ["48000000", "48100000", "48200000", "48300000", "48400000", "48500000", "48600000", "48700000", "48800000", "72260000", "72267000", "72268000"],
+  it_hardware: ["30200000", "30213000", "30231300", "32400000", "32420000", "32422000", "32424000", "48820000"],
+  telecom_av: ["32000000", "32200000", "32260000", "32300000", "32320000", "32321200"],
+  cloud_cyber_data: ["48710000", "48730000", "48760000", "48800000", "72250000", "72317000", "72500000"],
+  construction_works: ["45000000", "45100000", "45200000", "45300000", "45400000", "45500000"],
   electro_mechanical: ["45310000", "45330000", "50700000"],
   design_supervision: ["71200000", "71247000", "71520000"],
-  maintenance_support: ["50000000", "50300000", "72253000"],
+  maintenance_support: ["50000000", "50300000", "50312000", "50312310", "72253000", "72611000"],
   office_school_equipment: ["30190000", "39100000", "39160000"],
   industrial_tools_machinery: ["42000000", "42600000", "43800000"],
   furniture_interior: ["39100000", "39130000", "39160000"],
-  medical_supplies: ["33100000", "33140000", "33600000"],
-  laboratory_diagnostics: ["33124100", "33696500", "38430000"],
+  medical_supplies: ["33100000", "33140000", "33190000", "33600000", "33690000", "33141000"],
+  laboratory_diagnostics: ["33124100", "33696500", "38430000", "38500000"],
   vehicles_transport: ["34100000", "34300000", "60100000"],
   utility_waste_winter: ["90511000", "90600000", "90620000"],
   cleaning_hygiene: ["33700000", "39800000", "90910000"],
@@ -819,10 +1048,12 @@ const PRIMARY_INDUSTRY_RETRIEVAL_ALIASES: Record<string, string[]> = {
   ],
   it: [
     "software",
+    "business software",
     "programska rjesenja",
     "informacioni sistem",
     "ict",
     "digitalna platforma",
+    "upravljanje dokumentima",
   ],
   equipment: [
     "isporuka opreme",
@@ -880,6 +1111,8 @@ const OFFERING_CATEGORY_RETRIEVAL_ALIASES: Record<string, string[]> = {
     "program",
     "programska rjesenja",
     "informacioni sistem",
+    "poslovni softver",
+    "software platform",
   ],
   it_hardware: [
     "laptop",
@@ -946,12 +1179,15 @@ const OFFERING_CATEGORY_RETRIEVAL_ALIASES: Record<string, string[]> = {
     "medicinska oprema",
     "hirurski materijal",
     "zdravstveni materijal",
+    "sanitetski materijal",
+    "bolnicka oprema",
   ],
   laboratory_diagnostics: [
     "laboratorijski materijal",
     "reagensi i testovi",
     "dijagnosticka oprema",
     "laboratorijski analizator",
+    "laboratorijska oprema",
   ],
   vehicles_transport: [
     "nabavka vozila",
@@ -1042,6 +1278,17 @@ const SEARCH_KEYWORD_STOP_WORDS = new Set([
   "hercegovina",
   "cijela",
   "bih",
+  "oprema",
+  "uredjaj",
+  "uredjaji",
+  "materijal",
+  "materijali",
+  "proizvod",
+  "proizvodi",
+  "sistem",
+  "sistemi",
+  "podrska",
+  "odrzavanje",
 ]);
 
 export interface StructuredCompanyProfile {
@@ -1087,10 +1334,15 @@ const genericProfileKeywordTerms = new Set(
 const AMBIGUOUS_SINGLE_WORD_KEYWORD_PATTERNS = [
   /^mrež/i,
   /^oprem/i,
+  /^uredjaj/i,
+  /^materijal/i,
+  /^proizvod/i,
   /^nabavk/i,
   /^radov/i,
   /^uslug/i,
   /^servis$/i,
+  /^servisir/i,
+  /^odrzav/i,
   /^podršk/i,
   /^sistem/i,
   /^rješenj/i,
@@ -1106,6 +1358,44 @@ const offeringCategoryLookup = new Map(
 const specializationLookup = new Map(
   CATEGORY_SPECIALIZATION_OPTIONS.map((option) => [option.id, option])
 );
+
+const PRIMARY_INDUSTRY_CONTRACT_TYPE_HINTS: Record<string, string[]> = {
+  construction: ["works"],
+  it: ["goods", "services"],
+  equipment: ["goods"],
+  medical: ["goods"],
+  maintenance: ["services"],
+  consulting: ["services"],
+  logistics: ["goods", "services"],
+  security_energy: ["goods", "services"],
+  facilities_hospitality: ["goods", "services"],
+  communications_media: ["goods", "services"],
+};
+
+const OFFERING_CATEGORY_CONTRACT_TYPE_HINTS: Record<string, string[]> = {
+  software_licenses: ["goods", "services"],
+  it_hardware: ["goods"],
+  telecom_av: ["goods", "services"],
+  cloud_cyber_data: ["services", "goods"],
+  construction_works: ["works"],
+  electro_mechanical: ["works", "services"],
+  design_supervision: ["services"],
+  maintenance_support: ["services"],
+  office_school_equipment: ["goods"],
+  industrial_tools_machinery: ["goods"],
+  furniture_interior: ["goods"],
+  medical_supplies: ["goods"],
+  laboratory_diagnostics: ["goods"],
+  vehicles_transport: ["goods", "services"],
+  utility_waste_winter: ["services"],
+  cleaning_hygiene: ["goods", "services"],
+  food_catering: ["goods", "services"],
+  security_video: ["goods", "services"],
+  fuel_energy: ["goods", "works"],
+  legal_finance_consulting: ["services"],
+  training_research: ["services"],
+  printing_marketing_events: ["goods", "services"],
+};
 
 function normalizeSpecializationIds(
   specializationIds: Array<string | null | undefined>,
@@ -1381,6 +1671,29 @@ export function getPreferredContractTypes(preferredTenderTypes: string[]): strin
     .filter((item): item is string => Boolean(item));
 }
 
+export function buildEffectiveContractTypes(profile: ParsedCompanyProfile): string[] {
+  const explicitContractTypes = getPreferredContractTypes(profile.preferredTenderTypes);
+
+  if (explicitContractTypes.length > 0) {
+    return explicitContractTypes;
+  }
+
+  const derivedPrimaryIndustry = derivePrimaryIndustry(
+    profile.offeringCategories,
+    profile.primaryIndustry
+  );
+  const inferredTenderTypes = [
+    ...(derivedPrimaryIndustry
+      ? PRIMARY_INDUSTRY_CONTRACT_TYPE_HINTS[derivedPrimaryIndustry] ?? []
+      : []),
+    ...profile.offeringCategories.flatMap(
+      (item) => OFFERING_CATEGORY_CONTRACT_TYPE_HINTS[item] ?? []
+    ),
+  ];
+
+  return getPreferredContractTypes([...new Set(inferredTenderTypes)]);
+}
+
 function uniqueCpvCodes(values: Array<string | null | undefined>): string[] {
   return [
     ...new Set(
@@ -1415,6 +1728,26 @@ export function buildProfileKeywordSeeds(profile: ParsedCompanyProfile): string[
     ...buildCategoryKeywordSeeds(profile),
     ...extractDescriptionKeywordTerms(profile.companyDescription ?? profile.legacyIndustryText),
   ]);
+}
+
+export function buildProfileCoreKeywordSeeds(profile: ParsedCompanyProfile): string[] {
+  const derivedPrimaryIndustry = derivePrimaryIndustry(
+    profile.offeringCategories,
+    profile.primaryIndustry
+  );
+
+  return sanitizeSearchKeywords([
+    ...(derivedPrimaryIndustry
+      ? PRIMARY_INDUSTRY_CORE_KEYWORDS[derivedPrimaryIndustry] ?? []
+      : []),
+    ...profile.offeringCategories.flatMap(
+      (item) => OFFERING_CATEGORY_CORE_KEYWORDS[item] ?? []
+    ),
+    ...buildSelectedSpecializationKeywordSeeds(profile),
+    ...sanitizeSearchKeywords(profile.manualKeywords ?? []),
+  ])
+    .filter((term) => !isAmbiguousSingleWordKeyword(term))
+    .slice(0, 24);
 }
 
 export function buildProfileKeywordAliases(profile: ParsedCompanyProfile): string[] {

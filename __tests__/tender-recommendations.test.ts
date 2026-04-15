@@ -123,4 +123,110 @@ describe("tender recommendations", () => {
     expect(scored.qualifies).toBe(true);
     expect(scored.titleMatches).toContain("software");
   });
+
+  it("uses inferred contract types and rejects unrelated service tenders for medical suppliers", () => {
+    const profileContext = buildRecommendationContext({
+      industry: JSON.stringify({
+        version: 1,
+        primaryIndustry: "medical",
+        offeringCategories: ["medical_supplies"],
+        specializationIds: [],
+        preferredTenderTypes: [],
+        companyDescription: "Prodaja medicinske opreme i medicinskog potrosnog materijala.",
+        manualKeywords: [],
+      }),
+      keywords: [],
+      cpv_codes: [],
+      operating_regions: [],
+    });
+
+    const unrelatedService = scoreTenderRecommendation(
+      createTender({
+        id: "medical-noise",
+        title: "Odrzavanje i servisiranje klima uredjaja",
+        contracting_authority: "JU Dom zdravlja Sarajevo",
+        contract_type: "Usluge",
+        raw_description: "Redovan servis rashladnih i ventilacionih sistema.",
+      }),
+      profileContext
+    );
+
+    const relevantMedicalSupply = scoreTenderRecommendation(
+      createTender({
+        id: "medical-fit",
+        title: "Nabavka medicinske opreme i sanitetskog materijala",
+        contract_type: "Robe",
+        cpv_code: "33100000-1",
+        raw_description: "Isporuka medicinskog potrosnog materijala i opreme za ambulante.",
+      }),
+      profileContext
+    );
+
+    expect(profileContext.preferredContractTypes).toEqual(["Robe"]);
+    expect(unrelatedService.qualifies).toBe(false);
+    expect(relevantMedicalSupply.qualifies).toBe(true);
+  });
+
+  it("does not treat contracting authority text as a positive industry match", () => {
+    const profileContext = buildRecommendationContext({
+      industry: JSON.stringify({
+        version: 1,
+        primaryIndustry: "medical",
+        offeringCategories: ["laboratory_diagnostics"],
+        specializationIds: [],
+        preferredTenderTypes: [],
+        companyDescription: "Laboratorijska oprema i dijagnostika.",
+        manualKeywords: [],
+      }),
+      keywords: [],
+      cpv_codes: [],
+      operating_regions: [],
+    });
+
+    const scored = scoreTenderRecommendation(
+      createTender({
+        id: "authority-noise",
+        title: "Servisiranje sluzbenih vozila",
+        contracting_authority: "Klinicki centar univerziteta Sarajevo",
+        contract_type: "Usluge",
+        raw_description: "Odrzavanje voznog parka i nabavka autodijelova.",
+      }),
+      profileContext
+    );
+
+    expect(scored.matchedKeywords).toEqual([]);
+    expect(scored.qualifies).toBe(false);
+  });
+
+  it("covers broader construction CPV families beyond the main works code", () => {
+    const profileContext = buildRecommendationContext({
+      industry: JSON.stringify({
+        version: 1,
+        primaryIndustry: "construction",
+        offeringCategories: ["construction_works"],
+        specializationIds: [],
+        preferredTenderTypes: [],
+        companyDescription: "Izvodimo gradjevinske i instalaterske radove.",
+        manualKeywords: [],
+      }),
+      keywords: [],
+      cpv_codes: [],
+      operating_regions: [],
+    });
+
+    const scored = scoreTenderRecommendation(
+      createTender({
+        id: "construction-fit",
+        title: "Elektroinstalacioni radovi na rekonstrukciji objekta",
+        contract_type: "Radovi",
+        cpv_code: "45310000-3",
+        raw_description: "Izvodjenje elektroinstalacionih radova i rekonstrukcija objekta.",
+      }),
+      profileContext
+    );
+
+    expect(profileContext.cpvPrefixes).toContain("45300");
+    expect(scored.qualifies).toBe(true);
+    expect(scored.cpvMatch).toBe(true);
+  });
 });
