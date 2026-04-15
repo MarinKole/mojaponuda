@@ -97,16 +97,16 @@ export function TenderCard({ tender, locked = false, clientNames, href }: Tender
   const resolvedHref = href ?? (locked ? "/dashboard/subscription" : `/dashboard/tenders/${tender.id}`);
 
   return (
-    <Link href={resolvedHref} className="group block">
+    <Link href={resolvedHref} prefetch className="group block">
       <article
-        className={`relative overflow-hidden rounded-[1.6rem] border p-5 text-white transition-all duration-200 hover:-translate-y-0.5 hover:brightness-[1.04] ${deadline.cardClass}`}
+        className={`relative overflow-hidden rounded-2xl border p-5 text-white transition-all duration-200 hover:-translate-y-0.5 hover:brightness-[1.04] ${deadline.cardClass}`}
       >
         <div className={`absolute inset-y-0 left-0 w-1.5 ${deadline.accentClass}`} />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_34%)] opacity-80" />
         <div className="flex flex-col gap-5 pl-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-4">
-              <div className="hidden size-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.07] text-slate-100 sm:flex">
+              <div className="hidden size-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.07] text-slate-100 sm:flex">
                 <FileText className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -155,7 +155,7 @@ export function TenderCard({ tender, locked = false, clientNames, href }: Tender
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
               Otvori detalje
             </span>
-            <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.07] text-slate-300 transition-colors group-hover:bg-white/10 group-hover:text-white">
+            <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.07] text-slate-300 transition-colors group-hover:bg-white/10 group-hover:text-white">
               {locked ? <Lock className="size-4" /> : <ArrowUpRight className="size-4" />}
             </div>
           </div>

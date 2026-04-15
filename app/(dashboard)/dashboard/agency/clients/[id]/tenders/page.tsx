@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionStatus } from "@/lib/subscription";
 import type { Tender } from "@/types/database";
 import { buildRegionSearchTerms } from "@/lib/constants/regions";
-import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
 import {
   attachTenderLocationPriority,
   resolveTenderSort,
@@ -49,6 +48,90 @@ function getMultiParam(value: SearchParamValue): string[] {
     return value.filter((item) => typeof item === "string" && item.trim().length > 0);
   }
   return typeof value === "string" && value.trim().length > 0 ? [value] : [];
+}
+
+async function fetchAllTendersForClientSort(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  filters: {
+    keyword: string;
+    contractType: string;
+    procedureType: string;
+    deadlineFrom: string;
+    deadlineTo: string;
+    valueMin: string;
+    valueMax: string;
+  },
+  sortParam: ReturnType<typeof resolveTenderSort>,
+) {
+  const orderBy =
+    sortParam === "value_desc" || sortParam === "value_asc"
+      ? "estimated_value"
+      : sortParam === "newest"
+        ? "created_at"
+        : "deadline";
+  const ascending = sortParam === "value_asc" || sortParam === "deadline_asc";
+  const batchSize = 1000;
+  let offset = 0;
+  const rows: Tender[] = [];
+
+  while (true) {
+    let query = supabase.from("tenders").select("*");
+
+    if (filters.keyword) {
+      const keyword = `%${filters.keyword}%`;
+      query = query.or(`title.ilike.${keyword},raw_description.ilike.${keyword}`);
+    }
+
+    if (filters.contractType !== "all") {
+      query = query.ilike("contract_type", `%${filters.contractType}%`);
+    }
+
+    if (filters.procedureType !== "all") {
+      query = query.ilike("procedure_type", `%${filters.procedureType}%`);
+    }
+
+    if (filters.deadlineFrom) {
+      query = query.gte("deadline", new Date(filters.deadlineFrom).toISOString());
+    }
+
+    if (filters.deadlineTo) {
+      query = query.lte("deadline", new Date(`${filters.deadlineTo}T23:59:59`).toISOString());
+    }
+
+    if (filters.valueMin) {
+      query = query.gte("estimated_value", parseFloat(filters.valueMin));
+    }
+
+    if (filters.valueMax) {
+      query = query.lte("estimated_value", parseFloat(filters.valueMax));
+    }
+
+    const { data, error } = await query
+      .order(orderBy, {
+        ascending,
+        nullsFirst: false,
+      })
+      .range(offset, offset + batchSize - 1);
+
+    if (error) {
+      throw error;
+    }
+
+    const batch = (data ?? []) as Tender[];
+    if (batch.length === 0) {
+      break;
+    }
+
+    rows.push(...batch);
+
+    if (batch.length < batchSize) {
+      break;
+    }
+
+    offset += batchSize;
+  }
+
+  return rows;
 }
 
 async function TendersContent({ agencyClientId, companyId, recommendationContext, selectedRegions, searchParams }: {
@@ -131,11 +214,6 @@ async function TendersContent({ agencyClientId, companyId, recommendationContext
       })
     );
 
-    ranked = await maybeRerankTenderRecommendationsWithAI(ranked, recommendationContext, {
-      limit: Math.max(ranked.length, 10),
-      shortlistSize: 10,
-    });
-
     ranked = sortRecommendedTenderItems(ranked, sortParam);
 
     if (locationFilterTerms.length > 0) {
@@ -147,36 +225,19 @@ async function TendersContent({ agencyClientId, companyId, recommendationContext
   } else {
     // All tenders tab
     if (locationFilterTerms.length > 0) {
-      let locationQuery = supabase
-        .from("tenders")
-        .select("*");
-
-      if (keywordParam) {
-        const kw = `%${keywordParam}%`;
-        locationQuery = locationQuery.or(`title.ilike.${kw},raw_description.ilike.${kw}`);
-      }
-      if (contractTypeParam !== "all") locationQuery = locationQuery.ilike("contract_type", `%${contractTypeParam}%`);
-      if (procedureTypeParam !== "all") locationQuery = locationQuery.ilike("procedure_type", `%${procedureTypeParam}%`);
-      if (deadlineFromParam) locationQuery = locationQuery.gte("deadline", new Date(deadlineFromParam).toISOString());
-      if (deadlineToParam) locationQuery = locationQuery.lte("deadline", new Date(`${deadlineToParam}T23:59:59`).toISOString());
-      if (valueMinParam) locationQuery = locationQuery.gte("estimated_value", parseFloat(valueMinParam));
-      if (valueMaxParam) locationQuery = locationQuery.lte("estimated_value", parseFloat(valueMaxParam));
-
-      const { data } = await locationQuery
-        .order(
-          sortParam === "value_desc" || sortParam === "value_asc"
-            ? "estimated_value"
-            : sortParam === "newest"
-              ? "created_at"
-              : "deadline",
-          {
-            ascending:
-              sortParam === "value_asc" ||
-              sortParam === "deadline_asc",
-            nullsFirst: false,
-          }
-        )
-        .range(0, 2499);
+      const data = await fetchAllTendersForClientSort(
+        supabase,
+        {
+          keyword: keywordParam,
+          contractType: contractTypeParam,
+          procedureType: procedureTypeParam,
+          deadlineFrom: deadlineFromParam,
+          deadlineTo: deadlineToParam,
+          valueMin: valueMinParam,
+          valueMax: valueMaxParam,
+        },
+        sortParam,
+      );
 
       const enriched = await enrichTendersWithAuthorityGeo(
         supabase,
@@ -193,24 +254,19 @@ async function TendersContent({ agencyClientId, companyId, recommendationContext
       const shouldSortByNearest = sortParam === "nearest";
 
       if (shouldSortByNearest) {
-        let query = supabase
-          .from("tenders")
-          .select("*");
-
-        if (keywordParam) {
-          const kw = `%${keywordParam}%`;
-          query = query.or(`title.ilike.${kw},raw_description.ilike.${kw}`);
-        }
-        if (contractTypeParam !== "all") query = query.ilike("contract_type", `%${contractTypeParam}%`);
-        if (procedureTypeParam !== "all") query = query.ilike("procedure_type", `%${procedureTypeParam}%`);
-        if (deadlineFromParam) query = query.gte("deadline", new Date(deadlineFromParam).toISOString());
-        if (deadlineToParam) query = query.lte("deadline", new Date(`${deadlineToParam}T23:59:59`).toISOString());
-        if (valueMinParam) query = query.gte("estimated_value", parseFloat(valueMinParam));
-        if (valueMaxParam) query = query.lte("estimated_value", parseFloat(valueMaxParam));
-
-        const { data } = await query
-          .order("deadline", { ascending: true, nullsFirst: false })
-          .range(0, 2499);
+        const data = await fetchAllTendersForClientSort(
+          supabase,
+          {
+            keyword: keywordParam,
+            contractType: contractTypeParam,
+            procedureType: procedureTypeParam,
+            deadlineFrom: deadlineFromParam,
+            deadlineTo: deadlineToParam,
+            valueMin: valueMinParam,
+            valueMax: valueMaxParam,
+          },
+          sortParam,
+        );
 
         const enriched = await enrichTendersWithAuthorityGeo(
           supabase,
@@ -390,13 +446,13 @@ export default async function AgencyClientTendersPage({ params, searchParams }: 
       <Tabs defaultValue={activeTab} className="w-full">
         <TabsList className="grid w-full lg:w-[400px] grid-cols-2">
           <TabsTrigger value="recommended" asChild>
-            <Link href={{ pathname: basePath, query: { ...resolvedParams, tab: "recommended", page: "1" } }} className="flex items-center gap-2">
+            <Link href={{ pathname: basePath, query: { ...resolvedParams, tab: "recommended", page: "1" } }} prefetch className="flex items-center gap-2">
               <Sparkles className="size-3.5" />
               Preporučeno
             </Link>
           </TabsTrigger>
           <TabsTrigger value="all" asChild>
-            <Link href={{ pathname: basePath, query: { ...resolvedParams, tab: "all", page: "1" } }}>
+            <Link href={{ pathname: basePath, query: { ...resolvedParams, tab: "all", page: "1" } }} prefetch>
               Svi tenderi
             </Link>
           </TabsTrigger>

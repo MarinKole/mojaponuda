@@ -37,7 +37,7 @@ const PROCEDURE_TYPES = [
 ];
 
 const RECOMMENDED_SORT_OPTIONS = [
-  { value: "nearest", label: "Najbliži firmi" },
+  { value: "nearest", label: "Po blizini" },
   { value: "recommended", label: "Najrelevantniji" },
   { value: "deadline_asc", label: "Rok najskoriji" },
   { value: "deadline_desc", label: "Rok najdalji" },
@@ -47,7 +47,7 @@ const RECOMMENDED_SORT_OPTIONS = [
 ];
 
 const ALL_TENDERS_SORT_OPTIONS = [
-  { value: "nearest", label: "Najbliži firmi" },
+  { value: "nearest", label: "Po blizini" },
   { value: "deadline_asc", label: "Rok najskoriji" },
   { value: "deadline_desc", label: "Rok najdalji" },
   { value: "value_desc", label: "Najveća vrijednost" },
@@ -277,7 +277,7 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
     "rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 shadow-2xl [&_[data-slot=command]]:bg-slate-950 [&_[data-slot=command]]:text-slate-100 [&_[data-slot=command-input-wrapper]]:border-b [&_[data-slot=command-input-wrapper]]:border-white/10 [&_[data-slot=command-input-wrapper]]:bg-slate-950 [&_[data-slot=command-group]]:text-slate-100 [&_[data-slot=command-group]_[cmdk-group-heading]]:text-slate-400 [&_[data-slot=command-input]]:text-slate-100 [&_[data-slot=command-input]::placeholder]:text-slate-500 [&_[data-slot=command-item]]:text-slate-100 [&_[data-slot=command-item]_*]:text-inherit [&_[data-slot=command-item][data-selected=true]]:bg-white/10 [&_[data-slot=command-item][data-selected=true]]:text-white [&_[data-slot=command-item][data-selected=true]_*]:text-white";
 
   return (
-    <section className="mb-6 rounded-[1.7rem] border border-slate-800/90 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_26%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] p-3.5 text-white shadow-[0_26px_60px_-40px_rgba(2,6,23,0.9)]">
+    <section className="mb-6 rounded-3xl border border-slate-800/90 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_26%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] p-3.5 text-white shadow-[0_26px_60px_-40px_rgba(2,6,23,0.9)]">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-12">
         <div className="relative md:col-span-2 xl:col-span-4">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
@@ -295,7 +295,7 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
             selectedRegions={locations}
             onChange={setLocations}
             placeholder="Lokacija tendera"
-            triggerClassName="min-h-[44px] rounded-2xl border-white/12 bg-white/[0.07] px-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-white/[0.1]"
+            triggerClassName="min-h-[44px] rounded-xl border-white/12 bg-white/[0.07] px-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:bg-white/[0.1]"
             contentClassName={locationContentClassName}
             chipClassName="border border-sky-500/20 bg-sky-500/10 text-sky-100"
             placeholderClassName="text-white"
@@ -332,7 +332,7 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
           </Select>
         </div>
 
-        <div className="xl:col-span-1">
+        <div className="xl:col-span-2">
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger className={compactTriggerClassName}>
               <div className="flex items-center gap-2">
@@ -392,14 +392,14 @@ export function TenderFilters({ basePath = "/dashboard/tenders" }: { basePath?: 
           <Button
             variant="outline"
             onClick={resetFilters}
-            className="h-11 w-full rounded-2xl border-white/12 bg-white/[0.07] px-4 text-sm font-semibold text-white hover:bg-white/[0.11] hover:text-white sm:w-auto"
+            className="h-11 w-full rounded-xl border-white/12 bg-white/[0.07] px-4 text-sm font-semibold text-white hover:bg-white/[0.11] hover:text-white sm:w-auto"
           >
             <RotateCcw className="mr-2 size-4" />
             Očisti
           </Button>
           <Button
             onClick={applyFilters}
-            className="h-11 w-full rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-slate-100 sm:w-auto"
+            className="h-11 w-full rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 hover:bg-slate-100 sm:w-auto"
           >
             <Filter className="mr-2 size-4" />
             Primijeni

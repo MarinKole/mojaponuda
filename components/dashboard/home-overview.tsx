@@ -90,6 +90,7 @@ interface DashboardHomeOverviewProps {
   subscriptionActive: boolean;
   isLocked: boolean;
   tenderHrefBase?: string;
+  bidHrefBase?: string;
 }
 
 interface DashboardChecklistItem {
@@ -295,6 +296,7 @@ export function DashboardHomeOverview({
   subscriptionActive,
   isLocked,
   tenderHrefBase = "/dashboard/tenders",
+  bidHrefBase = "/dashboard/bids",
 }: DashboardHomeOverviewProps) {
   const operationalChecklist = buildOperationalChecklist({
     profileLabel,
@@ -308,7 +310,7 @@ export function DashboardHomeOverview({
 
   return (
     <div className="space-y-5 xl:space-y-7">
-      <section className="relative overflow-hidden rounded-[1.7rem] border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_55%,#0b1120_100%)] p-5 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:rounded-[2rem] sm:p-8 lg:p-9">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(180deg,#111827_0%,#0f172a_55%,#0b1120_100%)] p-5 text-white shadow-[0_35px_90px_-45px_rgba(2,6,23,0.92)] sm:p-8 lg:p-9">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-[size:52px_52px] [mask-image:radial-gradient(circle_at_top_left,#000_15%,transparent_75%)]" />
         <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px] xl:items-start">
           <div className="space-y-6">
@@ -343,6 +345,7 @@ export function DashboardHomeOverview({
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch
                   className={
                     index === 0
                       ? "inline-flex h-11 items-center rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 transition-all hover:bg-slate-100"
@@ -355,7 +358,7 @@ export function DashboardHomeOverview({
             </div>
           </div>
 
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Fokus sada</p>
             <h2 className="mt-3 font-heading text-2xl font-bold text-white">{nextAction.title}</h2>
             <p className="mt-3 text-sm leading-6 text-slate-300">{nextAction.description}</p>
@@ -377,7 +380,7 @@ export function DashboardHomeOverview({
               <Link
                 key={card.title}
                 href={card.href}
-                className="rounded-[1.35rem] border border-white/10 bg-white/5 p-5 transition-all hover:-translate-y-0.5 hover:bg-white/8"
+                className="rounded-2xl border border-white/10 bg-white/5 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/8"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-100">
@@ -395,7 +398,7 @@ export function DashboardHomeOverview({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-6">
-        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
+        <div className="rounded-3xl border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Kontrola</p>
@@ -431,7 +434,7 @@ export function DashboardHomeOverview({
           </div>
         </div>
 
-        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
+        <div className="rounded-3xl border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Tenderi</p>
@@ -492,11 +495,11 @@ export function DashboardHomeOverview({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] xl:gap-6">
-        <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
+        <div className="rounded-3xl border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
           <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Ponude</p>
-              <h2 className="mt-2 font-heading text-2xl font-bold text-white">Aktivni radni prostor</h2>
+              <h2 className="mt-2 font-heading text-2xl font-bold text-white">Ponude u pripremi</h2>
             </div>
             <Briefcase className="size-5 text-sky-300" />
           </div>
@@ -509,7 +512,7 @@ export function DashboardHomeOverview({
                   <div key={bid.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div className="min-w-0">
-                        <Link href={`/dashboard/bids/${bid.id}`} className="line-clamp-2 text-[15px] font-semibold leading-6 text-white transition-colors hover:text-sky-200">
+                        <Link href={`${bidHrefBase}/${bid.id}`} prefetch className="line-clamp-2 text-[15px] font-semibold leading-6 text-white transition-colors hover:text-sky-200">
                           {bid.tenders.title}
                         </Link>
                         <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
@@ -525,7 +528,8 @@ export function DashboardHomeOverview({
                           {status.label}
                         </span>
                         <Link
-                          href={`/dashboard/bids/${bid.id}`}
+                          href={`${bidHrefBase}/${bid.id}`}
+                          prefetch
                           className="inline-flex h-9 items-center rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white transition-all hover:bg-white/10"
                         >
                           Otvori
@@ -544,7 +548,7 @@ export function DashboardHomeOverview({
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
+          <div className="rounded-3xl border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Brzi pristup</p>
@@ -557,6 +561,7 @@ export function DashboardHomeOverview({
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch
                   className={`block rounded-xl border p-4 transition-all hover:-translate-y-0.5 ${
                     index === 0
                       ? "border-sky-500/35 bg-sky-500/10"
@@ -575,11 +580,11 @@ export function DashboardHomeOverview({
             </div>
           </div>
 
-          <div className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.85rem] lg:p-7">
+          <div className="rounded-3xl border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-5 text-white shadow-[0_28px_65px_-42px_rgba(2,6,23,0.88)] lg:p-7">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Status</p>
-                <h2 className="mt-2 font-heading text-2xl font-bold text-white">Radni signal</h2>
+                <h2 className="mt-2 font-heading text-2xl font-bold text-white">Moj paket</h2>
               </div>
               <ShieldCheck className="size-5 text-emerald-400" />
             </div>

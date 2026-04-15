@@ -6,8 +6,8 @@ import { getSubscriptionStatus } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import {
   buildRecommendationContext,
-  RECOMMENDATION_SUMMARY_CANDIDATE_LIMIT,
-  RECOMMENDATION_SUMMARY_MINIMUM_RESULTS,
+  RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
+  RECOMMENDATION_FULL_PAGE_MINIMUM_RESULTS,
 } from "@/lib/tender-recommendations";
 import { getPreparationUsageSummary } from "@/lib/preparation-credits";
 import type { BidStatus } from "@/types/database";
@@ -223,16 +223,16 @@ export default async function AgencyClientHomePage({
     company,
     select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description",
     nowIso,
-    candidateLimit: RECOMMENDATION_SUMMARY_CANDIDATE_LIMIT,
-    minimumResults: RECOMMENDATION_SUMMARY_MINIMUM_RESULTS,
+    candidateLimit: RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
+    minimumResults: RECOMMENDATION_FULL_PAGE_MINIMUM_RESULTS,
     excludeTenderIds: existingBidTenderIds,
-    limit: 12,
-    shortlistSize: 8,
+    limit: 4,
+    rerank: false,
   });
 
   const relevantTenders = tenderRecommendationResult.recommendations.map(({ tender }) => tender);
 
-  const relevantTenderCount = relevantTenders.length;
+  const relevantTenderCount = tenderRecommendationResult.totalCount;
   const relevantTenderValue = relevantTenders.reduce((sum, tender) => sum + (Number(tender.estimated_value) || 0), 0);
   const documentsCount = documentsCountValue ?? 0;
   const nextDeadlineInDays = urgentBidDeadlines[0]?.tenders.deadline
@@ -308,7 +308,7 @@ export default async function AgencyClientHomePage({
       icon: "search" as const,
     },
     {
-      title: "Rizici za provjeru",
+      title: "Nepriloženi dokumenti",
       value: String(warningCount),
       meta: `${expiring.length} dokumenta · ${missingChecklistCount} otvorenih stavki`,
       href: warningCount > 0 ? `${clientBase}/bids` : `${clientBase}/documents`,
@@ -417,6 +417,7 @@ export default async function AgencyClientHomePage({
       preparationStatus={buildPreparationStatus(preparationSummary, agencyClientId)}
       subscriptionActive
       isLocked={false}
+      bidHrefBase={`${clientBase}/bids`}
       tenderHrefBase={`${clientBase}/tenders`}
     />
   );

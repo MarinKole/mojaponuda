@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
 import type { Tender } from "@/types/database";
 import { buildRegionSearchTerms } from "@/lib/constants/regions";
-import { maybeRerankTenderRecommendationsWithAI } from "@/lib/tender-recommendation-rerank";
 import {
   attachTenderLocationPriority,
   resolveTenderSort,
@@ -55,7 +54,100 @@ function getMultiParam(value: SearchParamValue): string[] {
   return typeof value === "string" && value.trim().length > 0 ? [value] : [];
 }
 
-async function TendersContent({ searchParams }: TendersPageProps) {
+async function fetchAllTendersForClientSort(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  filters: {
+    keyword: string;
+    contractType: string;
+    procedureType: string;
+    deadlineFrom: string;
+    deadlineTo: string;
+    valueMin: string;
+    valueMax: string;
+  },
+  sortParam: ReturnType<typeof resolveTenderSort>,
+) {
+  const orderBy =
+    sortParam === "value_desc" || sortParam === "value_asc"
+      ? "estimated_value"
+      : sortParam === "newest"
+        ? "created_at"
+        : "deadline";
+  const ascending = sortParam === "value_asc" || sortParam === "deadline_asc";
+  const batchSize = 1000;
+  let offset = 0;
+  const rows: Tender[] = [];
+
+  while (true) {
+    let query = supabase.from("tenders").select("*");
+
+    if (filters.keyword) {
+      const keyword = `%${filters.keyword}%`;
+      query = query.or(`title.ilike.${keyword},raw_description.ilike.${keyword}`);
+    }
+
+    if (filters.contractType !== "all") {
+      query = query.ilike("contract_type", `%${filters.contractType}%`);
+    }
+
+    if (filters.procedureType !== "all") {
+      query = query.ilike("procedure_type", `%${filters.procedureType}%`);
+    }
+
+    if (filters.deadlineFrom) {
+      query = query.gte("deadline", new Date(filters.deadlineFrom).toISOString());
+    }
+
+    if (filters.deadlineTo) {
+      query = query.lte("deadline", new Date(`${filters.deadlineTo}T23:59:59`).toISOString());
+    }
+
+    if (filters.valueMin) {
+      query = query.gte("estimated_value", parseFloat(filters.valueMin));
+    }
+
+    if (filters.valueMax) {
+      query = query.lte("estimated_value", parseFloat(filters.valueMax));
+    }
+
+    const { data, error } = await query
+      .order(orderBy, {
+        ascending,
+        nullsFirst: false,
+      })
+      .range(offset, offset + batchSize - 1);
+
+    if (error) {
+      throw error;
+    }
+
+    const batch = (data ?? []) as Tender[];
+    if (batch.length === 0) {
+      break;
+    }
+
+    rows.push(...batch);
+
+    if (batch.length < batchSize) {
+      break;
+    }
+
+    offset += batchSize;
+  }
+
+  return rows;
+}
+
+async function TendersContent({
+  searchParams,
+  userId,
+  isLocked,
+  isAgency,
+}: TendersPageProps & {
+  userId: string | null;
+  isLocked: boolean;
+  isAgency: boolean;
+}) {
   const params = await searchParams;
   const supabase = await createClient();
   const pageParam = getSingleParam(params.page);
@@ -74,15 +166,6 @@ async function TendersContent({ searchParams }: TendersPageProps) {
   const offset = (page - 1) * PAGE_SIZE;
   const activeTab = tabParam === "all" ? "all" : "recommended";
   const sortParam = resolveTenderSort(getSingleParam(params.sort), activeTab);
-
-  // Get current user and company for recommendations
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const subscriptionStatus = user ? await getSubscriptionStatus(user.id, user.email, supabase) : null;
-  const isLocked = subscriptionStatus?.plan?.id === "basic";
-  const isAgency = subscriptionStatus?.plan?.id === "agency";
 
   // Agency: multi-client recommendation data
   interface AgencyClientCompany {
@@ -110,12 +193,12 @@ async function TendersContent({ searchParams }: TendersPageProps) {
   let hasRecommendationSignalsForProfile = false;
   let existingBidTenderIds = new Set<string>();
 
-  if (activeTab === "recommended" && user && isAgency) {
+  if (activeTab === "recommended" && userId && isAgency) {
     // Fetch all agency client companies
-    const { data: acRows } = await supabase
-      .from("agency_clients")
-      .select("id, company_id, companies (id, name, industry, keywords, cpv_codes, operating_regions)")
-      .eq("agency_user_id", user.id);
+      const { data: acRows } = await supabase
+        .from("agency_clients")
+        .select("id, company_id, companies (id, name, industry, keywords, cpv_codes, operating_regions)")
+        .eq("agency_user_id", userId);
 
     agencyClients = (acRows ?? []).map((row) => {
       const c = row.companies as { id: string; name: string; industry: string | null; keywords: string[] | null; cpv_codes: string[] | null; operating_regions: string[] | null } | null;
@@ -219,11 +302,11 @@ async function TendersContent({ searchParams }: TendersPageProps) {
         operating_regions: agencyClients[0].operating_regions,
       });
     }
-  } else if (user && !isAgency) {
+  } else if (userId && !isAgency) {
     const { data: company } = await supabase
       .from("companies")
       .select("id, industry, keywords, cpv_codes, operating_regions")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     companyProfile = company;
@@ -248,7 +331,7 @@ async function TendersContent({ searchParams }: TendersPageProps) {
 
   // If tab is recommended but no keywords/profile, show empty state immediately
   if (activeTab === "recommended") {
-    if (!user) {
+    if (!userId) {
       return (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-blue-50 text-blue-600">
@@ -362,15 +445,6 @@ async function TendersContent({ searchParams }: TendersPageProps) {
       })
     );
 
-    rankedRecommendations = await maybeRerankTenderRecommendationsWithAI(
-      rankedRecommendations,
-      recommendationContext,
-      {
-        limit: Math.max(rankedRecommendations.length, 10),
-        shortlistSize: 10,
-      }
-    );
-
     rankedRecommendations = sortRecommendedTenderItems(rankedRecommendations, sortParam);
 
     if (locationFilterTerms.length > 0) {
@@ -385,52 +459,19 @@ async function TendersContent({ searchParams }: TendersPageProps) {
       .map(({ tender }) => tender as Tender);
   } else {
     if (locationFilterTerms.length > 0) {
-      let locationQuery = supabase
-        .from("tenders")
-        .select("*");
-
-      if (keywordParam) {
-        const kw = `%${keywordParam}%`;
-        locationQuery = locationQuery.or(`title.ilike.${kw},raw_description.ilike.${kw}`);
-      }
-
-      if (contractTypeParam !== "all") {
-        locationQuery = locationQuery.ilike("contract_type", `%${contractTypeParam}%`);
-      }
-
-      if (procedureTypeParam !== "all") {
-        locationQuery = locationQuery.ilike("procedure_type", `%${procedureTypeParam}%`);
-      }
-
-      if (deadlineFromParam) {
-        locationQuery = locationQuery.gte("deadline", new Date(deadlineFromParam).toISOString());
-      }
-      if (deadlineToParam) {
-        locationQuery = locationQuery.lte("deadline", new Date(`${deadlineToParam}T23:59:59`).toISOString());
-      }
-
-      if (valueMinParam) {
-        locationQuery = locationQuery.gte("estimated_value", parseFloat(valueMinParam));
-      }
-      if (valueMaxParam) {
-        locationQuery = locationQuery.lte("estimated_value", parseFloat(valueMaxParam));
-      }
-
-      const { data } = await locationQuery
-        .order(
-          sortParam === "value_desc" || sortParam === "value_asc"
-            ? "estimated_value"
-            : sortParam === "newest"
-              ? "created_at"
-              : "deadline",
-          {
-            ascending:
-              sortParam === "value_asc" ||
-              sortParam === "deadline_asc",
-            nullsFirst: false,
-          }
-        )
-        .range(0, 2499);
+      const data = await fetchAllTendersForClientSort(
+        supabase,
+        {
+          keyword: keywordParam,
+          contractType: contractTypeParam,
+          procedureType: procedureTypeParam,
+          deadlineFrom: deadlineFromParam,
+          deadlineTo: deadlineToParam,
+          valueMin: valueMinParam,
+          valueMax: valueMaxParam,
+        },
+        sortParam,
+      );
 
       const enrichedRows = await enrichTendersWithAuthorityGeo(
         supabase,
@@ -457,40 +498,19 @@ async function TendersContent({ searchParams }: TendersPageProps) {
       const shouldSortByNearest = sortParam === "nearest";
 
       if (shouldSortByNearest) {
-        let query = supabase
-          .from("tenders")
-          .select("*");
-
-        if (keywordParam) {
-          const kw = `%${keywordParam}%`;
-          query = query.or(`title.ilike.${kw},raw_description.ilike.${kw}`);
-        }
-
-        if (contractTypeParam !== "all") {
-          query = query.ilike("contract_type", `%${contractTypeParam}%`);
-        }
-
-        if (procedureTypeParam !== "all") {
-          query = query.ilike("procedure_type", `%${procedureTypeParam}%`);
-        }
-
-        if (deadlineFromParam) {
-          query = query.gte("deadline", new Date(deadlineFromParam).toISOString());
-        }
-        if (deadlineToParam) {
-          query = query.lte("deadline", new Date(`${deadlineToParam}T23:59:59`).toISOString());
-        }
-
-        if (valueMinParam) {
-          query = query.gte("estimated_value", parseFloat(valueMinParam));
-        }
-        if (valueMaxParam) {
-          query = query.lte("estimated_value", parseFloat(valueMaxParam));
-        }
-
-        const { data } = await query
-          .order("deadline", { ascending: true, nullsFirst: false })
-          .range(0, 2499);
+        const data = await fetchAllTendersForClientSort(
+          supabase,
+          {
+            keyword: keywordParam,
+            contractType: contractTypeParam,
+            procedureType: procedureTypeParam,
+            deadlineFrom: deadlineFromParam,
+            deadlineTo: deadlineToParam,
+            valueMin: valueMinParam,
+            valueMax: valueMaxParam,
+          },
+          sortParam,
+        );
 
         const enrichedRows = await enrichTendersWithAuthorityGeo(
           supabase,
@@ -691,6 +711,7 @@ export default async function TendersPage(props: TendersPageProps) {
           <TabsTrigger value="recommended" asChild>
             <Link
               href={{ query: { ...params, tab: "recommended", page: "1" } }}
+              prefetch
               className="flex items-center gap-2"
             >
               <Sparkles className="size-3.5" />
@@ -699,7 +720,7 @@ export default async function TendersPage(props: TendersPageProps) {
           </TabsTrigger>
           {!isLocked && (
             <TabsTrigger value="all" asChild>
-              <Link href={{ query: { ...params, tab: "all", page: "1" } }}>
+              <Link href={{ query: { ...params, tab: "all", page: "1" } }} prefetch>
                 Svi tenderi
               </Link>
             </TabsTrigger>
@@ -724,7 +745,12 @@ export default async function TendersPage(props: TendersPageProps) {
               </div>
             }
           >
-            <TendersContent searchParams={props.searchParams} />
+            <TendersContent
+              searchParams={props.searchParams}
+              userId={user?.id ?? null}
+              isLocked={Boolean(isLocked)}
+              isAgency={Boolean(isAgencyOuter)}
+            />
           </Suspense>
         </div>
       </Tabs>

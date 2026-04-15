@@ -115,6 +115,29 @@ async function fetchWithRetry(
   throw lastError;
 }
 
+function normalizeNullableNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .replace(/[^\d.-]/g, "")
+      .trim();
+
+    if (!normalized) {
+      return null;
+    }
+
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
 // --- OData pagination helper ---
 
 interface ODataResponse<T> {
@@ -224,15 +247,10 @@ function mapAwardNotice(r: Record<string, unknown>): EjnAwardNotice {
     ContractingAuthorityJib: typeof r.ContractingAuthorityTaxNumber === "string" ? r.ContractingAuthorityTaxNumber : null,
     WinnerName: null,
     WinnerJib: null,
-    WinningPrice: typeof r.Value === "number" ? r.Value : null,
-    EstimatedValue:
-      typeof r.EstimatedValueTotal === "number"
-        ? r.EstimatedValueTotal
-        : typeof r.HighestAcceptableOfferValue === "number"
-          ? r.HighestAcceptableOfferValue
-          : typeof r.LowestAcceptableOfferValue === "number"
-            ? r.LowestAcceptableOfferValue
-            : null,
+    WinningPrice: normalizeNullableNumber(r.Value),
+    EstimatedValue: normalizeNullableNumber(
+      r.EstimatedValueTotal ?? r.EstimatedValue ?? r.HighestAcceptableOfferValue ?? r.LowestAcceptableOfferValue
+    ),
     TotalBiddersCount:
       typeof r.NumberOfReceivedOffers === "number"
         ? r.NumberOfReceivedOffers
@@ -278,10 +296,9 @@ export async function fetchProcurementNotices(
 
   // Additionally fetch anything updated since last sync (status changes,
   // extended deadlines, newly expired tenders, etc.).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let incrementalRaw: any[] = [];
+  let incrementalRaw: Array<Record<string, unknown>> = [];
   if (lastSyncAt?.trim()) {
-    incrementalRaw = await fetchODataPages<any>(
+    incrementalRaw = await fetchODataPages<Record<string, unknown>>(
       "/ProcurementNotices",
       "Id desc",
       `LastUpdated ge ${lastSyncAt}`
@@ -307,7 +324,9 @@ export async function fetchProcurementNotices(
     ContractingAuthorityName: r.ContractingAuthorityName || null,
     ContractingAuthorityJib: r.ContractingAuthorityTaxNumber || null,
     Deadline: r.ApplicationDeadlineDateTime || null,
-    EstimatedValue: r.EstimatedValueTotal ?? null,
+    EstimatedValue: normalizeNullableNumber(
+      r.EstimatedValueTotal ?? r.EstimatedValue ?? r.HighestAcceptableOfferValue ?? r.LowestAcceptableOfferValue
+    ),
     ContractType: CONTRACT_TYPE_MAP[r.ContractType] || r.ContractType || null,
     ProcedureType: PROCEDURE_TYPE_MAP[r.ProcedureType] || r.ProcedureType || null,
     Status: null,
@@ -506,7 +525,7 @@ export async function fetchPlannedProcurements(
     PlanId: String(r.Id ?? ""),
     ContractingAuthorityId: r.ContractingAuthorityId ? String(r.ContractingAuthorityId) : null,
     Description: r.Name || r.Description || r.ProcurementSubject || null,
-    EstimatedValue: r.EstimatedValueTotal ?? r.EstimatedValue ?? null,
+    EstimatedValue: normalizeNullableNumber(r.EstimatedValueTotal ?? r.EstimatedValue),
     PlannedDate: r.EstimatedProcedureStartDate || r.InitiationDate || null,
     ContractType: CONTRACT_TYPE_MAP[r.ContractType] || r.ContractType || null,
     CpvCode: r.MainCpvCodeName?.split(" - ")?.[0] || r.CpvCode || null,

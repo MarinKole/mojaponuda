@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { Briefcase, Loader2, Lock, Sparkles } from "lucide-react";
 import { PaywallModal } from "@/components/subscription/paywall-modal";
 import { Button } from "@/components/ui/button";
-import { PRICING } from "@/lib/plans";
 import { trackEvent } from "@/lib/analytics";
 import type { PreparationUsageSummary } from "@/lib/preparation-credits";
+import { PRICING } from "@/lib/plans";
+import { cn } from "@/lib/utils";
 
 interface StartBidButtonProps {
   tenderId: string;
@@ -50,8 +51,7 @@ function buildPreparationPrompt(
     };
   }
 
-  const scopeLabel =
-    summary.scope === "company" ? "za ovog klijenta" : "na vašem računu";
+  const scopeLabel = summary.scope === "company" ? "za ovog klijenta" : "na vašem računu";
 
   return {
     title: "Iskoristili ste dostupne pripreme",
@@ -90,10 +90,12 @@ export function StartBidButton({
         <Button
           variant={variant}
           onClick={() => router.push(`${bidPathBase}/${existingBidId}`)}
-          className={className || "rounded-sm font-semibold"}
+          className={cn("w-full rounded-xl font-semibold sm:min-w-[22rem]", className)}
         >
-          <Briefcase className="mr-2 size-4" />
-          Otvori postojeću ponudu
+          <span className="inline-flex min-w-[18.5rem] items-center justify-center">
+            <Briefcase className="mr-2 size-4" />
+            Otvori postojeću ponudu
+          </span>
         </Button>
         {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
       </div>
@@ -181,19 +183,24 @@ export function StartBidButton({
           onClick={handleStart}
           disabled={loading}
           variant={variant}
-          className={className || "rounded-sm bg-blue-600 font-semibold text-white hover:bg-blue-700"}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 size-4 animate-spin" />
-              {loadingText}
-            </>
-          ) : (
-            <>
-              {isSubscribed ? <Sparkles className="mr-2 size-4" /> : <Lock className="mr-2 size-4" />}
-              Započni pripremu ponude
-            </>
+          className={cn(
+            "w-full justify-center rounded-xl bg-blue-600 font-semibold text-white shadow-[0_14px_30px_-18px_rgba(37,99,235,0.55)] hover:bg-blue-700 sm:min-w-[22rem]",
+            className,
           )}
+        >
+          <span className="inline-flex min-w-[18.5rem] items-center justify-center">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                {loadingText}
+              </>
+            ) : (
+              <>
+                {isSubscribed ? <Sparkles className="mr-2 size-4" /> : <Lock className="mr-2 size-4" />}
+                Započni pripremu ponude
+              </>
+            )}
+          </span>
         </Button>
         {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
       </div>

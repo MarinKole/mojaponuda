@@ -27,6 +27,7 @@ interface PersonalizedTenderOptions {
 export interface PersonalizedTenderResult<TTender extends RecommendationTenderInput> {
   context: RecommendationContext;
   hasSignals: boolean;
+  totalCount: number;
   recommendations: Array<ScoredTenderRecommendation<TTender>>;
 }
 
@@ -43,6 +44,7 @@ export async function getPersonalizedTenderRecommendations<
     return {
       context,
       hasSignals,
+      totalCount: 0,
       recommendations: [],
     };
   }
@@ -62,6 +64,7 @@ export async function getPersonalizedTenderRecommendations<
   let recommendations = selectTenderRecommendations(availableCandidates, context, {
     minimumResults: options.minimumResults,
   });
+  const totalCount = recommendations.length;
 
   if (options.rerank !== false && recommendations.length > 1) {
     recommendations = await maybeRerankTenderRecommendationsWithAI(
@@ -79,6 +82,7 @@ export async function getPersonalizedTenderRecommendations<
   return {
     context,
     hasSignals,
+    totalCount,
     recommendations,
   };
 }

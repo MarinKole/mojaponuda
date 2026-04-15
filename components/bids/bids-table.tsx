@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { BidStatus } from "@/types/database";
 import { BID_STATUSES, BID_STATUS_LABELS } from "@/lib/bids/constants";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
   Edit,
   Filter,
   Loader2,
+  Trash2,
   XCircle,
 } from "lucide-react";
 
@@ -66,24 +66,36 @@ export function BidsTable({
   showClientColumn = false,
   basePath,
 }: BidsTableProps) {
-  const router = useRouter();
+  const [rows, setRows] = useState(bids);
   const [statusFilter, setStatusFilter] = useState("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setRows(bids);
+  }, [bids]);
 
   const filtered = useMemo(() => {
-    if (statusFilter === "all") return bids;
-    return bids.filter((bid) => bid.status === statusFilter);
-  }, [bids, statusFilter]);
+    if (statusFilter === "all") return rows;
+    return rows.filter((bid) => bid.status === statusFilter);
+  }, [rows, statusFilter]);
 
   async function updateBidStatus(bidId: string, newStatus: BidStatus) {
     setUpdatingId(bidId);
     try {
-      await fetch(`/api/bids/${bidId}`, {
+      const response = await fetch(`/api/bids/${bidId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      router.refresh();
+
+      if (!response.ok) {
+        throw new Error("Status nije ažuriran.");
+      }
+
+      setRows((current) =>
+        current.map((bid) => (bid.id === bidId ? { ...bid, status: newStatus } : bid)),
+      );
     } catch (error) {
       console.error("Failed to update status:", error);
     } finally {
@@ -91,9 +103,31 @@ export function BidsTable({
     }
   }
 
+  async function deleteBid(bidId: string) {
+    const confirmed = window.confirm("Želite li ukloniti ovu ponudu sa liste?");
+    if (!confirmed) return;
+
+    setDeletingId(bidId);
+    try {
+      const response = await fetch(`/api/bids/${bidId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Ponuda nije uklonjena.");
+      }
+
+      setRows((current) => current.filter((bid) => bid.id !== bidId));
+    } catch (error) {
+      console.error("Failed to delete bid:", error);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <section className="rounded-[1.55rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-4 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.75rem] sm:p-5">
+      <section className="rounded-3xl border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-4 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sky-300">
@@ -123,15 +157,15 @@ export function BidsTable({
       </section>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-[1.55rem] border border-dashed border-white/10 bg-white/5 py-20 text-center sm:rounded-[1.75rem]">
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-white/5 py-20 text-center">
           <div className="mb-4 flex size-16 items-center justify-center rounded-full border border-white/10 bg-white/5">
             <Briefcase className="size-8 text-slate-400" />
           </div>
           <h3 className="mb-2 font-heading text-lg font-bold text-white">
-            {bids.length === 0 ? "Nemate aktivnih ponuda" : "Nema rezultata"}
+            {rows.length === 0 ? "Nemate aktivnih ponuda" : "Nema rezultata"}
           </h3>
           <p className="max-w-sm text-sm text-slate-400">
-            {bids.length === 0
+            {rows.length === 0
               ? 'Započnite klikom na dugme "Nova ponuda" iznad.'
               : "Pokušajte promijeniti filtere za pretragu."}
           </p>
@@ -151,7 +185,7 @@ export function BidsTable({
             return (
               <article
                 key={bid.id}
-                className="rounded-[1.35rem] border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-4 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] sm:rounded-[1.5rem] sm:p-5"
+                className="rounded-2xl border border-slate-800 bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] p-4 text-white shadow-[0_24px_60px_-42px_rgba(2,6,23,0.88)] sm:p-5"
               >
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0 flex-1">
@@ -204,6 +238,19 @@ export function BidsTable({
                         >
                           {updatingId === bid.id ? <Loader2 className="mr-2 size-4 animate-spin" /> : <XCircle className="mr-2 size-4" />}
                           Izgubljeno
+                        </Button>
+                        <Button
+                          variant="outline"
+                          disabled={deletingId === bid.id}
+                          onClick={() => deleteBid(bid.id)}
+                          className="h-11 rounded-xl border-white/10 bg-white/5 px-4 text-sm font-semibold text-slate-200 hover:bg-white/10 hover:text-white"
+                        >
+                          {deletingId === bid.id ? (
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="mr-2 size-4" />
+                          )}
+                          Odustani od ponude
                         </Button>
                       </>
                     ) : null}

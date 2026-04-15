@@ -12,8 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getPersonalizedTenderRecommendations } from "@/lib/personalized-tenders";
 import {
   buildRecommendationContext,
-  RECOMMENDATION_SUMMARY_CANDIDATE_LIMIT,
-  RECOMMENDATION_SUMMARY_MINIMUM_RESULTS,
+  RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
+  RECOMMENDATION_FULL_PAGE_MINIMUM_RESULTS,
 } from "@/lib/tender-recommendations";
 import { getPreparationUsageSummary } from "@/lib/preparation-credits";
 import type { BidStatus, Document as DocType } from "@/types/database";
@@ -83,8 +83,8 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const { plan } = await getSubscriptionStatus(user.id, user.email, supabase);
-  if (isAgencyPlan(plan)) redirect("/dashboard/agency");
+  const subscriptionStatus = await getSubscriptionStatus(user.id, user.email, supabase);
+  if (isAgencyPlan(subscriptionStatus.plan)) redirect("/dashboard/agency");
 
   const isDemoAccount = isDemoUser(user.email);
   const { data: company } = await supabase
@@ -115,7 +115,6 @@ export default async function DashboardPage() {
     { count: wonBidsCount },
     { count: lostBidsCount },
     { data: expiringDocs },
-    subscriptionStatus,
     { count: documentsCountValue },
     { data: allBidRowsData },
   ] = await Promise.all([
@@ -143,7 +142,6 @@ export default async function DashboardPage() {
       .gte("expires_at", nowIso)
       .order("expires_at", { ascending: true })
       .limit(5),
-    getSubscriptionStatus(user.id, user.email, supabase),
     supabase
       .from("documents")
       .select("id", { count: "exact", head: true })
@@ -247,16 +245,16 @@ export default async function DashboardPage() {
     company: resolvedCompany,
     select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description",
     nowIso,
-    candidateLimit: RECOMMENDATION_SUMMARY_CANDIDATE_LIMIT,
-    minimumResults: RECOMMENDATION_SUMMARY_MINIMUM_RESULTS,
+    candidateLimit: RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
+    minimumResults: RECOMMENDATION_FULL_PAGE_MINIMUM_RESULTS,
     excludeTenderIds: existingBidTenderIds,
-    limit: 12,
-    shortlistSize: 8,
+    limit: 4,
+    rerank: false,
   });
 
   const relevantTenders = tenderRecommendationResult.recommendations.map(({ tender }) => tender);
 
-  const relevantTenderCount = relevantTenders.length;
+  const relevantTenderCount = tenderRecommendationResult.totalCount;
   const relevantTenderValue = relevantTenders.reduce((sum, tender) => sum + (Number(tender.estimated_value) || 0), 0);
   const documentsCount = documentsCountValue ?? demoDocuments.length;
   const dashboardBidRows = portfolioBids.slice(0, 6);
@@ -334,7 +332,7 @@ export default async function DashboardPage() {
       icon: "search" as const,
     },
     {
-      title: "Rizici za provjeru",
+      title: "Nepriloženi dokumenti",
       value: String(warningCount),
       meta: `${expiring.length} dokumenta · ${missingChecklistCount} otvorenih stavki`,
       href: warningCount > 0 ? "/dashboard/bids" : "/dashboard/vault",
@@ -443,6 +441,7 @@ export default async function DashboardPage() {
       preparationStatus={buildPreparationStatus(preparationSummary)}
       subscriptionActive={subscriptionStatus.isSubscribed}
       isLocked={subscriptionStatus.plan?.id === "basic"}
+      bidHrefBase="/dashboard/bids"
     />
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -102,25 +102,32 @@ export function DashboardSidebar({
     ? agencyClients.find((client) => client.id === activeClientId)
     : null;
 
-  const clientNavItems: NavItem[] = activeClient
-    ? [
-        {
-          href: `/dashboard/agency/clients/${activeClient.id}/home`,
-          label: "Početna",
-          icon: LayoutDashboard,
-          exact: true,
-        },
-        { href: `/dashboard/agency/clients/${activeClient.id}/tenders`, label: "Tenderi", icon: Search },
-        { href: `/dashboard/agency/clients/${activeClient.id}/bids`, label: "Ponude", icon: Briefcase },
-        { href: `/dashboard/agency/clients/${activeClient.id}/documents`, label: "Dokumenti", icon: FileText },
-        { href: `/dashboard/agency/clients/${activeClient.id}/prilike`, label: "Poticaji", icon: Sparkles },
-      ]
-    : [];
+  const clientNavItems: NavItem[] = useMemo(
+    () =>
+      activeClient
+        ? [
+            {
+              href: `/dashboard/agency/clients/${activeClient.id}/home`,
+              label: "Početna",
+              icon: LayoutDashboard,
+              exact: true,
+            },
+            { href: `/dashboard/agency/clients/${activeClient.id}/tenders`, label: "Tenderi", icon: Search },
+            { href: `/dashboard/agency/clients/${activeClient.id}/bids`, label: "Ponude", icon: Briefcase },
+            { href: `/dashboard/agency/clients/${activeClient.id}/documents`, label: "Dokumenti", icon: FileText },
+            { href: `/dashboard/agency/clients/${activeClient.id}/prilike`, label: "Poticaji", icon: Sparkles },
+          ]
+        : [],
+    [activeClient],
+  );
 
-  const agencyDefaultItems: NavItem[] = [
-    { href: "/dashboard/agency", label: "Svi klijenti", icon: Users, exact: true },
-    { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
-  ];
+  const agencyDefaultItems: NavItem[] = useMemo(
+    () => [
+      { href: "/dashboard/agency", label: "Svi klijenti", icon: Users, exact: true },
+      { href: "/dashboard/tenders", label: "Tenderi", icon: Search },
+    ],
+    [],
+  );
 
   const sections = isAdmin
     ? [{ label: "Admin", items: adminItems }]
@@ -133,6 +140,25 @@ export function DashboardSidebar({
   const mobileSubtitle = isAdmin
     ? "Admin"
     : activeClient?.name ?? companyName ?? (isAgency ? "Agencija" : "Pregled");
+
+  useEffect(() => {
+    const routes = new Set<string>([
+      "/dashboard",
+      "/dashboard/tenders",
+      "/dashboard/bids",
+      "/dashboard/vault",
+      "/dashboard/prilike",
+      "/dashboard/subscription",
+      "/dashboard/settings",
+      ...(isAdmin ? adminItems.map((item) => item.href) : []),
+      ...(isAgency ? agencyDefaultItems.map((item) => item.href) : coreItems.map((item) => item.href)),
+      ...clientNavItems.map((item) => item.href),
+    ]);
+
+    routes.forEach((route) => {
+      router.prefetch(route);
+    });
+  }, [clientNavItems, isAdmin, isAgency, router, agencyDefaultItems]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -154,7 +180,7 @@ export function DashboardSidebar({
       : pathname === item.href || pathname.startsWith(item.href);
 
     return (
-      <Link href={item.href} className="block" onClick={onNavigate}>
+      <Link href={item.href} prefetch className="block" onClick={onNavigate}>
         <span
           className={cn(
             "flex items-center gap-3 rounded-2xl px-3.5 py-3 text-[13px] font-medium transition-all duration-200",
@@ -249,17 +275,19 @@ export function DashboardSidebar({
             </div>
           </div>
           <div className="grid gap-2">
-            <Link
-              href="/dashboard/settings"
-              onClick={() => setMobileOpen(false)}
+              <Link
+                href="/dashboard/settings"
+                prefetch
+                onClick={() => setMobileOpen(false)}
               className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
             >
               <Settings className="size-4" />
               Račun
             </Link>
-            <Link
-              href="/dashboard/subscription"
-              onClick={() => setMobileOpen(false)}
+              <Link
+                href="/dashboard/subscription"
+                prefetch
+                onClick={() => setMobileOpen(false)}
               className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
             >
               <CreditCard className="size-4" />
@@ -284,6 +312,7 @@ export function DashboardSidebar({
             <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_20px_45px_-24px_rgba(15,23,42,0.45)]">
               <Link
                 href="/dashboard/settings"
+                prefetch
                 onClick={() => setDesktopMenuOpen(false)}
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
               >
@@ -292,6 +321,7 @@ export function DashboardSidebar({
               </Link>
               <Link
                 href="/dashboard/subscription"
+                prefetch
                 onClick={() => setDesktopMenuOpen(false)}
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
               >
