@@ -6,7 +6,10 @@ import { DEFAULT_PLAN, getPlanFromVariantId, type Plan, PLANS } from "@/lib/plan
 import { isAgencyPlan as isAgencyPlanHelper, isComplimentaryAgencyEmail } from "@/lib/agency";
 
 // Configurable via COMPLIMENTARY_PRO_EMAILS env var (comma-separated).
-const FALLBACK_COMPLIMENTARY_PRO_EMAILS = ["marin.kolenda@outlook.com"];
+const FALLBACK_COMPLIMENTARY_PRO_EMAILS = [
+  "marin.kolenda@outlook.com",
+  "elektronski.pretinac@gmail.com",
+];
 
 function getComplimentaryProEmails(): string[] {
   const envEmails = process.env.COMPLIMENTARY_PRO_EMAILS;
