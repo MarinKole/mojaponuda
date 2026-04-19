@@ -27,9 +27,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       description?: string;
-      pastClients?: string | null;
-      licenses?: string | null;
-      notOffered?: string | null;
       regionsText?: string | null;
       categoryText?: string | null;
       companyId?: string | null;
@@ -45,9 +42,6 @@ export async function POST(request: NextRequest) {
 
     const profileText = buildCompanyProfileEmbeddingText({
       description,
-      pastClients: body.pastClients ?? null,
-      licenses: body.licenses ?? null,
-      notOffered: body.notOffered ?? null,
       regionsText: body.regionsText ?? null,
       categoryText: body.categoryText ?? null,
     });

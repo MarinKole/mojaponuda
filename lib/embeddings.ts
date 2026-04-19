@@ -37,15 +37,9 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 }
 
 export interface CompanyProfileEmbeddingInputs {
-  /** Polje 1 — obavezno: čime se firma bavi (opis 2–5 rečenica). */
+  /** Obavezno: čime se firma bavi (opis 2–5 rečenica). Jedini free-text signal za embedding. */
   description: string;
-  /** Polje 2 — dosadašnji klijenti. */
-  pastClients?: string | null;
-  /** Polje 3 — licence i certifikati. */
-  licenses?: string | null;
-  /** Polje 4 — šta firma NE radi. */
-  notOffered?: string | null;
-  /** Polje 5 — geografsko područje (serijalizirani labele). */
+  /** Geografsko područje (serijalizirani labele). */
   regionsText?: string | null;
   /** Kategorija djelatnosti iz Koraka 1. */
   categoryText?: string | null;
@@ -61,9 +55,6 @@ export function buildCompanyProfileEmbeddingText(
     if (v) parts.push(`${label}: ${v}`);
   };
   push("Firma se bavi", inputs.description);
-  push("Dosadašnji klijenti", inputs.pastClients ?? null);
-  push("Licence i certifikati", inputs.licenses ?? null);
-  push("Ne radi", inputs.notOffered ?? null);
   push("Geografsko područje", inputs.regionsText ?? null);
   push("Kategorija djelatnosti", inputs.categoryText ?? null);
   return parts.join("\n");

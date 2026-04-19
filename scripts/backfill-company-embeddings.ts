@@ -1,7 +1,7 @@
 /**
- * Backfill profile_embedding for every company.user that doesn't have one yet.
+ * Backfill profile_embedding for every company that doesn't have one yet.
  * Synthesises a profile_text from:
- *   (a) structured industry JSON (companyDescription, pastClients, licenses, notOffered, offeringCategories)
+ *   (a) structured industry JSON (companyDescription + offeringCategories)
  *   (b) legacy industry text, if present
  *   (c) keywords[], operating_regions[] as additional context
  *
@@ -50,9 +50,6 @@ interface StructuredProfile {
   specializationIds?: string[];
   preferredTenderTypes?: string[];
   companyDescription?: string | null;
-  pastClients?: string | null;
-  licenses?: string | null;
-  notOffered?: string | null;
 }
 
 function parseIndustry(industry: string | null | undefined): {
@@ -91,22 +88,13 @@ function buildProfileText(company: {
     push("Firma se bavi", description);
   }
 
-  // 2. Past clients
-  push("Dosadašnji klijenti", structured?.pastClients ?? null);
-
-  // 3. Licenses
-  push("Licence i certifikati", structured?.licenses ?? null);
-
-  // 4. Not offered
-  push("Ne radi", structured?.notOffered ?? null);
-
-  // 5. Geographic area
+  // 2. Geographic area
   const regions = company.operating_regions ?? [];
   if (regions.length > 0) {
     push("Geografsko područje", regions.join(", "));
   }
 
-  // 6. Category of activity
+  // 3. Category of activity
   const categories = structured?.offeringCategories ?? [];
   if (categories.length > 0) {
     push("Kategorija djelatnosti", categories.map(labelFor).join(", "));

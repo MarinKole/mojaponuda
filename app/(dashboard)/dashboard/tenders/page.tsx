@@ -455,7 +455,7 @@ async function TendersContent({
       supabase,
       companyProfile.id,
       {
-        topK: 300,
+        topK: 200,
         limit: 1000,
         minScore: 6,
       }

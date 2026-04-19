@@ -148,9 +148,6 @@ export function OnboardingValueFirstForm({
   const [description, setDescription] = useState(
     parsedProfile.companyDescription ?? parsedProfile.legacyIndustryText ?? ""
   );
-  const [pastClients, setPastClients] = useState("");
-  const [licenses, setLicenses] = useState("");
-  const [notOffered, setNotOffered] = useState("");
   const [embeddingSaving, setEmbeddingSaving] = useState(false);
   const [embeddingError, setEmbeddingError] = useState<string | null>(null);
   // When the user has no company row yet (typical first onboarding), the
@@ -368,9 +365,6 @@ export function OnboardingValueFirstForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description: description.trim(),
-          pastClients: pastClients.trim() || null,
-          licenses: licenses.trim() || null,
-          notOffered: notOffered.trim() || null,
           regionsText: regionSelectionLabels.join(", ") || null,
           categoryText: categoryText || null,
           companyId: companyId || null,
@@ -601,9 +595,6 @@ export function OnboardingValueFirstForm({
           specializationIds,
           preferredTenderTypes,
           companyDescription: effectiveDescription,
-          pastClients: pastClients.trim() || null,
-          licenses: licenses.trim() || null,
-          notOffered: notOffered.trim() || null,
           legacyIndustryText: null,
           ...(enrichmentData ? {
             aiCoreKeywords: enrichmentData.core_keywords,
@@ -896,61 +887,15 @@ export function OnboardingValueFirstForm({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               disabled={loading || embeddingSaving}
-              placeholder="Npr: Bavimo se isporukom i instalacijom serverske i mrežne opreme. Prodajemo softverske licence i pružamo IT podršku javnim institucijama."
-              className="min-h-[100px] rounded-2xl border-slate-200 bg-white"
+              placeholder="Npr: Bavimo se isporukom i instalacijom serverske i mrežne opreme, softverskim licencama i IT podrškom za javne institucije. Ne izvodimo građevinske ni elektroinstalacione radove."
+              className="min-h-[120px] rounded-2xl border-slate-200 bg-white"
             />
             <p className="text-xs text-slate-500">
-              Opišite šta radite i za koga — 2 do 5 rečenica je sasvim dovoljno.
+              3–5 rečenica. Navedite šta radite i, ako smatrate korisnim, šta NE radite — to pomaže AI-u da iz preporuka izbaci tendere koji vam ne odgovaraju.
             </p>
           </div>
 
           <div className="space-y-5 rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Opciono — ali što više kažete, to bolji tenderi
-            </p>
-
-            <div className="space-y-2">
-              <Label htmlFor="pastClients" className="text-sm font-semibold text-slate-700">
-                Za koga ste do sada radili?
-              </Label>
-              <Input
-                id="pastClients"
-                value={pastClients}
-                onChange={(event) => setPastClients(event.target.value)}
-                disabled={loading || embeddingSaving}
-                placeholder="Npr: Klinički centar, općine u FBiH, javna preduzeća"
-                className="h-11 rounded-xl border-slate-200 bg-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="licenses" className="text-sm font-semibold text-slate-700">
-                Imate li posebne licence ili certifikate?
-              </Label>
-              <Input
-                id="licenses"
-                value={licenses}
-                onChange={(event) => setLicenses(event.target.value)}
-                disabled={loading || embeddingSaving}
-                placeholder="Npr: ISO 9001, licenca MUP-a, vatrogasno ovlaštenje"
-                className="h-11 rounded-xl border-slate-200 bg-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notOffered" className="text-sm font-semibold text-slate-700">
-                Što vaša firma ne radi i ne može isporučiti? (koje tendere ne želite vidjeti)
-              </Label>
-              <Input
-                id="notOffered"
-                value={notOffered}
-                onChange={(event) => setNotOffered(event.target.value)}
-                disabled={loading || embeddingSaving}
-                placeholder="Npr: Ne izvodimo građevinske radove, ne isporučujemo hranu ni vozila"
-                className="h-11 rounded-xl border-slate-200 bg-white"
-              />
-            </div>
-
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-slate-900">
                 <MapPin className="size-4 text-blue-600" />

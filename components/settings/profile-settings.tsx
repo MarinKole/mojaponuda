@@ -76,9 +76,6 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
   const [description, setDescription] = useState(
     parsedProfile.companyDescription ?? parsedProfile.legacyIndustryText ?? ""
   );
-  const [pastClients, setPastClients] = useState(parsedProfile.pastClients ?? "");
-  const [licenses, setLicenses] = useState(parsedProfile.licenses ?? "");
-  const [notOffered, setNotOffered] = useState(parsedProfile.notOffered ?? "");
   const [offeringCategories, setOfferingCategories] = useState<string[]>(
     parsedProfile.offeringCategories ?? []
   );
@@ -176,9 +173,6 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
           specializationIds,
           preferredTenderTypes: parsedProfile.preferredTenderTypes ?? [],
           companyDescription: description,
-          pastClients: pastClients.trim() || null,
-          licenses: licenses.trim() || null,
-          notOffered: notOffered.trim() || null,
           manualKeywords: parsedProfile.manualKeywords ?? [],
         }),
         operating_regions: regions,
@@ -204,9 +198,6 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           description: description.trim(),
-          pastClients: pastClients.trim() || null,
-          licenses: licenses.trim() || null,
-          notOffered: notOffered.trim() || null,
           regionsText: regionSelectionLabels.join(", ") || null,
           categoryText: categoryText || null,
           companyId: company.id,
@@ -470,52 +461,12 @@ export function ProfileSettings({ company }: ProfileSettingsProps) {
                 id="description"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
-                placeholder="Npr: Bavimo se isporukom i instalacijom serverske i mrežne opreme. Prodajemo softverske licence i pružamo IT podršku javnim institucijama."
-                className="min-h-[100px] rounded-2xl"
+                placeholder="Npr: Bavimo se isporukom i instalacijom serverske i mrežne opreme, softverskim licencama i IT podrškom za javne institucije. Ne izvodimo građevinske ni elektroinstalacione radove."
+                className="min-h-[120px] rounded-2xl"
               />
               <p className="text-xs text-slate-500">
-                Opišite šta radite i za koga — 2 do 5 rečenica je sasvim dovoljno. AI koristi ovaj opis za preporuke.
+                3–5 rečenica. Navedite šta radite i, ako smatrate korisnim, šta NE radite — to pomaže AI-u da iz preporuka izbaci tendere koji vam ne odgovaraju.
               </p>
-            </div>
-
-            {/* Opciona polja — svako daje embeddingu dodatni kontekst */}
-            <div className="space-y-2">
-              <Label htmlFor="pastClients" className="text-sm font-semibold text-slate-100">
-                Za koga ste do sada radili?
-              </Label>
-              <Input
-                id="pastClients"
-                value={pastClients}
-                onChange={(event) => setPastClients(event.target.value)}
-                placeholder="Npr: Klinički centar, općine u FBiH, javna preduzeća"
-                className="h-11 rounded-xl"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="licenses" className="text-sm font-semibold text-slate-100">
-                Imate li posebne licence ili certifikate?
-              </Label>
-              <Input
-                id="licenses"
-                value={licenses}
-                onChange={(event) => setLicenses(event.target.value)}
-                placeholder="Npr: ISO 9001, licenca MUP-a, vatrogasno ovlaštenje"
-                className="h-11 rounded-xl"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notOffered" className="text-sm font-semibold text-slate-100">
-                Što vaša firma NE radi? (koje tendere ne želite vidjeti)
-              </Label>
-              <Input
-                id="notOffered"
-                value={notOffered}
-                onChange={(event) => setNotOffered(event.target.value)}
-                placeholder="Npr: Ne izvodimo građevinske radove, ne isporučujemo hranu ni vozila"
-                className="h-11 rounded-xl"
-              />
             </div>
 
             <div className="space-y-2">

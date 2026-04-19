@@ -74,15 +74,24 @@ function parseScoresResponse(text: string): RelevanceScore[] {
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/\s*```$/i, "");
-  // Some models wrap in {"scores":[...]} — handle both shapes
-  let arr: unknown;
+  // When response_format is json_object, the API forces the reply to be a
+  // JSON object, so the model picks an arbitrary key name ("tenders",
+  // "scores", "results", "items", …) to wrap the array. Accept any array
+  // value found on the root — do NOT hard-code a key name. Also accept a
+  // bare array for robustness against loosely-formatted replies.
+  let arr: unknown = null;
   try {
     const parsed = JSON.parse(trimmed);
-    arr = Array.isArray(parsed)
-      ? parsed
-      : Array.isArray((parsed as { scores?: unknown[] }).scores)
-        ? (parsed as { scores: unknown[] }).scores
-        : null;
+    if (Array.isArray(parsed)) {
+      arr = parsed;
+    } else if (parsed && typeof parsed === "object") {
+      for (const value of Object.values(parsed as Record<string, unknown>)) {
+        if (Array.isArray(value)) {
+          arr = value;
+          break;
+        }
+      }
+    }
   } catch {
     return [];
   }
