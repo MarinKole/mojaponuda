@@ -6,11 +6,17 @@ import {
   generateEmbeddings,
   toPgVector,
 } from "@/lib/embeddings";
+import {
+  buildBroadRetrievalCpvPrefixes,
+  buildProfileKeywordSeeds,
+  parseCompanyProfile,
+} from "@/lib/company-profile";
 import type { Database } from "@/types/database";
 
 // ── Constants ─────────────────────────────────────────────────────────
 export const RELEVANCE_MODEL_VERSION = "gpt-4o-mini-v1";
 export const RETRIEVAL_TOP_K = 200;
+export const KEYWORD_RETRIEVAL_LIMIT = 200;
 export const LLM_BATCH_SIZE = 7;
 export const LLM_MAX_PARALLEL = 10;
 export const LLM_BATCH_DELAY_MS = 300;
@@ -190,6 +196,61 @@ export async function retrieveEmbeddingCandidates(
   );
 }
 
+// ── Retrieval via keywords + CPV prefixes (complementary recall) ──────
+// The embedding captures the gist of what a company does but can bury
+// long-tail category matches in the similarity ranking. For example, a
+// profile heavy on "servers and networks" may push pure software tenders
+// below topK even though the company explicitly selected
+// "software_licenses" as an offering category. This function compensates
+// by fetching active tenders whose title / description / CPV code match
+// the company's onboarding categories. The final LLM gate (>=6) prevents
+// false positives from slipping through.
+export async function retrieveKeywordCandidates(
+  supabase: SupabaseClient<Database>,
+  keywords: string[],
+  cpvPrefixes: string[],
+  options: { limit?: number; nowIso?: string } = {}
+): Promise<string[]> {
+  if (keywords.length === 0 && cpvPrefixes.length === 0) return [];
+
+  const limit = options.limit ?? KEYWORD_RETRIEVAL_LIMIT;
+  const nowIso = options.nowIso ?? new Date().toISOString();
+
+  const escapeIlike = (term: string) =>
+    term.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_").replace(/,/g, " ");
+
+  const keywordConds: string[] = [];
+  for (const raw of keywords.slice(0, 12)) {
+    const term = escapeIlike(raw.trim());
+    if (!term) continue;
+    keywordConds.push(`title.ilike.%${term}%`);
+    keywordConds.push(`raw_description.ilike.%${term}%`);
+  }
+  for (const prefix of cpvPrefixes.slice(0, 12)) {
+    const term = escapeIlike(prefix.trim());
+    if (!term) continue;
+    keywordConds.push(`cpv_code.ilike.${term}%`);
+  }
+
+  if (keywordConds.length === 0) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase as any)
+    .from("tenders")
+    .select("id, deadline")
+    .or(keywordConds.join(","))
+    .or(`deadline.gt.${nowIso},deadline.is.null`)
+    .order("deadline", { ascending: true, nullsFirst: false })
+    .limit(limit);
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("[tender-relevance] retrieveKeywordCandidates error:", error);
+    return [];
+  }
+  return ((data ?? []) as Array<{ id: string }>).map((r) => r.id);
+}
+
 // ── Main entry point (Step A + Step B with cache) ─────────────────────
 export interface GetRecommendedOptions {
   topK?: number;
@@ -230,15 +291,38 @@ export async function getRecommendedTenders<T extends { id: string } = Record<st
   const embedding = row.profile_embedding;
   if (embedding == null) return [];
 
-  // Step A: embedding retrieval — top K without threshold
-  const candidates = await retrieveEmbeddingCandidates(
-    supabase,
-    embedding as number[] | string,
-    { topK, nowIso: options.nowIso }
-  );
-  if (candidates.length === 0) return [];
-  const candidateIds = candidates.map((c) => c.id);
-  const similarityById = new Map(candidates.map((c) => [c.id, c.similarity]));
+  // Step A: hybrid retrieval — pgvector similarity UNION keyword/CPV match.
+  //   (a) pgvector top-K: captures semantic fit from the profile embedding.
+  //   (b) keyword/CPV: guarantees recall for every offering category the
+  //       user explicitly selected in onboarding, even if the embedding
+  //       happens to push those tenders below top-K.
+  // The LLM gate >=6 later filters false positives from (b), so widening
+  // recall here is safe and dramatically reduces missed matches.
+  const [embeddingCandidates, keywordCandidateIds] = await Promise.all([
+    retrieveEmbeddingCandidates(supabase, embedding as number[] | string, {
+      topK,
+      nowIso: options.nowIso,
+    }),
+    (async () => {
+      const parsed = parseCompanyProfile(row.industry);
+      const keywords = buildProfileKeywordSeeds(parsed);
+      const cpvPrefixes = buildBroadRetrievalCpvPrefixes(parsed);
+      if (keywords.length === 0 && cpvPrefixes.length === 0) return [];
+      return retrieveKeywordCandidates(supabase, keywords, cpvPrefixes, {
+        nowIso: options.nowIso,
+        limit: KEYWORD_RETRIEVAL_LIMIT,
+      });
+    })(),
+  ]);
+
+  if (embeddingCandidates.length === 0 && keywordCandidateIds.length === 0) return [];
+
+  // Dedup while preserving similarity score for the embedding subset.
+  const similarityById = new Map(embeddingCandidates.map((c) => [c.id, c.similarity]));
+  const candidateIdSet = new Set<string>();
+  for (const c of embeddingCandidates) candidateIdSet.add(c.id);
+  for (const id of keywordCandidateIds) candidateIdSet.add(id);
+  const candidateIds = [...candidateIdSet];
 
   // Cache lookup
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

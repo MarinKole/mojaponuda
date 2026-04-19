@@ -10,6 +10,7 @@ import {
 import { getSubscriptionStatus, isAgencyPlan } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { getPersonalizedTenderRecommendations } from "@/lib/personalized-tenders";
+import { getRecommendedTenders } from "@/lib/tender-relevance";
 import {
   buildRecommendationContext,
   RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
@@ -232,7 +233,10 @@ export default async function DashboardPage() {
     missingChecklistCount = checklistOverview?.filter((item) => item.status === "missing").length ?? 0;
   }
 
-  const tenderRecommendationResult = await getPersonalizedTenderRecommendations<{
+  // Primary: LLM-scored recommendations (same pipeline as /dashboard/tenders?tab=recommended).
+  // This ensures the KPI card "Relevantne prilike" and the Preporučeno tab always show
+  // the SAME count. topK=200 + minScore=6 must match the tenders page.
+  type DashboardTenderRow = {
     id: string;
     title: string;
     deadline: string | null;
@@ -241,21 +245,38 @@ export default async function DashboardPage() {
     contracting_authority_jib: string | null;
     contract_type: string | null;
     raw_description: string | null;
-  }>(supabase, {
-    company: resolvedCompany,
-    companyId: resolvedCompany.id,
-    select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description",
-    nowIso,
-    candidateLimit: RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
-    minimumResults: RECOMMENDATION_FULL_PAGE_MINIMUM_RESULTS,
-    excludeTenderIds: existingBidTenderIds,
-    limit: 4,
-    rerank: false,
-  });
+  };
 
-  const relevantTenders = tenderRecommendationResult.recommendations.map(({ tender }) => tender);
+  let relevantTenders: DashboardTenderRow[] = [];
+  let relevantTenderCount = 0;
 
-  const relevantTenderCount = tenderRecommendationResult.totalCount;
+  const llmScored = await getRecommendedTenders<DashboardTenderRow>(
+    supabase,
+    resolvedCompany.id,
+    { topK: 200, limit: 1000, minScore: 6, nowIso }
+  );
+
+  if (llmScored.length > 0) {
+    const gated = llmScored.filter(({ tender }) => !existingBidTenderIds.has(tender.id));
+    relevantTenders = gated.map(({ tender }) => tender);
+    relevantTenderCount = relevantTenders.length;
+  } else {
+    // Fallback: company without profile_embedding (pre-backfill) — use legacy
+    // keyword/CPV pipeline so the card still shows something useful.
+    const legacy = await getPersonalizedTenderRecommendations<DashboardTenderRow>(supabase, {
+      company: resolvedCompany,
+      companyId: resolvedCompany.id,
+      select: "id, title, deadline, estimated_value, contracting_authority, contracting_authority_jib, contract_type, raw_description",
+      nowIso,
+      candidateLimit: RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
+      minimumResults: RECOMMENDATION_FULL_PAGE_MINIMUM_RESULTS,
+      excludeTenderIds: existingBidTenderIds,
+      limit: 4,
+      rerank: false,
+    });
+    relevantTenders = legacy.recommendations.map(({ tender }) => tender);
+    relevantTenderCount = legacy.totalCount;
+  }
   const relevantTenderValue = relevantTenders.reduce((sum, tender) => sum + (Number(tender.estimated_value) || 0), 0);
   const documentsCount = documentsCountValue ?? demoDocuments.length;
   const dashboardBidRows = portfolioBids.slice(0, 6);

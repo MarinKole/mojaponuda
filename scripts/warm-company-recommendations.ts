@@ -140,6 +140,98 @@ async function runPool<T, R>(
   return results;
 }
 
+// ── Category → keyword/CPV seeds (mirrors lib/company-profile.ts) ─────
+// Self-contained here so the script does not pull in server-only code.
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  software_licenses: ["softver", "licenc", "erp", "dms", "saas", "aplikacij", "software"],
+  it_hardware: ["server", "računar", "printer", "switch", "router", "firewall", "mrežna oprema", "kompjuter", "laptop", "storage"],
+  telecom_av: ["telekom", "telefonij", "konferencij", "audio", "video", "razglas"],
+  cloud_cyber_data: ["cloud", "backup", "cyber", "siem", "data platform", "disaster recovery"],
+  civil_works: ["izgradnj", "rekonstrukcij", "sanacij", "adaptacij", "građevin"],
+  electrical_works: ["elektroinst", "električ", "niskonapon"],
+  mechanical_works: ["mašin", "mehan", "hvac", "klima"],
+  road_works: ["cestogr", "asfalt", "put", "cesta"],
+  medical_goods: ["medicin", "ljekarn", "bolnic", "zdravstv"],
+  office_goods: ["kancelar", "uredsk", "namještaj"],
+  food_goods: ["hrana", "prehra", "piće"],
+  cleaning_goods: ["čiš", "higijen"],
+  vehicles: ["vozil", "autodio"],
+  fuels_energy: ["gorivo", "dizel", "benzin", "energ"],
+  services: ["usluge", "konsultanc", "savjetovanj"],
+  maintenance: ["održavanj", "servisir", "servis"],
+  transport_logistics: ["transport", "logist", "dostav"],
+};
+
+const CATEGORY_CPV_PREFIXES: Record<string, string[]> = {
+  software_licenses: ["48", "72"],
+  it_hardware: ["30", "32"],
+  telecom_av: ["32"],
+  cloud_cyber_data: ["48", "72"],
+  civil_works: ["45"],
+  electrical_works: ["45"],
+  mechanical_works: ["45", "42"],
+  road_works: ["45"],
+  medical_goods: ["33"],
+  office_goods: ["30", "39"],
+  food_goods: ["15"],
+  cleaning_goods: ["39"],
+  vehicles: ["34"],
+  fuels_energy: ["09"],
+  transport_logistics: ["60"],
+};
+
+function deriveCategoryRecall(industry: string | null): { keywords: string[]; cpvPrefixes: string[] } {
+  if (!industry) return { keywords: [], cpvPrefixes: [] };
+  try {
+    const parsed = JSON.parse(industry) as { offeringCategories?: string[] };
+    const cats = parsed?.offeringCategories ?? [];
+    const kw = new Set<string>();
+    const cpv = new Set<string>();
+    for (const c of cats) {
+      for (const k of CATEGORY_KEYWORDS[c] ?? []) kw.add(k);
+      for (const p of CATEGORY_CPV_PREFIXES[c] ?? []) cpv.add(p);
+    }
+    return { keywords: [...kw], cpvPrefixes: [...cpv] };
+  } catch {
+    return { keywords: [], cpvPrefixes: [] };
+  }
+}
+
+async function retrieveByKeywords(
+  s: any,
+  keywords: string[],
+  cpvPrefixes: string[],
+  nowIso: string
+): Promise<string[]> {
+  if (keywords.length === 0 && cpvPrefixes.length === 0) return [];
+  const escape = (t: string) => t.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_").replace(/,/g, " ");
+  const conds: string[] = [];
+  for (const k of keywords.slice(0, 12)) {
+    const term = escape(k.trim());
+    if (!term) continue;
+    conds.push(`title.ilike.%${term}%`);
+    conds.push(`raw_description.ilike.%${term}%`);
+  }
+  for (const p of cpvPrefixes.slice(0, 12)) {
+    const term = escape(p.trim());
+    if (!term) continue;
+    conds.push(`cpv_code.ilike.${term}%`);
+  }
+  if (conds.length === 0) return [];
+  const { data, error } = await s
+    .from("tenders")
+    .select("id")
+    .or(conds.join(","))
+    .or(`deadline.gt.${nowIso},deadline.is.null`)
+    .order("deadline", { ascending: true, nullsFirst: false })
+    .limit(200);
+  if (error) {
+    console.error("  retrieveByKeywords error:", error.message);
+    return [];
+  }
+  return ((data ?? []) as any[]).map((r) => r.id);
+}
+
 async function warmOne(
   s: any,
   openai: OpenAI,
@@ -155,21 +247,36 @@ async function warmOne(
     return;
   }
 
-  // retrieve top K active tender IDs
+  const nowIso = new Date().toISOString();
+
+  // (a) pgvector top-K
   const { data: matches, error: rpcErr } = await s.rpc("match_tenders_by_embedding", {
     query_embedding: company.profile_embedding,
     match_count: RETRIEVE_TOP_K,
-    now_iso: new Date().toISOString(),
+    now_iso: nowIso,
   });
   if (rpcErr) {
     console.error(`  ${company.name}: RPC error`, rpcErr.message);
     return;
   }
-  const candidateIds = (matches ?? []).map((m: any) => m.id);
+  const embeddingIds: string[] = (matches ?? []).map((m: any) => m.id);
+
+  // (b) keyword/CPV retrieval for the company's offering categories
+  const { keywords, cpvPrefixes } = deriveCategoryRecall(company.industry);
+  const keywordIds = await retrieveByKeywords(s, keywords, cpvPrefixes, nowIso);
+
+  const candidateIdSet = new Set<string>();
+  for (const id of embeddingIds) candidateIdSet.add(id);
+  for (const id of keywordIds) candidateIdSet.add(id);
+  const candidateIds = [...candidateIdSet];
+
   if (candidateIds.length === 0) {
-    console.log(`  ${company.name}: no candidates from pgvector`);
+    console.log(`  ${company.name}: no candidates (pgvector + keyword both empty)`);
     return;
   }
+  console.log(
+    `  ${company.name}: retrieval → pgvector=${embeddingIds.length}, keyword=${keywordIds.length}, union=${candidateIds.length}`
+  );
 
   // skip ones already cached
   const { data: existing } = await s
