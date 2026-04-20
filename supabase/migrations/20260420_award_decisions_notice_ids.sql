@@ -15,7 +15,11 @@
 
 alter table public.award_decisions
   add column if not exists notice_id text,
-  add column if not exists procedure_id text;
+  add column if not exists procedure_id text,
+  -- procedure_name je dodat u migraciji 20260321123500_add_award_procedure_name.sql,
+  -- ali neke baze su napravljene prije nje. Garantujemo njegovo postojanje ovdje
+  -- da bi indeks ispod radio bez obzira na redoslijed migracija.
+  add column if not exists procedure_name text;
 
 -- Indeksi za post-hoc matching
 create index if not exists award_decisions_notice_id_idx
