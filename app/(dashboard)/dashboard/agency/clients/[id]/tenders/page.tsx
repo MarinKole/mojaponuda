@@ -21,6 +21,7 @@ import {
   RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
   RECOMMENDATION_FULL_PAGE_MINIMUM_RESULTS,
   selectTenderRecommendations,
+  TENDER_LIST_COLUMNS,
   type RecommendationContext,
 } from "@/lib/tender-recommendations";
 import { tenderMatchesClientFilters } from "@/lib/tender-client-filters";
@@ -77,7 +78,7 @@ async function fetchAllTendersForClientSort(
   const rows: Tender[] = [];
 
   while (true) {
-    let query = supabase.from("tenders").select("*");
+    let query = supabase.from("tenders").select(TENDER_LIST_COLUMNS);
 
     if (filters.keyword) {
       const keyword = `%${filters.keyword}%`;
@@ -195,7 +196,7 @@ async function TendersContent({ agencyClientId, companyId, recommendationContext
         authority_entity: string | null;
       }
     >(supabase, recommendationContext, {
-      select: "*",
+      select: TENDER_LIST_COLUMNS,
       limit: RECOMMENDATION_FULL_PAGE_CANDIDATE_LIMIT,
     });
 
@@ -288,7 +289,7 @@ async function TendersContent({ agencyClientId, companyId, recommendationContext
       } else {
       let query = supabase
         .from("tenders")
-        .select("*", { count: "exact" });
+        .select(TENDER_LIST_COLUMNS, { count: "exact" });
 
       if (keywordParam) {
         const kw = `%${keywordParam}%`;

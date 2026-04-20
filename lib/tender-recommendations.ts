@@ -27,6 +27,17 @@ import {
 import { getGeoEnrichmentFromAiAnalysis } from "@/lib/tender-area";
 import type { Database, Json } from "@/types/database";
 
+/**
+ * All columns on `tenders` except the 1536-dim `embedding` vector.
+ * Using this in place of `*` avoids pulling ~24 KB of vector text per row,
+ * which for a 1800+ tender corpus easily exceeds PostgREST / Vercel function
+ * payload limits and crashes the server-rendered "Svi tenderi" page.
+ *
+ * Keep this list in sync with `Database["public"]["Tables"]["tenders"]["Row"]`.
+ */
+export const TENDER_LIST_COLUMNS =
+  "id, portal_id, title, contracting_authority, contracting_authority_jib, deadline, estimated_value, contract_type, cpv_code, procedure_type, status, portal_url, raw_description, ai_analysis, created_at";
+
 export interface RecommendationCompanySource {
   industry: string | null | undefined;
   keywords?: string[] | null;
@@ -728,7 +739,7 @@ export async function fetchRecommendedTenderCandidates<
 
   const nowIso = options.nowIso ?? new Date().toISOString();
   const limit = options.limit ?? RECOMMENDATION_SUMMARY_CANDIDATE_LIMIT;
-  const select = options.select ?? "*";
+  const select = options.select ?? TENDER_LIST_COLUMNS;
   const includeUndated = options.includeUndated !== false;
   const keywordConditions = buildRecommendationSearchCondition(context)
     .split(",")
