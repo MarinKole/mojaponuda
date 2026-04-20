@@ -21,6 +21,12 @@ export interface EjnProcurementNotice {
   Status: string | null;
   NoticeUrl: string | null;
   Description: string | null;
+  /**
+   * 8-digit CPV code derived from the main Lot of this procedure.
+   * Populated by `enrichNoticesWithCpvCodes`; null when the notice has no
+   * main-CPV link (EJN allows this for some legacy procedures).
+   */
+  CpvCode: string | null;
 }
 
 export interface EjnAwardNotice {
@@ -318,7 +324,7 @@ export async function fetchProcurementNotices(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return merged.map((r: any) => ({
+  const mapped: EjnProcurementNotice[] = merged.map((r: any) => ({
     NoticeId: String(r.Id ?? r.ProcedureId ?? ""),
     Title: r.ProcedureName || r.ProcedureNumber || "Bez naziva",
     ContractingAuthorityName: r.ContractingAuthorityName || null,
@@ -339,7 +345,139 @@ export async function fetchProcurementNotices(
       r.TechnicalAbility,
       r.PaymentRequirements,
     ]),
+    CpvCode: null,
   }));
+
+  // Populate CpvCode for every notice via Lots → LotCpvCodeLinks → CpvCodes
+  await enrichNoticesWithCpvCodes(mapped);
+  return mapped;
+}
+
+// ── CPV enrichment ────────────────────────────────────────────────────
+//
+// EJN OData does not expose a CPV code directly on `ProcurementNotices`.
+// The relationship is:
+//
+//   ProcurementNotice.Id == Procedure.Id
+//     └─ Lots (ProcedureId == Procedure.Id)
+//         └─ LotCpvCodeLinks (LotId == Lot.Id, IsMain == true)
+//             └─ CpvCodes (Id == CpvCodeId)  →  "45000000-7"
+//
+// $expand is NOT supported by the EJN OData endpoint, so we fetch the
+// three auxiliary tables and join them in memory.
+//
+// Called once after `fetchProcurementNotices`; also usable standalone from
+// a backfill script (`scripts/backfill-tender-cpv.mjs`).
+
+async function fetchAllCpvCodes(): Promise<Map<number, string>> {
+  // ~9000 rows, static reference data. One-shot paginated fetch.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = await fetchODataPages<any>("/CpvCodes", "Id desc");
+  const map = new Map<number, string>();
+  for (const r of rows) {
+    const id = typeof r.Id === "number" ? r.Id : Number(r.Id);
+    const code = typeof r.Code === "string" ? r.Code : "";
+    const digits = code.replace(/[^0-9]/g, "").slice(0, 8);
+    if (Number.isFinite(id) && digits.length >= 5) map.set(id, digits);
+  }
+  return map;
+}
+
+async function fetchLotsByProcedureIds(
+  procedureIds: number[]
+): Promise<Array<{ Id: number; ProcedureId: number }>> {
+  const out: Array<{ Id: number; ProcedureId: number }> = [];
+  // EJN OData enforces MaxNodeCount=100 on $filter. Empirically 25 IDs
+  // rejects with HTTP 400; 20 works. AST ≈ 4N−1 plus internal nodes.
+  const chunkSize = 20;
+  for (let i = 0; i < procedureIds.length; i += chunkSize) {
+    const batch = procedureIds.slice(i, i + chunkSize);
+    const filter = batch.map((id) => `ProcedureId eq ${id}`).join(" or ");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = await fetchODataPages<any>("/Lots", "Id desc", filter);
+    for (const r of rows) {
+      const id = typeof r.Id === "number" ? r.Id : Number(r.Id);
+      const pid = typeof r.ProcedureId === "number" ? r.ProcedureId : Number(r.ProcedureId);
+      if (Number.isFinite(id) && Number.isFinite(pid)) out.push({ Id: id, ProcedureId: pid });
+    }
+  }
+  return out;
+}
+
+async function fetchMainCpvLinksByLotIds(
+  lotIds: number[]
+): Promise<Array<{ LotId: number; CpvCodeId: number }>> {
+  const out: Array<{ LotId: number; CpvCodeId: number }> = [];
+  // Same MaxNodeCount=100 constraint plus an extra `and IsMain eq true`
+  // (~4 nodes), so 18 IDs stays safely under the cap.
+  const chunkSize = 18;
+  for (let i = 0; i < lotIds.length; i += chunkSize) {
+    const batch = lotIds.slice(i, i + chunkSize);
+    const filter = `(${batch.map((id) => `LotId eq ${id}`).join(" or ")}) and IsMain eq true`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = await fetchODataPages<any>("/LotCpvCodeLinks", "Id desc", filter);
+    for (const r of rows) {
+      const lotId = typeof r.LotId === "number" ? r.LotId : Number(r.LotId);
+      const cpvId = typeof r.CpvCodeId === "number" ? r.CpvCodeId : Number(r.CpvCodeId);
+      if (Number.isFinite(lotId) && Number.isFinite(cpvId)) {
+        out.push({ LotId: lotId, CpvCodeId: cpvId });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Fills `CpvCode` on each notice that does not already have one.
+ * Exported so that backfill scripts can reuse it on arbitrary notice sets.
+ */
+export async function enrichNoticesWithCpvCodes(
+  notices: Array<Pick<EjnProcurementNotice, "NoticeId"> & { CpvCode: string | null }>
+): Promise<void> {
+  const needCpv = notices.filter((n) => !n.CpvCode);
+  if (needCpv.length === 0) return;
+
+  const procedureIds = Array.from(
+    new Set(
+      needCpv
+        .map((n) => Number(n.NoticeId))
+        .filter((n) => Number.isFinite(n) && n > 0)
+    )
+  );
+  if (procedureIds.length === 0) return;
+
+  const [cpvCodeMap, lots] = await Promise.all([
+    fetchAllCpvCodes(),
+    fetchLotsByProcedureIds(procedureIds),
+  ]);
+
+  const lotIds = Array.from(new Set(lots.map((l) => l.Id)));
+  if (lotIds.length === 0) return;
+
+  const links = await fetchMainCpvLinksByLotIds(lotIds);
+
+  // lotId → 8-digit CPV code (first IsMain link wins)
+  const lotToCpv = new Map<number, string>();
+  for (const l of links) {
+    if (lotToCpv.has(l.LotId)) continue;
+    const code = cpvCodeMap.get(l.CpvCodeId);
+    if (code) lotToCpv.set(l.LotId, code);
+  }
+
+  // procedureId → first resolvable main CPV across its lots
+  const procToCpv = new Map<number, string>();
+  for (const lot of lots) {
+    if (procToCpv.has(lot.ProcedureId)) continue;
+    const code = lotToCpv.get(lot.Id);
+    if (code) procToCpv.set(lot.ProcedureId, code);
+  }
+
+  for (const n of notices) {
+    if (n.CpvCode) continue;
+    const pid = Number(n.NoticeId);
+    const cpv = Number.isFinite(pid) ? procToCpv.get(pid) : undefined;
+    if (cpv) n.CpvCode = cpv;
+  }
 }
 
 export async function fetchAwardNotices(

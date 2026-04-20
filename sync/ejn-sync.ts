@@ -1403,6 +1403,7 @@ async function syncTenders(
         status: n.Status || null,
         portal_url: n.NoticeUrl || null,
         raw_description: n.Description || null,
+        cpv_code: n.CpvCode ?? null,
         ai_analysis: mergeGeoEnrichmentIntoAiAnalysis(
           existingTender?.ai_analysis ?? null,
           geoEnrichment

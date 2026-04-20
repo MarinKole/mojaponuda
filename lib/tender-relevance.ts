@@ -18,6 +18,10 @@ import type { Database } from "@/types/database";
 export const RELEVANCE_MODEL_VERSION = "gpt-4o-mini-v1";
 export const RETRIEVAL_TOP_K = 500;
 export const KEYWORD_RETRIEVAL_LIMIT = 500;
+// Max UUIDs to pack into a single Supabase `.in(...)` filter.
+// Supabase PostgREST silently truncates URLs above ~8 KB, which with 36-char
+// UUIDs translates to roughly 200 items before results start disappearing.
+export const IN_CHUNK_SIZE = 200;
 export const LLM_BATCH_SIZE = 7;
 export const LLM_MAX_PARALLEL = 10;
 export const LLM_BATCH_DELAY_MS = 300;
@@ -331,41 +335,50 @@ export async function getRecommendedTenders<T extends { id: string } = Record<st
   for (const id of keywordCandidateIds) candidateIdSet.add(id);
   const candidateIds = [...candidateIdSet];
 
-  // Cache lookup
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: existingRows } = await (supabase as any)
-    .from("tender_relevance")
-    .select("tender_id, score, confidence")
-    .eq("company_id", companyId)
-    .in("tender_id", candidateIds);
-
+  // Cache lookup — chunked because Supabase truncates URLs with >~200 UUIDs
+  // in a single `.in()` filter (silently returning 0 rows).
   const cached = new Map<string, { score: number; confidence: number }>();
-  for (const r of (existingRows ?? []) as Array<{
-    tender_id: string;
-    score: number;
-    confidence: number;
-  }>) {
-    cached.set(r.tender_id, { score: r.score, confidence: r.confidence });
+  for (let i = 0; i < candidateIds.length; i += IN_CHUNK_SIZE) {
+    const slice = candidateIds.slice(i, i + IN_CHUNK_SIZE);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingRows } = await (supabase as any)
+      .from("tender_relevance")
+      .select("tender_id, score, confidence")
+      .eq("company_id", companyId)
+      .in("tender_id", slice);
+    for (const r of (existingRows ?? []) as Array<{
+      tender_id: string;
+      score: number;
+      confidence: number;
+    }>) {
+      cached.set(r.tender_id, { score: r.score, confidence: r.confidence });
+    }
   }
 
   const missingIds = candidateIds.filter((id) => !cached.has(id));
 
   // Step B: LLM reranking for missing pairs (batched 7, max 10 parallel)
   if (missingIds.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: tenderRows } = await (supabase as any)
-      .from("tenders")
-      .select("id, title, raw_description, cpv_code, contract_type, contracting_authority")
-      .in("id", missingIds);
-
-    const rowsById = new Map(
-      ((tenderRows ?? []) as Array<{
+    const rowsById = new Map<
+      string,
+      { id: string; title: string | null; raw_description: string | null; cpv_code: string | null }
+    >();
+    for (let i = 0; i < missingIds.length; i += IN_CHUNK_SIZE) {
+      const slice = missingIds.slice(i, i + IN_CHUNK_SIZE);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: tenderRows } = await (supabase as any)
+        .from("tenders")
+        .select("id, title, raw_description, cpv_code, contract_type, contracting_authority")
+        .in("id", slice);
+      for (const r of (tenderRows ?? []) as Array<{
         id: string;
         title: string | null;
         raw_description: string | null;
         cpv_code: string | null;
-      }>).map((r) => [r.id, r])
-    );
+      }>) {
+        rowsById.set(r.id, r);
+      }
+    }
 
     const profileText = row.profile_text?.trim() || row.industry || "";
     const industry = row.industry ?? null;
@@ -433,16 +446,17 @@ export async function getRecommendedTenders<T extends { id: string } = Record<st
     }
   }
 
-  // Final: load tender rows for all scored candidates
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: allTenderRows } = await (supabase as any)
-    .from("tenders")
-    .select("*")
-    .in("id", candidateIds);
-
-  const tenderMap = new Map<string, T>(
-    ((allTenderRows ?? []) as T[]).map((r) => [r.id, r])
-  );
+  // Final: load tender rows for all scored candidates (chunked)
+  const tenderMap = new Map<string, T>();
+  for (let i = 0; i < candidateIds.length; i += IN_CHUNK_SIZE) {
+    const slice = candidateIds.slice(i, i + IN_CHUNK_SIZE);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: allTenderRows } = await (supabase as any)
+      .from("tenders")
+      .select("*")
+      .in("id", slice);
+    for (const r of ((allTenderRows ?? []) as T[])) tenderMap.set(r.id, r);
+  }
 
   const scored: Array<ScoredTender<T>> = [];
   for (const id of candidateIds) {

@@ -243,13 +243,19 @@ async function warmOne(
     `  ${company.name}: retrieval → pgvector=${embeddingIds.length}, keyword=${keywordIds.length}, union=${candidateIds.length}`
   );
 
-  // skip ones already cached
-  const { data: existing } = await s
-    .from("tender_relevance")
-    .select("tender_id")
-    .eq("company_id", company.id)
-    .in("tender_id", candidateIds);
-  const cachedSet = new Set<string>((existing ?? []).map((r: any) => r.tender_id));
+  // skip ones already cached — chunked `.in()` because Supabase truncates
+  // the URL for >~200 UUIDs and silently returns nothing.
+  const IN_CHUNK = 200;
+  const cachedSet = new Set<string>();
+  for (let i = 0; i < candidateIds.length; i += IN_CHUNK) {
+    const slice = candidateIds.slice(i, i + IN_CHUNK);
+    const { data: existing } = await s
+      .from("tender_relevance")
+      .select("tender_id")
+      .eq("company_id", company.id)
+      .in("tender_id", slice);
+    for (const r of (existing ?? []) as Array<{ tender_id: string }>) cachedSet.add(r.tender_id);
+  }
   const missingIds = candidateIds.filter((id: string) => !cachedSet.has(id));
 
   if (missingIds.length === 0) {
@@ -257,12 +263,16 @@ async function warmOne(
     return;
   }
 
-  // fetch tender rows for missing IDs
-  const { data: tenderRows } = await s
-    .from("tenders")
-    .select("id, title, raw_description, cpv_code")
-    .in("id", missingIds);
-  const byId = new Map<string, any>((tenderRows ?? []).map((r: any) => [r.id, r]));
+  // fetch tender rows for missing IDs (same chunking)
+  const byId = new Map<string, any>();
+  for (let i = 0; i < missingIds.length; i += IN_CHUNK) {
+    const slice = missingIds.slice(i, i + IN_CHUNK);
+    const { data: tenderRows } = await s
+      .from("tenders")
+      .select("id, title, raw_description, cpv_code")
+      .in("id", slice);
+    for (const r of (tenderRows ?? []) as any[]) byId.set(r.id, r);
+  }
 
   const batches: Array<Array<{ id: string; title: string; short: string | null; cpv: string | null }>> = [];
   for (let i = 0; i < missingIds.length; i += LLM_BATCH_SIZE) {
