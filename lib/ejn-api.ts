@@ -311,11 +311,39 @@ export async function fetchProcurementNotices(
     );
   }
 
-  // Merge & deduplicate by Id (active set takes priority)
+  return mapAndEnrichNoticeRaws([...activeRaw, ...incrementalRaw]);
+}
+
+/**
+ * Dohvata historijske tendere (expired) u datom opsegu po ApplicationDeadlineDateTime.
+ * Koristi se iz backfill skripte da se popuni `tenders` tablica tenderima koji
+ * su zavrsili prije pokretanja sinhronizacije. Date range se preporuča dijeliti
+ * na kvartale (EJN OData MAX_PAGES budget ~500K items).
+ *
+ * @param fromIso ISO datum "from" (inclusive). null = bez donje granice
+ * @param toIso   ISO datum "to" (exclusive). null = do sada
+ */
+export async function fetchProcurementNoticesInDateRange(
+  fromIso: string | null,
+  toIso: string | null
+): Promise<EjnProcurementNotice[]> {
+  const conditions: string[] = [];
+  if (fromIso) conditions.push(`ApplicationDeadlineDateTime ge ${fromIso}`);
+  if (toIso) conditions.push(`ApplicationDeadlineDateTime lt ${toIso}`);
+  const filter = conditions.length > 0 ? conditions.join(" and ") : undefined;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = await fetchODataPages<any>("/ProcurementNotices", "Id desc", filter);
+  return mapAndEnrichNoticeRaws(raw);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function mapAndEnrichNoticeRaws(raws: any[]): Promise<EjnProcurementNotice[]> {
+  // Merge & deduplicate by Id
   const seenIds = new Set<string>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const merged: any[] = [];
-  for (const item of [...activeRaw, ...incrementalRaw]) {
+  for (const item of raws) {
     const id = String(item.Id ?? item.ProcedureId ?? "");
     if (id && !seenIds.has(id)) {
       seenIds.add(id);
