@@ -35,7 +35,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase: any = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-const PAGE_SIZE = 1000;
+const PAGE_SIZE = 500;
 const DATE_TOLERANCE_MS = 90 * 24 * 60 * 60 * 1000; // ±90 dana
 
 interface TenderRef {
@@ -64,16 +64,24 @@ function normalizeTitle(s: string | null): string {
 }
 
 async function fetchAllTenders(): Promise<TenderRef[]> {
-  console.log("→ Dohvatam sve tendere …");
+  console.log("→ Dohvatam sve tendere (keyset paginacija po id) …");
   const all: TenderRef[] = [];
-  let from = 0;
+  let lastId: string | null = null;
+
   while (true) {
-    const { data, error } = await supabase
+    // Keyset paginacija: WHERE id > lastId ORDER BY id LIMIT PAGE_SIZE
+    // Brže od OFFSET pagination-a jer ne skenira preskocene redove.
+    let query = supabase
       .from("tenders")
       .select("id, portal_id, title, contracting_authority_jib, estimated_value, created_at")
-      .range(from, from + PAGE_SIZE - 1);
+      .order("id", { ascending: true })
+      .limit(PAGE_SIZE);
+    if (lastId) query = query.gt("id", lastId);
+
+    const { data, error } = await query;
     if (error) throw error;
     if (!data || data.length === 0) break;
+
     for (const t of data) {
       all.push({
         id: t.id,
@@ -84,8 +92,13 @@ async function fetchAllTenders(): Promise<TenderRef[]> {
         created_at: t.created_at ?? null,
       });
     }
+
+    if (all.length % 10000 < PAGE_SIZE) {
+      process.stdout.write(`   … ${all.length}\r`);
+    }
+
     if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+    lastId = data[data.length - 1].id;
   }
   console.log(`   indeksirano ${all.length} tendera`);
   return all;

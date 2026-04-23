@@ -26,9 +26,12 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase: any = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
+  // PostgREST default statement_timeout je ~8s — premalo za paginaciju nad 258K tendera.
+  // Dajemo mu 120s po zahtjevu.
+  global: { headers: { "statement-timeout": "120000" } },
 });
 
-const PAGE_SIZE = 1000;
+const PAGE_SIZE = 200;
 
 function cpvPrefix(code: string | null | undefined): string | null {
   if (!code) return null;
@@ -63,12 +66,15 @@ async function fetchTenderLookup(): Promise<TenderLookup> {
   console.log("→ Dohvatam tenders lookup (id → cpv + authority + value) …");
   const byId = new Map<string, TenderRef>();
   const byAuthority = new Map<string, Array<TenderRef & { id: string }>>();
-  let from = 0;
+  let lastId: string | null = null;
   while (true) {
-    const { data, error } = await supabase
+    let q = supabase
       .from("tenders")
       .select("id, cpv_code, contracting_authority_jib, estimated_value, created_at")
-      .range(from, from + PAGE_SIZE - 1);
+      .order("id", { ascending: true })
+      .limit(PAGE_SIZE);
+    if (lastId) q = q.gt("id", lastId);
+    const { data, error } = await q;
     if (error) throw error;
     if (!data || data.length === 0) break;
     for (const t of data) {
@@ -86,8 +92,9 @@ async function fetchTenderLookup(): Promise<TenderLookup> {
         byAuthority.set(ref.authority_jib, list);
       }
     }
+    if (byId.size % 20000 < PAGE_SIZE) process.stdout.write(`   … ${byId.size}\r`);
     if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+    lastId = data[data.length - 1].id;
   }
   console.log(`   indeksirano ${byId.size} tendera (${byAuthority.size} naručilaca)`);
   return { byId, byAuthority };
@@ -198,12 +205,15 @@ async function fetchAuthorities() {
 async function fetchTenderCountsPerAuthority() {
   console.log("→ Brojim tenders po autoritetu …");
   const countMap = new Map<string, { count: number; totalValue: number }>();
-  let from = 0;
+  let lastId: string | null = null;
   while (true) {
-    const { data } = await supabase
+    let q = supabase
       .from("tenders")
-      .select("contracting_authority_jib, estimated_value")
-      .range(from, from + PAGE_SIZE - 1);
+      .select("id, contracting_authority_jib, estimated_value")
+      .order("id", { ascending: true })
+      .limit(PAGE_SIZE);
+    if (lastId) q = q.gt("id", lastId);
+    const { data } = await q;
     if (!data || data.length === 0) break;
     for (const t of data) {
       const jib = t.contracting_authority_jib;
@@ -215,7 +225,7 @@ async function fetchTenderCountsPerAuthority() {
       countMap.set(jib, existing);
     }
     if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+    lastId = data[data.length - 1].id;
   }
   return countMap;
 }
@@ -223,12 +233,15 @@ async function fetchTenderCountsPerAuthority() {
 async function fetchTenderCountsPerCpv() {
   console.log("→ Brojim tenders po CPV kodu …");
   const countMap = new Map<string, { count: number; totalValue: number[] }>();
-  let from = 0;
+  let lastId: string | null = null;
   while (true) {
-    const { data } = await supabase
+    let q = supabase
       .from("tenders")
-      .select("cpv_code, estimated_value")
-      .range(from, from + PAGE_SIZE - 1);
+      .select("id, cpv_code, estimated_value")
+      .order("id", { ascending: true })
+      .limit(PAGE_SIZE);
+    if (lastId) q = q.gt("id", lastId);
+    const { data } = await q;
     if (!data || data.length === 0) break;
     for (const t of data) {
       const p = cpvPrefix(t.cpv_code);
@@ -239,7 +252,7 @@ async function fetchTenderCountsPerCpv() {
       countMap.set(p, existing);
     }
     if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+    lastId = data[data.length - 1].id;
   }
   return countMap;
 }
